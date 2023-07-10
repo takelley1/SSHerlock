@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "SSH Plugin",
+  "name_for_model": "ssh",
+  "description_for_human": "Plugin for executing commands over SSH on remote servers.",
+  "description_for_model": "Plugin for executing commands over SSH on remote servers.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "<https://example.com/.well-known/openapi.yaml>",
+    "is_user_authenticated": false
+  },
+  "logo_url": "<https://example.com/logo.png>",
+  "contact_email": "support@example.com",
+  "legal_info_url": "<https://example.com/legal>"
+}

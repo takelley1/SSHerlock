@@ -1,0 +1,56 @@
+openapi: 3.0.1
+info:
+  title: SSH Connection Plugin
+  description: A plugin for executing commands over SSH on remote servers.
+  version: 'v1'
+servers:
+  - url: https://example.com
+paths:
+  /ssh:
+    post:
+      operationId: executeSSHCommand
+      summary: Execute an SSH command on a remote server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SSHCommandRequest'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSHCommandResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    SSHCommandRequest:
+      type: object
+      properties:
+        host:
+          type: string
+          description: The hostname or IP address of the remote server
+        command:
+          type: string
+          description: The command to be executed on the remote server
+
+    SSHCommandResponse:
+      type: object
+      properties:
+        output:
+          type: string
+          description: The output of the executed SSH command
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: An error message describing the issue
