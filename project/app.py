@@ -55,6 +55,20 @@ def signup_post():
 
     return redirect(url_for("profile"))
 
+# @app.route("/login")
+# def login():
+
+#     email = request.form.get("email")
+#     password = request.form.get("password")
+#     user = user_datastore.find_user(email=email)
+
+#     login_user(user, remember=False)
+#     return render_template("security/login_user.html")
+
+# @app.route("/login", methods=["POST"])
+# def login():
+#     return render_template("security/login_user.html")
+
 @app.route("/profile")
 @auth_required()
 def profile():

@@ -1,38 +1,41 @@
-{% extends "base.html" %}
+{% extends "security/base.html" %}
+{% from "security/_macros.html" import render_field_with_errors, render_field, render_field_errors, render_form_errors, prop_next %}
 
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h3 class="title">Login</h3>
-    <div class="box">
-
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <div class="notification is-danger">
-            {{ messages[0] }}
-        </div>
+  {% include "security/_messages.html" %}
+  <h1>{{ _fsdomain('Login') }}</h1>
+  <form action="{{ url_for_security('login') }}{{ prop_next() }}" method="post" name="login_user_form">
+    {{ login_user_form.hidden_tag() }}
+    {{ render_form_errors(login_user_form) }}
+    {% if "email" in identity_attributes %}{{ render_field_with_errors(login_user_form.email) }}{% endif %}
+    {% if login_user_form.username and "username" in identity_attributes %}
+      {% if "email" in identity_attributes %}<h3>{{ _fsdomain("or") }}</h3>{% endif %}
+      {{ render_field_with_errors(login_user_form.username) }}
     {% endif %}
-    {% endwith %}
-
-        <form method="POST" action="/login">
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="email" name="email" placeholder="Your Email" autofocus="">
-                </div>
-            </div>
-
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="password" name="password" placeholder="Your Password">
-                </div>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input type="checkbox" name="remember">
-                    Remember me
-                </label>
-            </div>
-            <button class="button is-block is-info is-large is-fullwidth">Login</button>
-        </form>
+    <div class="fs-gap">{{ render_field_with_errors(login_user_form.password) }}</div>
+    {{ render_field_with_errors(login_user_form.remember) }}
+    {{ render_field_errors(login_user_form.csrf_token) }}
+    {{ render_field(login_user_form.submit) }}
+  </form>
+  {% if security.webauthn %}
+    <hr class="fs-gap">
+    <h2>{{ _fsdomain("Use WebAuthn to Sign In") }}</h2>
+    <div>
+      <form method="get" id="wan-signin-form" name="wan_signin_form">
+        <input id="wan_signin" name="wan_signin" type="submit" value="{{ _fsdomain('Sign in with WebAuthn') }}" formaction="{{ url_for_security('wan_signin') }}{{ prop_next() }}">
+      </form>
     </div>
-</div>
-{% endblock %}
+  {% endif %}
+  {% if security.oauthglue %}
+    <hr class="fs-gap">
+    <h2>{{ _fsdomain("Use Social Oauth to Sign In") }}</h2>
+    {% for provider in security.oauthglue.provider_names %}
+      <div class="fs-gap">
+        <form method="post" id="{{ provider }}"-form name="{{ provider }}"_form>
+          <input id="{{ provider }}" name="{{ provider }}" type="submit" value="{{ _fsdomain('Sign in with ')~provider }}" formaction="{{ url_for_security('oauthstart', name=provider) }}{{ prop_next() }}">
+        </form>
+      </div>
+    {% endfor %}
+  {% endif %}
+  {% include "security/_menu.html" %}
+{% endblock content %}
