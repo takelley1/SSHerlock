@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 mypy.xml
 ssheldon/ssheldon_server/migrations
+ssherlock/ssherlock_server/migrations

@@ -1,7 +1,18 @@
+from django.shortcuts import get_list_or_404
+from django.shortcuts import get_object_or_404
 from django.shortcuts import render
-from django.http import HttpResponse
 
-# Create your views here.
+from .models import *
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+
+def landing(request):
+    return render(request, "ssherlock_server/landing.html")
+
+
+def home(request):
+    return render(request, "ssherlock_server/home.html")
+
+
+def target_servers(request):
+    output = get_list_or_404(TargetServer.objects.all())
+    return render(request, "ssherlock_server/target_servers.html", {"output": output})

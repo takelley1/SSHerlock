@@ -1,0 +1,20 @@
+{% extends "ssherlock_server/home.html" %}
+{% block title %}Target Servers{% endblock %}
+
+{% block content %}
+
+  <div class="button">
+    <ul>
+      <a href="/add_target_server" class="button-link"><h2>Add Target Server</h1></a>
+    </ul>
+  </div>
+
+  {% if output %}
+    {% for item in output %}
+      <p>{{ item.hostname }}</p>
+    {% endfor %}
+  {% else %}
+  <p>No target servers available</p>
+  {% endif %}
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "ssherlock_server/boilerplate_base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block navbar %}
+<div class="navbar-content">
+  <ul>
+    <a href="/" class="navbar-button"><h2>Landing</h2></a>
+    <a href="/home" class="navbar-button"><h2>Home</h2></a>
+    <a href="/credentials" class="navbar-button"><h2>Credentials</h2></a>
+    <a href="/llm_apis" class="navbar-button"><h2>LLM APIs</h2></a>
+    <a href="/bastion_servers" class="navbar-button"><h2>Bastion Servers</h2></a>
+    <a href="/target_servers" class="navbar-button"><h2>Target Servers</h1></a>
+    <a href="/sign_out" class="navbar-button-signout"><h2>Sign Out</h1></a>
+  </ul>
+</div>
+{% endblock %}

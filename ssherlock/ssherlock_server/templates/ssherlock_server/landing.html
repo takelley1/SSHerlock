@@ -1,0 +1,92 @@
+{% extends "ssherlock_server/boilerplate_base.html" %}
+
+{% block content %}
+<header class="header">
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-content">
+        <div class="logo">
+          <h1>pentester</h1>
+        </div>
+        <ul class="nav-menu">
+          <li><a href="#">Home</a></li>
+          <li><a href="#">Company</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#">Services</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Login</a></li>
+          <li><a href="#" class="dark-mode-toggle">🌙</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div class="container header-content">
+    <div class="header-text">
+      <p class="tagline">EASY TO USE & FREE TO TRY (NO CREDIT CARD REQUIRED)</p>
+      <h1>Is Your Data Safe?</h1>
+      <h2>View Critical Risks in Under 30 Seconds.</h2>
+      <div class="cta">
+        <input type="text" placeholder="Enter website or email">
+        <button>Scan</button>
+      </div>
+    </div>
+    <div class="header-image">
+      <img src="image.png" alt="Dashboard Preview">
+    </div>
+  </div>
+</header>
+
+<section class="scan-section">
+  <div class="container">
+    <div class="card personal">
+      <h2>Discover Your Digital Footprint</h2>
+      <button>Start Scan Now</button>
+    </div>
+  </div>
+</section>
+
+<section class="pricing-section">
+  <div class="container">
+    <h2>Pricing Based on Needs</h2>
+    <div class="pricing-cards">
+      <div class="card personal">
+        <h3>PERSONAL</h3>
+        <p>From $19.00 / month</p>
+        <button>Start Now</button>
+        <ul>
+          <li>Automated Data Breach</li>
+          <li>Weekly Security Reports</li>
+          <li>Dedicated Support</li>
+        </ul>
+      </div>
+      <div class="card small-business">
+        <h3>SMALL BUSINESS</h3>
+        <p>From $49.00 / month</p>
+        <button>Start Now</button>
+        <ul>
+          <li>Automated Data Breach</li>
+          <li>24/7 Security Support</li>
+          <li>API Access and Integrations</li>
+        </ul>
+      </div>
+      <div class="card elite">
+        <h3>PENTESTER ELITE</h3>
+        <p>From $899.00 / month</p>
+        <button>Start Now</button>
+        <ul>
+          <li>24/7 Support and Monitoring</li>
+          <li>Custom API Integrations</li>
+          <li>Advanced Pentesting Tools</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Industry Specific & Powerful Reports</p>
+    <button>Start Free Scan</button>
+  </div>
+</footer>
+{% endblock %}
