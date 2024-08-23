@@ -10,6 +10,7 @@ jobs:
   pylint:
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 2
       matrix:
         python-version:
           - "3.8"
@@ -35,7 +36,7 @@ jobs:
     needs:
       - pylint
     strategy:
-      max-parallel: 4
+      max-parallel: 2
       matrix:
         python-version:
           - "3.8"
