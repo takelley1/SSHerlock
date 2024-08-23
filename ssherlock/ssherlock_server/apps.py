@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class SsheldonServerConfig(AppConfig):
+class SsherlockServerConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "ssheldon_server"
+    name = "ssherlock_server"
