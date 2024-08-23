@@ -1,0 +1,49 @@
+---
+
+stages:
+  - test
+
+default:
+  image: python:3.8.10
+
+variables:
+  REQUIREMENTS_PATH: ./requirements.txt
+
+include:
+  - project: devops/scanning-templates/pipeline
+    ref: master
+    file:
+      # - python_packages/build.yml
+      - python_packages/flake8.yml
+      # - python_packages/install.yml
+      # - python_packages/mypy.yml
+      - python_packages/pydocstyle.yml
+      - python_packages/pylint.yml
+      # - python_packages/coverage.yml
+      - yaml/yamllint.yml
+      - misc/codespell.yml
+
+codespell:
+  variables:
+    FILES_TO_SCAN: >
+      ./src ./project ./tests*.py ./*.cfg ./*.md ./*.py ./*.toml ./*.txt
+
+flake8:
+  variables:
+    FILES_TO_SCAN: ./project
+    FLAKE8_CONF_FILE: ./conf/.flake8rc
+
+pydocstyle:
+  variables:
+    FILES_TO_SCAN: ./project
+
+pylint:
+  variables:
+    FILES_TO_SCAN: ./project
+    PYLINT_CONF_FILE: ./conf/.pylintrc
+
+
+# mypy:
+#   variables:
+#     FILES_TO_SCAN: ./project
+#     MYPY_CONF_FILE: ./conf/mypy.ini

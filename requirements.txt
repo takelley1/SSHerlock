@@ -1,9 +1,4 @@
 fabric
-flask
-flask_sqlalchemy
-black
-pylint
-pydocstyle
-flake8
-flask_security-too
-email_validator
+openai
+tiktoken
+django
