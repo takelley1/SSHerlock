@@ -13,19 +13,34 @@ class User(models.Model):
         return self.email
 
 
+class BastionServer(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    creation_time = models.DateTimeField(
+        "date bastion server was created", auto_now_add=True
+    )
+    hostname = models.CharField(max_length=253)
+
+    class Meta:
+        ordering = ["hostname"]
+
+    def __str__(self):
+        return self.hostname
+
+
 class Credential(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_time = models.DateTimeField(
-        "date credential was created", auto_now_add=True
+        "Date credential was created", auto_now_add=True
     )
+    credential_name = models.CharField("Name to give this credential", max_length=255)
     username = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
 
     class Meta:
-        ordering = ["username"]
+        ordering = ["credential_name"]
 
     def __str__(self):
-        return self.username
+        return self.credential_name
 
 
 class LlmApi(models.Model):
@@ -45,20 +60,6 @@ class TargetServer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_time = models.DateTimeField(
         "date target server was created", auto_now_add=True
-    )
-    hostname = models.CharField(max_length=253)
-
-    class Meta:
-        ordering = ["hostname"]
-
-    def __str__(self):
-        return self.hostname
-
-
-class BastionServer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    creation_time = models.DateTimeField(
-        "date bastion server was created", auto_now_add=True
     )
     hostname = models.CharField(max_length=253)
 

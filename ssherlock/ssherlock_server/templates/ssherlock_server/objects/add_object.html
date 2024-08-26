@@ -1,0 +1,11 @@
+{% extends "ssherlock_server/home.html" %}
+{% block title %}Add {{ object_name }}{% endblock %}
+
+{% block content %}
+<form action="add_{{ object_name | lower}}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Create">
+    <a href="/{{ object_name | lower }}" class="button">Cancel</a>
+</form>
+{% endblock %}
