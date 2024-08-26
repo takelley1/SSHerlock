@@ -5,7 +5,9 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
 
+from .forms import BastionHostForm
 from .forms import CredentialForm
+from .forms import TargetHostForm
 from .models import BastionHost
 from .models import Credential
 from .models import Job
@@ -18,31 +20,42 @@ def landing(request):
     return render(request, "ssherlock_server/landing.html")
 
 
-def handle_credential(request, uuid=None):
-    """Handle creating or editing a credential."""
+# Allows us to get the model object matching the string passed to the handle_object function.
+MODEL_FORM_MAP = {
+    "credential": (Credential, CredentialForm),
+    "bastion_host": (BastionHost, BastionHostForm),
+    "target_host": (TargetHost, TargetHostForm),
+}
+
+
+def handle_object(request, model_type, uuid=None):
+    """Handle creating or editing any object."""
+    # Get the model, form, and template based on the model_type parameter
+    model, form = MODEL_FORM_MAP.get(model_type)
+
+    if not model or not form:
+        # Handle the case where the model_type is not valid
+        return render(request, "404.html", status=404)
+
+    instance = None
     if uuid:
-        # If editing, retrieve the existing credential.
-        existing_cred = get_object_or_404(Credential, pk=uuid)
-        form = CredentialForm(request.POST or None, instance=existing_cred)
-    else:
-        # If adding, create a new form instance.
-        form = CredentialForm(request.POST or None)
+        instance = get_object_or_404(model, pk=uuid)
+
+    form = form(request.POST or None, instance=instance)
 
     if request.method == "POST" and form.is_valid():
         form.save()
-        return redirect("/credential")
+        return redirect(f"/{model_type}")
 
     context = {
         "form": form,
         "object_name": "Credential",
         "uuid": uuid,
     }
-
-    template_name = (
-        "ssherlock_server/objects/edit_object.html"
-        if uuid
-        else "ssherlock_server/objects/add_object.html"
-    )
+    if uuid:
+        template_name = "ssherlock_server/objects/edit_object.html"
+    else:
+        template_name = "ssherlock_server/objects/add_object.html"
     return render(request, template_name, context)
 
 

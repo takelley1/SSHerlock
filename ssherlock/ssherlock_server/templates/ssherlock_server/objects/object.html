@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<a href="add_{{ object_name.split | join:"_" | lower}}" class="button">New {{ object_name }}</a>
+<a href="add/{{ object_name.split | join:"_" | lower}}" class="button">New {{ object_name }}</a>
 
 {% if output %}
 

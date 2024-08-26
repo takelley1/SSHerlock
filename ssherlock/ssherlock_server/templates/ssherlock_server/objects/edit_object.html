@@ -2,9 +2,8 @@
 {% block title %}Edit {{ object_name }}{% endblock %}
 
 {% block content %}
-  {# Use "with" to create a URL variable like 'edit_credential/UUID' #}
-  {% with url_name="edit_"|add:object_name|lower %}
-    <form action="{% url url_name uuid %}" method="post">
+  {% with model_type=object_name|lower %}
+    <form action="{% url 'edit_object' model_type=model_type uuid=uuid %}" method="post">
       {% csrf_token %}
         {{ form }}
         <input type="submit" value="Edit"}}>

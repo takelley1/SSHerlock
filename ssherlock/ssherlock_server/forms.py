@@ -8,3 +8,11 @@ class CredentialForm(ModelForm):
     class Meta:
         model = Credential
         fields = ["credential_name", "user", "username", "password"]
+
+
+class BastionHostForm(ModelForm):
+    pass
+
+
+class TargetHostForm(ModelForm):
+    pass
