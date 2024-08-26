@@ -1,0 +1,14 @@
+{% extends "ssherlock_server/home.html" %}
+{% block title %}Edit {{ object_name }}{% endblock %}
+
+{% block content %}
+  {# Use "with" to create a URL variable like 'edit_credential/UUID' #}
+  {% with url_name="edit_"|add:object_name|lower %}
+    <form action="{% url url_name uuid %}" method="post">
+      {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Edit"}}>
+        <a href="/{{ object_name|lower }}" class="button">Cancel</a>
+    </form>
+  {% endwith %}
+{% endblock %}

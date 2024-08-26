@@ -1,8 +1,10 @@
+"""All Django forms for the SSHerlock server application."""
 from django.forms import ModelForm
-from .models import *
+
+from .models import Credential
 
 
-class AddCredentialForm(ModelForm):
+class CredentialForm(ModelForm):
     class Meta:
         model = Credential
-        fields = ["credential_name", "username", "password"]
+        fields = ["credential_name", "user", "username", "password"]

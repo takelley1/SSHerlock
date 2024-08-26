@@ -1,8 +1,12 @@
-from django.db import models
+import uuid
+
+"""All Django models for the SSHerlock server application."""
 from django.conf import settings
+from django.db import models
 
 
 class User(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.CharField(max_length=255)
     creation_time = models.DateTimeField("date user was created", auto_now_add=True)
 
@@ -13,10 +17,13 @@ class User(models.Model):
         return self.email
 
 
-class BastionServer(models.Model):
+class BastionHost(models.Model):
+    """Defines bastion hosts for connecting through to target hosts."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_time = models.DateTimeField(
-        "date bastion server was created", auto_now_add=True
+        "date bastion host was created", auto_now_add=True
     )
     hostname = models.CharField(max_length=253)
 
@@ -28,6 +35,9 @@ class BastionServer(models.Model):
 
 
 class Credential(models.Model):
+    """Defines username/password/key pairs for connecting to bastions and target hosts."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_time = models.DateTimeField(
         "Date credential was created", auto_now_add=True
@@ -44,6 +54,9 @@ class Credential(models.Model):
 
 
 class LlmApi(models.Model):
+    """Defines the APIs we will connect to for interacting with large language models."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_time = models.DateTimeField("date llm api was created", auto_now_add=True)
     base_url = models.CharField(max_length=255)
@@ -56,10 +69,13 @@ class LlmApi(models.Model):
         return self.base_url
 
 
-class TargetServer(models.Model):
+class TargetHost(models.Model):
+    """Defines a host that the LLM will run commands against."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_time = models.DateTimeField(
-        "date target server was created", auto_now_add=True
+        "Date target host was created", auto_now_add=True
     )
     hostname = models.CharField(max_length=253)
 
@@ -71,38 +87,61 @@ class TargetServer(models.Model):
 
 
 class Job(models.Model):
+    """
+    Defines a job in which the LLM runs against a target server.
+
+    The LLM must complete a set of instructions before the job is complete.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    start_time = models.DateTimeField("date job was started", auto_now_add=True)
-    stop_time = models.DateTimeField("date job was stopped", blank=True, null=True)
+    start_time = models.DateTimeField(
+        "Date job was started", auto_now_add=True, editable=False
+    )
+    stop_time = models.DateTimeField(
+        "Date job was stopped", blank=True, null=True, editable=False
+    )
     completion_time = models.DateTimeField(
-        "date job was completed", blank=True, null=True
+        "Date job was completed", blank=True, null=True, editable=False
     )
     duration = models.DurationField(
-        "amount of time job took to complete", blank=True, null=True
+        "Amount of time job took to complete", blank=True, null=True, editable=False
+    )
+    STATUS_CHOICES = {
+        ("PE", "PENDING"),
+        ("RU", "RUNNING"),
+        ("CO", "COMPLETED"),
+        ("CE", "CONTEXT_EXCEEDED"),
+        ("FA", "FAILED"),
+    }
+    status = models.CharField(
+        "Current status of job",
+        max_length=32,
+        choices=STATUS_CHOICES,
+        default="PENDING",
+        editable=False,
     )
 
     llm_api = models.ForeignKey(LlmApi, on_delete=models.SET_NULL, null=True)
 
-    bastion_server = models.ForeignKey(
-        BastionServer, on_delete=models.SET_NULL, blank=True, null=True
+    bastion_host = models.ForeignKey(
+        BastionHost, on_delete=models.SET_NULL, blank=True, null=True
     )
     credentials_for_bastion = models.ForeignKey(
         Credential,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name="bastion_servers",
+        related_name="bastion_hosts",
     )
 
-    target_servers = models.ManyToManyField(TargetServer)
-    credentials_for_target_servers = models.ForeignKey(
-        Credential, on_delete=models.SET_NULL, null=True, related_name="target_servers"
+    target_hosts = models.ManyToManyField(TargetHost)
+    credentials_for_target_hosts = models.ForeignKey(
+        Credential, on_delete=models.SET_NULL, null=True, related_name="target_hosts"
     )
 
     instructions = models.TextField()
-
-    output_path = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         ordering = ["id"]

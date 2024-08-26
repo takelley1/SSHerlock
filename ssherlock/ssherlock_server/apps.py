@@ -1,3 +1,4 @@
+"""All Django app configs for the SSHerlock server application."""
 from django.apps import AppConfig
 
 
