@@ -2,3 +2,4 @@ fabric
 openai
 tiktoken
 django
+django-htmlmin
