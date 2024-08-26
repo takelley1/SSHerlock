@@ -44,7 +44,7 @@ def bastion_server_list(request):
 def credential_list(request):
     output = Credential.objects.all()
     context = {"output": output, "object_name": "Credential"}
-    return render(request, "ssherlock_server/objects/object.html", context)
+    return render(request, "ssherlock_server/objects/credential.html", context)
 
 
 def job_list(request):
