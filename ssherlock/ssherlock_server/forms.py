@@ -5,14 +5,16 @@ from .models import Credential
 
 
 class CredentialForm(ModelForm):
+    """Present a form matching the Credential model."""
+
     class Meta:
         model = Credential
         fields = ["credential_name", "user", "username", "password"]
 
 
 class BastionHostForm(ModelForm):
-    pass
+    """Present a form matching the Bastion Host model."""
 
 
 class TargetHostForm(ModelForm):
-    pass
+    """Present a form matching the Target Host model."""

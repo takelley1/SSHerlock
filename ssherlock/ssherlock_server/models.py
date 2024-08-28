@@ -1,11 +1,13 @@
+"""All Django models for the SSHerlock server application."""
 import uuid
 
-"""All Django models for the SSHerlock server application."""
 from django.conf import settings
 from django.db import models
 
 
 class User(models.Model):
+    """Placeholder user model."""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.CharField(max_length=255)
     creation_time = models.DateTimeField("date user was created", auto_now_add=True)
@@ -92,6 +94,7 @@ class Job(models.Model):
 
     The LLM must complete a set of instructions before the job is complete.
     """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
