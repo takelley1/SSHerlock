@@ -1,9 +1,7 @@
 """All Django views for the SSHerlock server application."""
-from django.shortcuts import get_list_or_404
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.urls import reverse
 
 from .forms import BastionHostForm
 from .forms import CredentialForm
@@ -49,7 +47,7 @@ def handle_object(request, model_type, uuid=None):
 
     context = {
         "form": form,
-        "object_name": "Credential",
+        "object_name": model_type.capitalize(),
         "uuid": uuid,
     }
     if uuid:
@@ -57,6 +55,21 @@ def handle_object(request, model_type, uuid=None):
     else:
         template_name = "ssherlock_server/objects/add_object.html"
     return render(request, template_name, context)
+
+
+def delete_object(request, model_type, uuid):
+    """Delete the given object."""
+    # Get the model, form, and template based on the model_type parameter
+    model, form = MODEL_FORM_MAP.get(model_type)
+
+    if not model or not form:
+        # Handle the case where the model_type is not valid
+        return render(request, "404.html", status=404)
+
+    instance = get_object_or_404(model, pk=uuid)
+
+    instance.delete()
+    return redirect(f"/{model_type}")
 
 
 def home(request):
