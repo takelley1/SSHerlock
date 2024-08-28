@@ -1,7 +1,12 @@
 """All Django admin configs for the SSHerlock server application."""
 from django.contrib import admin
 
-from .models import *
+from .models import BastionHost
+from .models import Credential
+from .models import Job
+from .models import LlmApi
+from .models import TargetHost
+from .models import User
 
 admin.site.register(BastionHost)
 admin.site.register(Credential)
