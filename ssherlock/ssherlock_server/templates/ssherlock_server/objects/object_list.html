@@ -1,4 +1,5 @@
 {% extends "ssherlock_server/home.html" %}
+{% load custom_filters %}
 {% block title %}{{ object_name }}{% endblock %}
 
 {% block content %}
@@ -10,15 +11,24 @@
   <table>
     <thead>
       <tr>
-        {% block table_column_headers %}
-        {% endblock %}
+        {% for header in column_headers %}
+        <th scope="col">{{ header }}</th>
+        {% endfor %}
         <th scope="col">Edit</th>
         <th scope="col">Delete</th>
       </tr>
     </thead>
     <tbody>
-      {% block table_rows %}
-      {% endblock %}
+      {% for item in output %}
+        <tr>
+          {% for field in object_fields %}
+          <td>{{ item|get_attr:field }}</td>
+          {% endfor %}
+          <td><a href="edit/{{ object_name.split | join:"_" | lower}}/{{ item.id }}" class="button">edit</a></td>
+          <td><a href="delete/{{ object_name.split | join:"_" | lower}}/{{ item.id }}" class="button">delete</a></td>
+        </tr>
+      {% endfor %}
+    <tbody>
   </table>
 
 {% else %}

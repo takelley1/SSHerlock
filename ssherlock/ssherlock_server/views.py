@@ -5,6 +5,8 @@ from django.shortcuts import render
 
 from .forms import BastionHostForm
 from .forms import CredentialForm
+from .forms import JobForm
+from .forms import LlmApiForm
 from .forms import TargetHostForm
 from .models import BastionHost
 from .models import Credential
@@ -21,6 +23,8 @@ def landing(request):
 # Allows us to get the model object matching the string passed to the handle_object function.
 MODEL_FORM_MAP = {
     "credential": (Credential, CredentialForm),
+    "llm_api": (LlmApi, LlmApiForm),
+    "job": (Job, JobForm),
     "bastion_host": (BastionHost, BastionHostForm),
     "target_host": (TargetHost, TargetHostForm),
 }
@@ -80,33 +84,28 @@ def home(request):
 def bastion_host_list(request):
     """List the bastion hosts."""
     output = BastionHost.objects.all()
-    context = {"output": output, "object_name": "Bastion Host"}
-    return render(request, "ssherlock_server/objects/object.html", context)
+    column_headers = ["Hostname"]
+    object_fields = ["hostname"]
+    object_name = "Bastion Host"
+    context = {
+        "output": output,
+        "column_headers": column_headers,
+        "object_name": object_name,
+        "object_fields": object_fields,
+    }
+    return render(request, "ssherlock_server/objects/object_list.html", context)
 
 
 def credential_list(request):
     """List the credentials."""
     output = Credential.objects.all()
-    context = {"output": output, "object_name": "Credential"}
-    return render(request, "ssherlock_server/objects/credential.html", context)
-
-
-def job_list(request):
-    """List all jobs."""
-    output = Job.objects.all()
-    context = {"output": output, "object_name": "Job"}
-    return render(request, "ssherlock_server/objects/object.html", context)
-
-
-def llm_api_list(request):
-    """List the LLM APIs."""
-    output = LlmApi.objects.all()
-    context = {"output": output, "object_name": "LLM API"}
-    return render(request, "ssherlock_server/objects/object.html", context)
-
-
-def target_host_list(request):
-    """List the target hosts."""
-    output = TargetHost.objects.all()
-    context = {"output": output, "object_name": "Target Host"}
-    return render(request, "ssherlock_server/objects/object.html", context)
+    column_headers = ["Name", "Username", "Password"]
+    object_fields = ["credential_name", "username", "password"]
+    object_name = "Credential"
+    context = {
+        "output": output,
+        "column_headers": column_headers,
+        "object_name": object_name,
+        "object_fields": object_fields,
+    }
+    return render(request, "ssherlock_server/objects/object_list.html", context)
