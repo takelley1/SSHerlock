@@ -1,3 +1,4 @@
+"""The main runner invoked by SSHerlock Server to interact with LLMs and target hosts."""
 import logging as log
 import os
 import time
@@ -9,9 +10,10 @@ import tiktoken
 
 class Config:
     def __init__(self):
+        """Read in configuration from environment vars."""
         self.log_level = os.getenv("LOG_LEVEL", "").upper()
         self.initial_prompt = os.getenv("INITIAL_PROMPT", "")
-        self.model_context_size = int(os.getenv("MODEL_CONTEXT_SIZE", 0))
+        self.model_context_size = int(os.getenv("MODEL_CONTEXT_SIZE", "0"))
         self.target_host = os.getenv("TARGET_HOST", "")
         self.target_host_user = os.getenv("TARGET_HOST_USER", "")
         self.target_host_user_password = os.getenv("TARGET_HOST_USER_PASSWORD", "")
@@ -79,6 +81,7 @@ def log_function_call(func):
 
 @log_function_call
 def validate_config() -> None:
+    """Ensure necessary config options have been supplied."""
     required_vars = {
         "LOG_LEVEL": config.log_level,
         "INITIAL_PROMPT": config.initial_prompt,
@@ -136,7 +139,6 @@ def query_llm(base_url: str, prompt, api_key: str = "") -> str:
     Returns:
         str: LLM's reponse.
     """
-
     client = openai.OpenAI(
         base_url=base_url,
         api_key=api_key,
