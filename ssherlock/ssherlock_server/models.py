@@ -1,4 +1,5 @@
 """All Django models for the SSHerlock server application."""
+
 import uuid
 
 from django.conf import settings
@@ -131,7 +132,7 @@ class Job(models.Model):
     bastion_host = models.ForeignKey(
         BastionHost, on_delete=models.SET_NULL, blank=True, null=True
     )
-    credentials_for_bastion = models.ForeignKey(
+    credentials_for_bastion_host = models.ForeignKey(
         Credential,
         on_delete=models.SET_NULL,
         blank=True,

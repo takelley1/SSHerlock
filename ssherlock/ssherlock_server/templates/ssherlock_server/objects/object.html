@@ -1,0 +1,35 @@
+{% extends "ssherlock_server/home.html" %}
+{% block title %}{{ object_name }}{% endblock %}
+
+{% block content %}
+
+<a href="add_{{ object_name.split | join:"_" | lower}}" class="button">New {{ object_name }}</a>
+
+{% if output %}
+
+  <table>
+    <thead>
+      <tr>
+        {% block table_column_headers %}
+        {% endblock %}
+        <th scope="col">Edit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        {% block table_rows %}
+        {% endblock %}
+      </tr>
+  </table>
+
+{% else %}
+
+  {% if object_name == "LLM API" %}
+    <p>No {{ object_name }}s available</p>
+  {% else %}
+    <p>No {{ object_name | title}}s available</p>
+  {% endif %}
+
+{% endif %}
+
+{% endblock %}

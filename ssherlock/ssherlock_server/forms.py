@@ -48,7 +48,7 @@ class JobForm(ModelForm):
         fields = [
             "llm_api",
             "bastion_host",
-            "credentials_for_bastion",
+            "credentials_for_bastion_host",
             "target_hosts",
             "credentials_for_target_hosts",
             "instructions",
