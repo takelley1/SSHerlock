@@ -6,6 +6,7 @@ from . import views
 urlpatterns = [
     path("", views.landing, name="landing"),
     path("home", views.home, name="home"),
+    path("add/job", views.create_job, name="create_job"),
     path("add/<str:model_type>", views.handle_object, name="add_object"),
     path("edit/<str:model_type>/<uuid:uuid>", views.handle_object, name="edit_object"),
     path("delete/<str:model_type>/<uuid:uuid>", views.delete_object, name="delete_object"),

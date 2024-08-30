@@ -24,8 +24,11 @@
           {% for field in object_fields %}
           <td>{{ item|get_attr:field }}</td>
           {% endfor %}
-          <td><a href="edit/{{ object_name.split | join:"_" | lower}}/{{ item.id }}" class="button">edit</a></td>
-          <td><a href="delete/{{ object_name.split | join:"_" | lower}}/{{ item.id }}" class="button">delete</a></td>
+          {# Jobs can't be edited or deleted, so don't show the edit button for them #}
+          {#% if object_name != "Job" %#}
+            <td><a href="edit/{{ object_name.split | join:"_" | lower}}/{{ item.id }}" class="button">edit</a></td>
+            <td><a href="delete/{{ object_name.split | join:"_" | lower}}/{{ item.id }}" class="button">delete</a></td>
+          {#% endif %#}
         </tr>
       {% endfor %}
     <tbody>

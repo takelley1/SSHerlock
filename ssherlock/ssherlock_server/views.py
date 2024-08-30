@@ -1,5 +1,6 @@
 """All Django views for the SSHerlock server application."""
-
+from django.core.exceptions import ValidationError
+from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -32,7 +33,7 @@ MODEL_FORM_MAP = {
 
 
 def handle_object(request, model_type, uuid=None):
-    """Handle creating or editing any object."""
+    """Handle creating or editing any object except jobs."""
     # Get the model, form, and template based on the model_type parameter
     model, form = MODEL_FORM_MAP.get(model_type)
 
@@ -74,7 +75,41 @@ def delete_object(request, model_type, uuid):
     instance = get_object_or_404(model, pk=uuid)
 
     instance.delete()
-    return redirect(f"/{model_type}")
+    return redirect(f"/{model_type}_list")
+
+def create_job(request):
+    """Handle creating jobs.
+    When the create job form is submitted, a new job is created for every target host.
+    """
+    form = JobForm(request.POST)
+
+    if request.method == "POST" and form.is_valid():
+
+        cleaned_data = form.cleaned_data
+        # Get list of target hosts and also remove the list of target hosts from the cleaned data.
+        target_hosts = cleaned_data.pop("target_hosts", [])
+
+        for host in target_hosts:
+            # Copy all the attributes from cleaned data into the job (excluding target hosts).
+            job = Job(**cleaned_data)
+            # Save the job object to create a primary key.
+            job.save()
+
+            # Create a query set for the current host.
+            queryset = TargetHost.objects.filter(id=host.id)
+
+            # Add the single host to each job that's created.
+            job.target_hosts.add(host.id)
+            job.save()
+
+        return redirect(f"/job_list")
+
+    context = {
+        "form": form,
+        "object_name": "Job",
+    }
+    template_name = "ssherlock_server/objects/add_object.html"
+    return render(request, template_name, context)
 
 
 def home(request):
@@ -164,8 +199,6 @@ def job_list(request):
         "object_name": object_name,
         "object_fields": object_fields,
     }
-    print("CONTEXT IS", context)
-    print("OBJECT IS", output[0].target_hosts)
     return render(request, "ssherlock_server/objects/object_list.html", context)
 
 
