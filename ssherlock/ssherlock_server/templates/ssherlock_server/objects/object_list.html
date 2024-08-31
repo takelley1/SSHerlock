@@ -8,7 +8,7 @@
 
 {% if output %}
 
-  <table>
+  <table id="object_list_table">
     <thead>
       <tr>
         {% for header in column_headers %}
@@ -43,5 +43,12 @@
   {% endif %}
 
 {% endif %}
+
+<script>
+  {% comment %} Use DataTable to prettify and format the table. {% endcomment %}
+  $(document).ready( function () {
+      $('#object_list_table').DataTable();
+  } );
+</script>
 
 {% endblock %}
