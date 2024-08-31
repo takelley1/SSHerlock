@@ -1,5 +1,6 @@
 [flake8]
 # E501 = Line is over 80 characters long.
 # W503 = Line break before binary operator. Created by the Black formatter.
-ignore = E501,W503
+# E402 = Module level import not at top of file.
+ignore = E501,W503,E402
 exclude = .git,__pycache__,old,build,dist,*.sh,__init__.py
