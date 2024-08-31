@@ -1,8 +1,9 @@
 """All Django models for the SSHerlock server application."""
 
+# pylint: disable=import-error, missing-class-docstring
+
 import uuid
 
-from django.conf import settings
 from django.db import models
 
 
@@ -11,7 +12,7 @@ class User(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.CharField(max_length=255)
-    creation_time = models.DateTimeField("date user was created", auto_now_add=True)
+    creation_date = models.DateTimeField("date user was created", auto_now_add=True)
 
     class Meta:
         ordering = ["email"]
@@ -25,10 +26,11 @@ class BastionHost(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    creation_time = models.DateTimeField(
+    creation_date = models.DateTimeField(
         "date bastion host was created", auto_now_add=True
     )
     hostname = models.CharField(max_length=253)
+    port = models.IntegerField()
 
     class Meta:
         ordering = ["hostname"]
@@ -42,7 +44,7 @@ class Credential(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    creation_time = models.DateTimeField(
+    creation_date = models.DateTimeField(
         "Date credential was created", auto_now_add=True
     )
     credential_name = models.CharField("Name to give this credential", max_length=255)
@@ -61,7 +63,7 @@ class LlmApi(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    creation_time = models.DateTimeField("date llm api was created", auto_now_add=True)
+    creation_date = models.DateTimeField("date llm api was created", auto_now_add=True)
     base_url = models.CharField(max_length=255)
     api_key = models.CharField(max_length=255)
 
@@ -77,10 +79,11 @@ class TargetHost(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    creation_time = models.DateTimeField(
+    creation_date = models.DateTimeField(
         "Date target host was created", auto_now_add=True
     )
     hostname = models.CharField(max_length=253)
+    port = models.IntegerField()
 
     class Meta:
         ordering = ["hostname"]
@@ -100,14 +103,14 @@ class Job(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    start_time = models.DateTimeField(
+    creation_date = models.DateTimeField(
+        "Date job was created", auto_now_add=True, editable=False
+    )
+    start_date = models.DateTimeField(
         "Date job was started", auto_now_add=True, editable=False
     )
-    stop_time = models.DateTimeField(
+    stop_date = models.DateTimeField(
         "Date job was stopped", blank=True, null=True, editable=False
-    )
-    completion_time = models.DateTimeField(
-        "Date job was completed", blank=True, null=True, editable=False
     )
     duration = models.DurationField(
         "Amount of time job took to complete", blank=True, null=True, editable=False
@@ -115,6 +118,7 @@ class Job(models.Model):
     STATUS_CHOICES = {
         ("PE", "PENDING"),
         ("RU", "RUNNING"),
+        ("CA", "CANCELED"),
         ("CO", "COMPLETED"),
         ("CE", "CONTEXT_EXCEEDED"),
         ("FA", "FAILED"),
