@@ -113,8 +113,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install -r ./tests/requirements.txt
+          pip install -r ./requirements_test.txt
 
       - name: Run Tests
         run: |
-          python ./ssherlock/manage.py test
+          bash ./run_tests.sh
