@@ -27,7 +27,7 @@ class BastionHost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_date = models.DateTimeField(
-        "date bastion host was created", auto_now_add=True
+        "date bastion host was created", auto_now_add=True, editable=False
     )
     hostname = models.CharField(max_length=253)
     port = models.IntegerField()
@@ -45,7 +45,7 @@ class Credential(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_date = models.DateTimeField(
-        "Date credential was created", auto_now_add=True
+        "Date credential was created", auto_now_add=True, editable=False
     )
     credential_name = models.CharField("Name to give this credential", max_length=255)
     username = models.CharField(max_length=255)
@@ -63,7 +63,7 @@ class LlmApi(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    creation_date = models.DateTimeField("date llm api was created", auto_now_add=True)
+    creation_date = models.DateTimeField("date llm api was created", auto_now_add=True, editable=False)
     base_url = models.CharField(max_length=255)
     api_key = models.CharField(max_length=255)
 
@@ -80,7 +80,7 @@ class TargetHost(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     creation_date = models.DateTimeField(
-        "Date target host was created", auto_now_add=True
+        "Date target host was created", auto_now_add=True, editable=False
     )
     hostname = models.CharField(max_length=253)
     port = models.IntegerField()
@@ -106,9 +106,7 @@ class Job(models.Model):
     creation_date = models.DateTimeField(
         "Date job was created", auto_now_add=True, editable=False
     )
-    start_date = models.DateTimeField(
-        "Date job was started", auto_now_add=True, editable=False
-    )
+    start_date = models.DateTimeField("Date job was started", blank=True, null=True, editable=False)
     stop_date = models.DateTimeField(
         "Date job was stopped", blank=True, null=True, editable=False
     )
