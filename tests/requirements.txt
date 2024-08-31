@@ -1,5 +1,6 @@
 -r ../requirements.txt
 black
+codespell
 coverage
 flake8
 pydocstyle

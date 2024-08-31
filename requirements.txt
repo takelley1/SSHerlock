@@ -1,5 +1,5 @@
+django
+django-htmlmin
 fabric
 openai
 tiktoken
-django
-django-htmlmin
