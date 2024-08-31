@@ -1,3 +1,5 @@
+"""Defines custom filters for templates."""
+# pylint: disable=import-error
 from django import template
 
 register = template.Library()

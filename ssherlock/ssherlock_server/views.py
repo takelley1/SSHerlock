@@ -1,6 +1,5 @@
 """All Django views for the SSHerlock server application."""
-from django.core.exceptions import ValidationError
-from django.db.models.query import QuerySet
+# pylint: disable=import-error
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -79,6 +78,7 @@ def delete_object(request, model_type, uuid):
 
 def create_job(request):
     """Handle creating jobs.
+
     When the create job form is submitted, a new job is created for every target host.
     """
     form = JobForm(request.POST)
@@ -94,15 +94,11 @@ def create_job(request):
             job = Job(**cleaned_data)
             # Save the job object to create a primary key.
             job.save()
-
-            # Create a query set for the current host.
-            queryset = TargetHost.objects.filter(id=host.id)
-
             # Add the single host to each job that's created.
             job.target_hosts.add(host.id)
             job.save()
 
-        return redirect(f"/job_list")
+        return redirect("/job_list")
 
     context = {
         "form": form,

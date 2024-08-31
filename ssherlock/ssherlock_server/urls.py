@@ -1,4 +1,5 @@
 """All Django URLs for the SSHerlock server application."""
+# pylint: disable=import-error
 from django.urls import path
 
 from . import views

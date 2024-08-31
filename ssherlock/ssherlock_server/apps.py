@@ -1,4 +1,5 @@
 """All Django app configs for the SSHerlock server application."""
+# pylint: disable=import-error
 from django.apps import AppConfig
 
 

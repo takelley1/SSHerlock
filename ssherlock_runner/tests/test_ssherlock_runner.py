@@ -1,8 +1,6 @@
-import importlib
-import logging as log
+# pylint: disable=import-error
 import os
 import sys
-from unittest.mock import patch  # Use this for mocking
 
 import pytest
 

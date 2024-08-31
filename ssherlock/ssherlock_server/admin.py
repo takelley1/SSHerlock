@@ -1,4 +1,5 @@
 """All Django admin configs for the SSHerlock server application."""
+# pylint: disable=import-error
 from django.contrib import admin
 
 from .models import BastionHost

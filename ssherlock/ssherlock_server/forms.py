@@ -1,4 +1,6 @@
 """All Django forms for the SSHerlock server application."""
+
+# pylint: disable=import-error, missing-class-docstring
 from django.forms import ModelForm
 
 from .models import BastionHost
