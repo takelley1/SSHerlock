@@ -1,0 +1,5 @@
+[pydocstyle]
+# D106 = Doctrings in public nested classes.
+# D105 = Doctrings in magic methods.
+add_ignore = D106,D105
+convention = google
