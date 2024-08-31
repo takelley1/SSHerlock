@@ -2,8 +2,6 @@
 import os
 import sys
 
-import pytest
-
 sys.path.insert(1, "../")
 from ssheldon import (
     Runner,

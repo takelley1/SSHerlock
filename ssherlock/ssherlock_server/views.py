@@ -76,6 +76,7 @@ def delete_object(request, model_type, uuid):
     instance.delete()
     return redirect(f"/{model_type}_list")
 
+
 def create_job(request):
     """Handle creating jobs.
 
