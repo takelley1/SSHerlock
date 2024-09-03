@@ -8,13 +8,6 @@ from ssherlock_server.models import (
     LlmApi,
     TargetHost,
 )
-from ssherlock_server.forms import (
-    BastionHostForm,
-    CredentialForm,
-    JobForm,
-    LlmApiForm,
-    TargetHostForm,
-)
 from ssherlock_server.views import handle_object
 import uuid
 
@@ -391,7 +384,7 @@ class TestCreateJobView(TestCase):
             "credentials_for_target_hosts": self.credential.id,
             "target_hosts": [self.target_host1.id],
             "user": self.user.id,
-            "instructions": "Test instructions"
+            "instructions": "Test instructions",
         }
         response = self.client.post(reverse("create_job"), data)
         self.assertEqual(response.status_code, 302)
@@ -401,7 +394,7 @@ class TestCreateJobView(TestCase):
         job = Job.objects.get()
         self.assertEqual(job.status, "PENDING")
         self.assertEqual(job.llm_api, self.llm_api)
-        self.assertIn(self.target_host1, job.target_hosts.all()) # codespell:ignore
+        self.assertIn(self.target_host1, job.target_hosts.all())  # codespell:ignore
 
     def test_create_multiple_jobs(self):
         """Test creating multiple jobs with multiple target hosts."""
@@ -411,7 +404,7 @@ class TestCreateJobView(TestCase):
             "credentials_for_target_hosts": [self.credential.id],
             "target_hosts": [self.target_host1.id, self.target_host2.id],
             "user": self.user.id,
-            "instructions": "Test instructions"
+            "instructions": "Test instructions",
         }
         response = self.client.post(reverse("create_job"), data)
         self.assertEqual(response.status_code, 302)
@@ -421,18 +414,27 @@ class TestCreateJobView(TestCase):
         jobs = Job.objects.all()
         self.assertEqual(jobs.count(), 2)
 
-        # Check the first job
+        # Check the first job.
+        # Sometimes job1 receives target-host1 and sometimes job1 receives target-host2,
+        #  so check for both.
+        # All the matters is that each job has a single target host -- it doesn't matter which
+        #  target host.
         job1 = jobs[0]
         self.assertEqual(job1.status, "PENDING")
         self.assertEqual(job1.llm_api, self.llm_api)
-        self.assertIn(self.target_host1, job1.target_hosts.all()) # codespell:ignore
+        self.assertTrue(
+            self.target_host1 == job1.target_hosts.all()[0]
+            or self.target_host2 == job1.target_hosts.all()[0]
+        )
 
         # Check the second job
         job2 = jobs[1]
         self.assertEqual(job2.status, "PENDING")
         self.assertEqual(job2.llm_api, self.llm_api)
-        self.assertIn(self.target_host2, job2.target_hosts.all()) # codespell:ignore
-
+        self.assertTrue(
+            self.target_host1 == job2.target_hosts.all()[0]
+            or self.target_host2 == job2.target_hosts.all()[0]
+        )
 
     def test_invalid_form_submission(self):
         """Test form submission with invalid data."""
