@@ -176,7 +176,7 @@ def job_list(request):
     ]
 
     # Add only the necessary column headers since some fields are not always populated.
-    # If any output obejct has one of these fields, add it to the column headers.
+    # If any output object has one of these fields, add it to the column headers.
     for item in output:
         if item.bastion_host:
             object_fields.append("bastion_host")
