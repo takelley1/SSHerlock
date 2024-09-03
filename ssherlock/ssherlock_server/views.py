@@ -1,5 +1,6 @@
 """All Django views for the SSHerlock server application."""
 # pylint: disable=import-error
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -34,11 +35,10 @@ MODEL_FORM_MAP = {
 def handle_object(request, model_type, uuid=None):
     """Handle creating or editing any object except jobs."""
     # Get the model, form, and template based on the model_type parameter
-    model, form = MODEL_FORM_MAP.get(model_type)
-
-    if not model or not form:
-        # Handle the case where the model_type is not valid
-        return render(request, "404.html", status=404)
+    try:
+        model, form = MODEL_FORM_MAP.get(model_type)
+    except TypeError:
+        raise Http404("Model type not found.")
 
     instance = None
     if uuid:
@@ -65,11 +65,10 @@ def handle_object(request, model_type, uuid=None):
 def delete_object(request, model_type, uuid):
     """Delete the given object."""
     # Get the model, form, and template based on the model_type parameter
-    model, form = MODEL_FORM_MAP.get(model_type)
-
-    if not model or not form:
-        # Handle the case where the model_type is not valid
-        return render(request, "404.html", status=404)
+    try:
+        model, form = MODEL_FORM_MAP.get(model_type)
+    except TypeError:
+        raise Http404("Model type not found.")
 
     instance = get_object_or_404(model, pk=uuid)
 
