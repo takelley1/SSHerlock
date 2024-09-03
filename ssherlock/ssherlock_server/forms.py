@@ -23,7 +23,7 @@ class BastionHostForm(ModelForm):
 
     class Meta:
         model = BastionHost
-        fields = ["hostname", "user"]
+        fields = ["hostname", "user", "port"]
 
 
 class TargetHostForm(ModelForm):
@@ -31,7 +31,7 @@ class TargetHostForm(ModelForm):
 
     class Meta:
         model = TargetHost
-        fields = ["hostname", "user"]
+        fields = ["hostname", "user", "port"]
 
 
 class LlmApiForm(ModelForm):
