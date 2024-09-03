@@ -44,7 +44,7 @@ jobs:
 
       - name: Lint with yamllint
         run: |
-          yamllint --config-file ./conf/.yamllint
+          yamllint --config-file ./conf/.yamllint .
 
   flake8:
     runs-on: ubuntu-latest
@@ -96,7 +96,7 @@ jobs:
         run: |
           pip install pydocstyle
 
-      - name: Lint with yamllint
+      - name: Lint with pydocstyle
         run: |
           pydocstyle --config=./conf/.pydocstyle
 
