@@ -63,7 +63,9 @@ class LlmApi(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    creation_date = models.DateTimeField("date llm api was created", auto_now_add=True, editable=False)
+    creation_date = models.DateTimeField(
+        "date llm api was created", auto_now_add=True, editable=False
+    )
     base_url = models.CharField(max_length=255)
     api_key = models.CharField(max_length=255)
 
@@ -106,7 +108,9 @@ class Job(models.Model):
     creation_date = models.DateTimeField(
         "Date job was created", auto_now_add=True, editable=False
     )
-    start_date = models.DateTimeField("Date job was started", blank=True, null=True, editable=False)
+    start_date = models.DateTimeField(
+        "Date job was started", blank=True, null=True, editable=False
+    )
     stop_date = models.DateTimeField(
         "Date job was stopped", blank=True, null=True, editable=False
     )
