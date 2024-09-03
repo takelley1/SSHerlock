@@ -1,4 +1,4 @@
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 from ssherlock_server.models import (
     User,
@@ -8,7 +8,6 @@ from ssherlock_server.models import (
     LlmApi,
     TargetHost,
 )
-from ssherlock_server.views import handle_object
 import uuid
 
 
@@ -42,7 +41,7 @@ class TestHandleObject(TestCase):
         """Verify GET requests work to add objects."""
         response = self.client.get(reverse("add_object", args=[model_name]))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, f"ssherlock_server/objects/add_object.html")
+        self.assertTemplateUsed(response, "ssherlock_server/objects/add_object.html")
 
     def _GET_edit_object(self, model_name, uuid):
         """Verify GET requests work to edit objects."""

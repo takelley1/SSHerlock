@@ -1,6 +1,6 @@
 """All Django models for the SSHerlock server application."""
 
-# pylint: disable=import-error, missing-class-docstring
+# pylint: disable=import-error, missing-class-docstring, invalid-str-returned
 
 import uuid
 

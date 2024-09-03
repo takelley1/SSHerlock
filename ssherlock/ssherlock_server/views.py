@@ -1,4 +1,5 @@
 """All Django views for the SSHerlock server application."""
+
 # pylint: disable=import-error
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -37,8 +38,8 @@ def handle_object(request, model_type, uuid=None):
     # Get the model, form, and template based on the model_type parameter
     try:
         model, form = MODEL_FORM_MAP.get(model_type)
-    except TypeError:
-        raise Http404("Model type not found.")
+    except TypeError as exc:
+        raise Http404("Model type not found.") from exc
 
     instance = None
     if uuid:
