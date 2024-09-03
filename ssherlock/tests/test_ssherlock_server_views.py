@@ -401,7 +401,7 @@ class TestCreateJobView(TestCase):
         job = Job.objects.get()
         self.assertEqual(job.status, "PENDING")
         self.assertEqual(job.llm_api, self.llm_api)
-        self.assertIn(self.target_host1, job.target_hosts.all())
+        self.assertIn(self.target_host1, job.target_hosts.all()) # codespell:ignore
 
     def test_create_multiple_jobs(self):
         """Test creating multiple jobs with multiple target hosts."""
@@ -425,13 +425,14 @@ class TestCreateJobView(TestCase):
         job1 = jobs[0]
         self.assertEqual(job1.status, "PENDING")
         self.assertEqual(job1.llm_api, self.llm_api)
-        self.assertIn(self.target_host1, job1.target_hosts.all())
+        self.assertIn(self.target_host1, job1.target_hosts.all()) # codespell:ignore
 
         # Check the second job
         job2 = jobs[1]
         self.assertEqual(job2.status, "PENDING")
         self.assertEqual(job2.llm_api, self.llm_api)
-        self.assertIn(self.target_host2, job2.target_hosts.all())
+        self.assertIn(self.target_host2, job2.target_hosts.all()) # codespell:ignore
+
 
     def test_invalid_form_submission(self):
         """Test form submission with invalid data."""
