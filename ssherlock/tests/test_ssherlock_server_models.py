@@ -45,7 +45,7 @@ class TestBastionHost(TestCase):
 
         self.assertIsInstance(bastion.port, int)
         self.assertIsInstance(bastion.id, uuid.UUID)
-        self.assertIsInstance(bastion.creation_date, datetime.datetime)
+        self.assertIsInstance(bastion.created_at, datetime.datetime)
 
     def test_editing_attributes(self):
         bastion = BastionHost.objects.get(hostname="bastion2.example.com")
@@ -92,7 +92,7 @@ class TestCredential(TestCase):
         self.assertIsInstance(credential.username, str)
         self.assertIsInstance(credential.credential_name, str)
         self.assertIsInstance(credential.id, uuid.UUID)
-        self.assertIsInstance(credential.creation_date, datetime.datetime)
+        self.assertIsInstance(credential.created_at, datetime.datetime)
 
     def test_editing_attributes(self):
         credential = Credential.objects.get(credential_name="Credential 2")
@@ -137,7 +137,7 @@ class TestTargetHost(TestCase):
 
         self.assertIsInstance(target_host.hostname, str)
         self.assertIsInstance(target_host.id, uuid.UUID)
-        self.assertIsInstance(target_host.creation_date, datetime.datetime)
+        self.assertIsInstance(target_host.created_at, datetime.datetime)
 
     def test_editing_attributes(self):
         target_host = TargetHost.objects.get(hostname="1.2.3.4")
@@ -184,7 +184,7 @@ class TestLlmApi(TestCase):
         self.assertIsInstance(llm_api.base_url, str)
         self.assertIsInstance(llm_api.api_key, str)
         self.assertIsInstance(llm_api.id, uuid.UUID)
-        self.assertIsInstance(llm_api.creation_date, datetime.datetime)
+        self.assertIsInstance(llm_api.created_at, datetime.datetime)
 
     def test_editing_attributes(self):
         llm_api = LlmApi.objects.get(base_url="https://api2.example.com")
@@ -256,7 +256,7 @@ class TestJob(TestCase):
         self.assertIsInstance(job.credentials_for_target_hosts, Credential)
 
         self.assertIsInstance(job.id, uuid.UUID)
-        self.assertIsInstance(job.creation_date, datetime.datetime)
+        self.assertIsInstance(job.created_at, datetime.datetime)
 
     def test_editing_attributes(self):
         job = Job.objects.get(id=self.job1.id)
