@@ -354,6 +354,25 @@ class TestListViews(TestCase):
         self._test_list_view("job_list", [])
 
 
+class TestHomeView(TestCase):
+    """Tests for the home view."""
+
+    def test_home_view(self):
+        """Test home view."""
+        response = self.client.get(reverse("home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "ssherlock_server/home.html")
+
+class TestLandingView(TestCase):
+    """Tests for the landing page view."""
+
+    def test_landing_view(self):
+        """Test landing page view."""
+        response = self.client.get(reverse("landing"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "ssherlock_server/landing.html")
+
+
 class TestCreateJobView(TestCase):
     """Tests for the create_job view."""
 
