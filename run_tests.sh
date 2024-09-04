@@ -10,3 +10,8 @@ fi
 
 cd ssherlock/tests || exit 1
 python ../manage.py test --shuffle $*
+
+cd - || exit 1
+cd ssherlock_runner/tests || exit 1
+coverage run --source=ssherlock -m pytest -v .
+coverage report

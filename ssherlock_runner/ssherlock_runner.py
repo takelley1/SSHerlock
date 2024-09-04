@@ -1,14 +1,11 @@
+"""Main runner."""
 # pylint: disable=import-error
 import logging as log
-import os
 import time
 
 import fabric
 import openai
 import tiktoken
-
-# TODO: investigate if the LLM API model is necessary to change
-# Useful environment variables to include in the SSH commands.
 
 
 def log_function_call(func):
@@ -24,28 +21,43 @@ def log_function_call(func):
 
 
 class Runner:
-    def __init__(self):
-        self.log_level = os.getenv("LOG_LEVEL", "").upper()
-        self.initial_prompt = os.getenv("INITIAL_PROMPT", "")
-        self.model_context_size = int(os.getenv("MODEL_CONTEXT_SIZE", "0"))
-        self.target_host = os.getenv("TARGET_HOST", "")
-        self.target_host_user = os.getenv("TARGET_HOST_USER", "")
-        self.target_host_user_password = os.getenv("TARGET_HOST_USER_PASSWORD", "")
-        self.target_host_user_keyfile = os.getenv("TARGET_HOST_USER_KEYFILE", "")
-        self.target_host_user_sudo_password = os.getenv(
-            "TARGET_HOST_USER_SUDO_PASSWORD", ""
-        )
-        self.bastion_host = os.getenv("BASTION_HOST", "")
-        self.bastion_host_user = os.getenv("BASTION_HOST_USER", "")
-        self.bastion_host_user_password = os.getenv("BASTION_HOST_USER_PASSWORD", "")
-        self.bastion_host_user_keyfile = os.getenv("BASTION_HOST_USER_KEYFILE", "")
-        self.llm_api_base_url = os.getenv("LLM_API_BASE_URL", "")
-        self.llm_api_key = os.getenv("LLM_API_KEY", "")
+    def __init__(
+        self,
+        llm_api_base_url,
+        initial_prompt,
+        target_host,
+        target_host_user,
+        llm_api_key="",
+        model_context_size=0,
+        log_level="WARNING",
+        target_host_user_password="",
+        target_host_user_keyfile="",
+        target_host_user_sudo_password="",
+        bastion_host="",
+        bastion_host_user="",
+        bastion_host_user_password="",
+        bastion_host_user_keyfile="",
+    ):
+        """Initialize main runner configuration."""
+        self.log_level = log_level
+        self.initial_prompt = initial_prompt
+        self.model_context_size = model_context_size
+        self.target_host = target_host
+        self.target_host_user = target_host_user
+        self.target_host_user_password = target_host_user_password
+        self.target_host_user_keyfile = target_host_user_keyfile
+        self.target_host_user_sudo_password = target_host_user_sudo_password
+        self.bastion_host = bastion_host
+        self.bastion_host_user = bastion_host_user
+        self.bastion_host_user_password = bastion_host_user_password
+        self.bastion_host_user_keyfile = bastion_host_user_keyfile
+        self.llm_api_base_url = llm_api_base_url
+        self.llm_api_key = llm_api_key
         self.shell_environment = "DEBIAN_FRONTEND=noninteractive ASSUME_YES=1 LC_ALL=C"
         self.system_prompt = (
             "You're an autonomous system administrator managing a server non-interactively."
             "Your objective is print the next command to run to complete the task and NOTHING ELSE!"
-            "You must follow these rules:"
+            "You MUST FOLLOW ALL THE FOLLOWING RULES EXACTLY:"
             "1. If your objective has been completed successfully, print DONE."
             "2. Prepend privileged actions with sudo."
             "3. Don't use tools that require interaction with the terminal, like vim or nano."
@@ -53,10 +65,12 @@ class Runner:
             "5. Don't print multiple commands at one time."
             "6. If you get a 'Permission denied' error, try a different method."
             "7. Add -y to package installation commands."
+            "8. If you get errors of any kind, try a different command."
         )
         self.system_prompt_summarize = (
             "You are a helpful AI assistant that summarizes text."
-            "Your objective is to summarize all text that is provided to you as input and NOTHING ELSE!"
+            "Your objective is to summarize all text that is provided to you as input and \
+            NOTHING ELSE!"
             "You must follow these rules:"
             "1. Be brief"
             "2. All summaries must be a single line."
@@ -64,18 +78,6 @@ class Runner:
             "3. Don't be verbose."
             "4. Don't summarize over multiple lines."
         )
-
-        required_vars = {
-            "LOG_LEVEL": self.log_level,
-            "INITIAL_PROMPT": self.initial_prompt,
-            "TARGET_HOST": self.target_host,
-            "TARGET_HOST_USER": self.target_host_user,
-            "LLM_API_BASE_URL": self.llm_api_base_url,
-        }
-
-        for name, value in required_vars.items():
-            if not value:
-                raise EnvironmentError(f"{name} not defined!")
 
     def configure_logging(self) -> None:
         """Set up logging."""
@@ -99,9 +101,9 @@ class Runner:
 
         Args:
             base_url (string): The base URL of the LLM API, like "https://codeium.example.com/v1".
-            prompt (list of dicts): The LLM prompt, including system prompt. Previous responses from the
-                                    LLM can also be added as context for new replies in order to mimic
-                                    a conversation. See example below.
+            prompt (list of dicts): The LLM prompt, including system prompt. Previous responses
+                                    from the LLM can also be added as context for new replies in
+                                    order to mimic a conversation. See example below.
 
         Example:
             prompt = [
@@ -204,12 +206,13 @@ class Runner:
 
         Args:
             messages (list of dicts): Counts tokens in the "content" key of each dictionary in the
-                                      provided list to determine if we're near the context size threshold
-                                      of the LLM. See examples below.
+                                      provided list to determine if we're near the context size
+                                      threshold of the LLM. See examples below.
 
-            threshold (float): A decimal between 0 and 1 to determine the threshold of the LLM's context
-                               size to warn after. For example, a threshold of "0.85" will warn after
-                               we've exceeded 85% of the LLM's context size. Default is 0.85.
+            threshold (float): A decimal between 0 and 1 to determine the threshold of the LLM's
+                               context size to warn after. For example, a threshold of "0.85"
+                               will warn after we've exceeded 85% of the LLM's context size.
+                               Default is 0.85.
 
         Examples:
             messages = [
@@ -222,9 +225,8 @@ class Runner:
             bool: True if context threshold has been exceeded, False otherwise.
         """
         # Skip if the context size hasn't been set.
-        print("model context size is", self.model_context_size)
         if self.model_context_size == 0:
-            print("Returning false sinze size is 0")
+            print("Returning false since size is 0")
             return False
         num_tokens = count_tokens(messages)
         print("Current token count is ", num_tokens)
@@ -305,10 +307,27 @@ class Runner:
             messages (list): The list of messages in the conversation.
             connect_args (dict): SSH connection parameters.
         """
+        # Setup gateway connection if a bastion host is provided.
+        gateway = None
+        if self.bastion_host:
+            gateway_connect_kwargs = {}
+            if self.bastion_host_user_keyfile:
+                gateway_connect_kwargs["key_filename"] = self.bastion_host_user_keyfile
+            else:
+                gateway_connect_kwargs["password"] = self.bastion_host_user_password
+
+            # Connect to the bastion host.
+            gateway = fabric.Connection(
+                host=self.bastion_host,
+                user=self.bastion_host_user,
+                connect_kwargs=gateway_connect_kwargs,
+            )
+
         with fabric.Connection(
             host=self.target_host,
             user=self.target_host_user,
             connect_kwargs=connect_args,
+            gateway=gateway,
         ) as ssh:
             while True:
                 llm_reply = self.query_llm(messages)
@@ -344,7 +363,7 @@ class Runner:
 
     @log_function_call
     def main(self):
-        """Main function to initialize and run the system."""
+        """Initialize and run the job."""
         self.initialize()
 
         # Initialize the conversation messages.
@@ -399,7 +418,8 @@ def count_tokens(messages) -> int:
     """
     Count the number of LLM tokens in the provided dictionary of context.
 
-    Uses the list of dictionaries inside the messages list and counts the tokens in the "content" key.
+    Uses the list of dictionaries inside the messages list and counts the tokens in the
+    "content" key.
 
     Args:
         messages (list of dicts): Counts tokens in the "content" key of each dictionary in the
@@ -453,7 +473,3 @@ def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
     """
     messages.append({"role": "assistant", "content": llm_reply})
     messages.append({"role": "user", "content": ssh_reply})
-
-
-if __name__ == "__main__":
-    Runner().main()
