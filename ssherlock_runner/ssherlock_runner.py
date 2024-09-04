@@ -114,7 +114,7 @@ class Runner:
             ]
 
         Returns:
-            str: LLM's reponse.
+            str: LLM's response.
         """
         client = openai.OpenAI(
             base_url=self.llm_api_base_url,
