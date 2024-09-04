@@ -176,19 +176,6 @@ def job_list(request):
         "credentials_for_target_hosts",
     ]
 
-    # Add only the necessary column headers since some fields are not always populated.
-    # If any output object has one of these fields, add it to the column headers.
-    for item in output:
-        if item.bastion_host:
-            object_fields.append("bastion_host")
-            column_headers.append("Bastion Host")
-            break
-    for item in output:
-        if item.credentials_for_bastion_host:
-            column_headers.append("Bastion Host Credentials")
-            object_fields.append("credentials_for_bastion_host")
-            break
-
     object_name = "Job"
     context = {
         "output": output,
