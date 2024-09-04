@@ -2,6 +2,7 @@
 
 # pylint: disable=import-error, missing-class-docstring
 from django.forms import ModelForm
+from django import forms
 
 from .models import BastionHost
 from .models import Credential
@@ -44,6 +45,12 @@ class LlmApiForm(ModelForm):
 
 class JobForm(ModelForm):
     """Present a form matching the Job model."""
+
+    instructions = forms.CharField(
+        max_length=128000,
+        widget=forms.Textarea,
+        help_text="Instructions for the job, limited to 128,000 characters.",
+    )
 
     class Meta:
         model = Job
