@@ -101,7 +101,7 @@ jobs:
           pydocstyle --config=./conf/.pydocstyle
 
 
-  django_test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
