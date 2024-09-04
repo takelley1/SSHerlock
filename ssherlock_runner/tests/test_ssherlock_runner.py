@@ -8,7 +8,7 @@ import openai
 import pytest
 
 sys.path.insert(1, "../")
-from ssherlock import (
+from ssherlock_runner import (
     Runner,
     strip_eot_from_string,
     is_string_too_long,
@@ -331,7 +331,7 @@ def test_handle_ssh_command_with_summarization():
 
     # Patch both the run_ssh_cmd method and the is_string_too_long method.
     with patch.object(runner, "run_ssh_cmd", return_value=mock_ssh_reply), patch(
-        "ssheldon.is_string_too_long", return_value=True
+        "ssherlock_runner.is_string_too_long", return_value=True
     ), patch.object(runner, "summarize_string", return_value=summarized_output):
 
         # When the string is too long, it should be summarized.

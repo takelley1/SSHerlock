@@ -9,9 +9,9 @@ if ! python --version &>/dev/null; then
 fi
 
 cd ssherlock/tests || exit 1
-python ../manage.py test --shuffle $*
+python ../manage.py test --shuffle --force-color $*
 
 cd - || exit 1
 cd ssherlock_runner/tests || exit 1
-coverage run --source=ssherlock -m pytest -v .
+coverage run --source=ssherlock_runner -m pytest -v .
 coverage report
