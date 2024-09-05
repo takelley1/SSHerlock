@@ -2,6 +2,8 @@
 
 # pylint: disable=import-error
 from django.http import Http404
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -63,13 +65,13 @@ def handle_object(request, model_type, uuid=None):
     return render(request, template_name, context)
 
 
-def delete_object(request, model_type, uuid):
+def delete_object(request, model_type, uuid): # pylint: disable=unused-argument
     """Delete the given object."""
     # Get the model, form, and template based on the model_type parameter
     try:
-        model, form = MODEL_FORM_MAP.get(model_type)
-    except TypeError:
-        raise Http404("Model type not found.")
+        model, _ = MODEL_FORM_MAP.get(model_type)
+    except TypeError as exc:
+        raise Http404("Model type not found.") from exc
 
     instance = get_object_or_404(model, pk=uuid)
 
@@ -96,7 +98,7 @@ def create_job(request):
             # Save the job object to create a primary key.
             job.save()
             # Add the single host to each job that's created.
-            job.target_hosts.add(host.id)
+            job.target_hosts.add(host.id) # pylint: disable=no-member
             job.save()
 
         return redirect("/job_list")
@@ -116,7 +118,7 @@ def home(request):
 
 def bastion_host_list(request):
     """List the bastion hosts."""
-    output = BastionHost.objects.all()
+    output = BastionHost.objects.all() # pylint: disable=no-member
     column_headers = ["Hostname"]
     object_fields = ["hostname"]
     object_name = "Bastion Host"
@@ -131,7 +133,7 @@ def bastion_host_list(request):
 
 def credential_list(request):
     """List the credentials."""
-    output = Credential.objects.all()
+    output = Credential.objects.all()  # pylint: disable=no-member
     column_headers = ["Name", "Username", "Password"]
     object_fields = ["credential_name", "username", "password"]
     object_name = "Credential"
@@ -146,7 +148,7 @@ def credential_list(request):
 
 def llm_api_list(request):
     """List the LLM APIs."""
-    output = LlmApi.objects.all()
+    output = LlmApi.objects.all()  # pylint: disable=no-member
     column_headers = ["Base URL", "API Key"]
     object_fields = ["base_url", "api_key"]
     object_name = "LLM API"
@@ -161,7 +163,7 @@ def llm_api_list(request):
 
 def job_list(request):
     """List the jobs."""
-    output = Job.objects.all()
+    output = Job.objects.all() # pylint: disable=no-member
 
     column_headers = [
         "Status",
@@ -188,7 +190,7 @@ def job_list(request):
 
 def target_host_list(request):
     """List the target hosts."""
-    output = TargetHost.objects.all()
+    output = TargetHost.objects.all()  # pylint: disable=no-member
     column_headers = ["Hostname"]
     object_fields = ["hostname"]
     object_name = "Target Host"

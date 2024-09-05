@@ -1,5 +1,5 @@
-# pylint: disable=import-error
 """Test the functions in the runner."""
+# pylint: disable=import-error, wrong-import-position
 import sys
 from unittest.mock import MagicMock
 from unittest.mock import patch

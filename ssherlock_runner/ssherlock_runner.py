@@ -1,4 +1,5 @@
 """Main runner."""
+
 # pylint: disable=import-error
 import logging as log
 import time
@@ -20,7 +21,9 @@ def log_function_call(func):
     return wrapper
 
 
-class Runner:
+class Runner: # pylint: disable=too-many-arguments
+    """Main class for runner configuration."""
+
     def __init__(
         self,
         llm_api_base_url,

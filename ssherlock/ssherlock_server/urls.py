@@ -16,4 +16,5 @@ urlpatterns = [
     path("job_list", views.job_list, name="job_list"),
     path("llm_api_list", views.llm_api_list, name="llm_api_list"),
     path("target_host_list", views.target_host_list, name="target_host_list"),
+    path("request_job", views.request_job, name="request_job"),
 ]

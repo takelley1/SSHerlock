@@ -1,7 +1,18 @@
-from django.test import TestCase
-from ssherlock_server.models import User, BastionHost, Credential, TargetHost, LlmApi, Job
+"""Tests for all classes in models.py"""
+
+# pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
+
 import datetime
 import uuid
+from django.test import TestCase
+from ssherlock_server.models import (
+    User,
+    BastionHost,
+    Credential,
+    TargetHost,
+    LlmApi,
+    Job,
+)
 
 
 class TestUser(TestCase):
@@ -25,6 +36,7 @@ class TestUser(TestCase):
 
 class TestBastionHost(TestCase):
     """Test creating, reading, editing, and deleting bastion host objects."""
+
     def setUp(self):
         self.user = User.objects.create(email="user@example.com")
         self.bastion1 = BastionHost.objects.create(
@@ -74,13 +86,20 @@ class TestBastionHost(TestCase):
 
 class TestCredential(TestCase):
     """Test creating, reading, editing, and deleting credential objects."""
+
     def setUp(self):
         self.user = User.objects.create(email="user@example.com")
         self.credential1 = Credential.objects.create(
-            user=self.user, credential_name="Credential 1", username="user1", password="pass1"
+            user=self.user,
+            credential_name="Credential 1",
+            username="user1",
+            password="pass1",
         )
         self.credential2 = Credential.objects.create(
-            user=self.user, credential_name="Credential 2", username="user2", password="pass2"
+            user=self.user,
+            credential_name="Credential 2",
+            username="user2",
+            password="pass2",
         )
 
     def test_reading_attributes(self):
@@ -120,6 +139,7 @@ class TestCredential(TestCase):
 
 class TestTargetHost(TestCase):
     """Test creating, reading, editing, and deleting target host objects."""
+
     def setUp(self):
         self.user = User.objects.create(email="user@example.com")
         self.target_host1 = TargetHost.objects.create(
@@ -166,6 +186,7 @@ class TestTargetHost(TestCase):
 
 class TestLlmApi(TestCase):
     """Test creating, reading, editing, and deleting LLM API objects."""
+
     def setUp(self):
         self.user = User.objects.create(email="user@example.com")
         self.llm_api1 = LlmApi.objects.create(
@@ -212,6 +233,7 @@ class TestLlmApi(TestCase):
 
 class TestJob(TestCase):
     """Test creating, reading, editing, and deleting Job objects."""
+
     def setUp(self):
         self.user = User.objects.create(email="user@example.com")
         self.llm_api = LlmApi.objects.create(
@@ -221,7 +243,10 @@ class TestJob(TestCase):
             user=self.user, hostname="bastion.example.com", port=22
         )
         self.credential = Credential.objects.create(
-            user=self.user, credential_name="Credential", username="user", password="pass"
+            user=self.user,
+            credential_name="Credential",
+            username="user",
+            password="pass",
         )
         self.target_host = TargetHost.objects.create(
             user=self.user, hostname="target.example.com", port=22
@@ -232,7 +257,7 @@ class TestJob(TestCase):
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
             credentials_for_target_hosts=self.credential,
-            instructions="Run diagnostics"
+            instructions="Run diagnostics",
         )
         # Directly setting a ManyToManyField isn't allowed so use add here.
         self.job1.target_hosts.add(self.target_host)

@@ -1,3 +1,7 @@
+"""Tests for all classes in forms.py"""
+
+# pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member
+
 from django.test import TestCase
 from ssherlock_server.forms import (
     CredentialForm,
@@ -263,7 +267,12 @@ class TestLlmApiForm(TestCase):
 class TestJobForm(TestCase):
     def setUp(self):
         self.user = User.objects.create(email="testuser@example.com")
-        self.credential = Credential.objects.create(credential_name="Test", username="Admin", password="password", user=self.user)
+        self.credential = Credential.objects.create(
+            credential_name="Test",
+            username="Admin",
+            password="password",
+            user=self.user,
+        )
         self.llm_api = LlmApi.objects.create(
             base_url="https://api.example.com", api_key="apikey", user=self.user
         )

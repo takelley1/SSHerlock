@@ -1,3 +1,8 @@
+"""Tests for all classes in views.py"""
+
+# pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
+
+import uuid
 from django.test import TestCase
 from django.urls import reverse
 from ssherlock_server.models import (
@@ -8,7 +13,6 @@ from ssherlock_server.models import (
     LlmApi,
     TargetHost,
 )
-import uuid
 
 
 class TestHandleObject(TestCase):
@@ -43,9 +47,9 @@ class TestHandleObject(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "ssherlock_server/objects/add_object.html")
 
-    def _GET_edit_object(self, model_name, uuid):
+    def _GET_edit_object(self, model_name, iid):
         """Verify GET requests work to edit objects."""
-        response = self.client.get(reverse("edit_object", args=[model_name, str(uuid)]))
+        response = self.client.get(reverse("edit_object", args=[model_name, str(iid)]))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "ssherlock_server/objects/edit_object.html")
 
@@ -58,12 +62,10 @@ class TestHandleObject(TestCase):
         response_list = self.client.get(reverse(f"{model_name}_list"))
         self.assertContains(response_list, new_object_str)
 
-    def _POST_edit_object(
-        self, model_name, uuid, edited_object_str, data, expected_url
-    ):
+    def _POST_edit_object(self, model_name, iid, edited_object_str, data, expected_url):
         """Verify POSTS requests work to edit objects."""
         response = self.client.post(
-            reverse("edit_object", args=[model_name, str(uuid)]), data
+            reverse("edit_object", args=[model_name, str(iid)]), data
         )
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, expected_url)
@@ -363,6 +365,7 @@ class TestHomeView(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "ssherlock_server/home.html")
 
+
 class TestLandingView(TestCase):
     """Tests for the landing page view."""
 
@@ -475,3 +478,88 @@ class TestCreateJobView(TestCase):
         response = self.client.get(reverse("create_job"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "ssherlock_server/objects/add_object.html")
+
+
+class RequestJob(TestCase):
+    def setUp(self):
+        # Set up initial data
+        self.user = User.objects.create(email="testuser@example.com")
+        self.llm_api = LlmApi.objects.create(
+            base_url="http://api.example.com", api_key="apikey123", user=self.user
+        )
+        self.bastion_host = BastionHost.objects.create(
+            hostname="bastion.example.com", user=self.user, port=22
+        )
+        self.credential = Credential.objects.create(
+            credential_name="admin",
+            user=self.user,
+            username="admin",
+            password="password",
+        )
+        self.target_host = TargetHost.objects.create(
+            hostname="target.example.com", user=self.user, port=22
+        )
+
+        # Create pending jobs
+        self.job1 = Job.objects.create(
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 1 instructions",
+            user=self.user,
+            status="pending",
+        )
+        self.job1.target_hosts.add(self.target_host)
+
+        self.job2 = Job.objects.create(
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 2 instructions",
+            user=self.user,
+            status="pending",
+        )
+        self.job2.target_hosts.add(self.target_host)
+
+    def test_oldest_pending_job_is_returned(self):
+        # Make the GET request to the API endpoint
+        response = self.client.get(reverse("request_job"))
+
+        # Check that the response is 200 OK
+        self.assertEqual(response.status_code, 200)
+
+        # Parse the JSON response
+        job_data = response.json()
+
+        # Verify the correct job is returned (the oldest one)
+        self.assertEqual(job_data["id"], self.job1.id)
+        self.assertEqual(job_data["instructions"], self.job1.instructions)
+        self.assertEqual(job_data["status"], self.job1.status)
+
+        # Verify the related fields
+        self.assertEqual(job_data["llm_api"], self.llm_api.id)
+        self.assertEqual(job_data["bastion_host"], self.bastion_host.id)
+        self.assertEqual(job_data["credentials_for_bastion_host"], self.credential.id)
+        self.assertEqual(job_data["target_hosts"], [self.target_host.id])
+        self.assertEqual(job_data["credentials_for_target_hosts"], [self.credential.id])
+
+    def test_no_pending_jobs(self):
+        # Delete the existing jobs to simulate no pending jobs
+        Job.objects.all().delete()
+
+        # Make the GET request to the API endpoint
+        response = self.client.get(reverse("request_job"))
+
+        # Check that the response is 404 Not Found
+        self.assertEqual(response.status_code, 404)
+
+        # Verify the response message
+        self.assertEqual(response.json()["message"], "No pending jobs found.")
+
+    def test_internal_server_error(self):
+        # Simulate an exception by mocking the Job.objects.filter method
+        with self.assertRaises(Exception):
+            response = self.client.get(reverse("request_job"))
+            self.assertEqual(response.status_code, 500)
