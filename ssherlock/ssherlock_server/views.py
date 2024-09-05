@@ -65,7 +65,7 @@ def handle_object(request, model_type, uuid=None):
     return render(request, template_name, context)
 
 
-def delete_object(request, model_type, uuid): # pylint: disable=unused-argument
+def delete_object(request, model_type, uuid):  # pylint: disable=unused-argument
     """Delete the given object."""
     # Get the model, form, and template based on the model_type parameter
     try:
@@ -98,7 +98,7 @@ def create_job(request):
             # Save the job object to create a primary key.
             job.save()
             # Add the single host to each job that's created.
-            job.target_hosts.add(host.id) # pylint: disable=no-member
+            job.target_hosts.add(host.id)  # pylint: disable=no-member
             job.save()
 
         return redirect("/job_list")
@@ -118,7 +118,7 @@ def home(request):
 
 def bastion_host_list(request):
     """List the bastion hosts."""
-    output = BastionHost.objects.all() # pylint: disable=no-member
+    output = BastionHost.objects.all()  # pylint: disable=no-member
     column_headers = ["Hostname"]
     object_fields = ["hostname"]
     object_name = "Bastion Host"
@@ -163,7 +163,7 @@ def llm_api_list(request):
 
 def job_list(request):
     """List the jobs."""
-    output = Job.objects.all() # pylint: disable=no-member
+    output = Job.objects.all()  # pylint: disable=no-member
 
     column_headers = [
         "Status",

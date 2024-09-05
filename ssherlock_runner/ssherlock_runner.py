@@ -21,7 +21,7 @@ def log_function_call(func):
     return wrapper
 
 
-class Runner: # pylint: disable=too-many-arguments
+class Runner:  # pylint: disable=too-many-arguments
     """Main class for runner configuration."""
 
     def __init__(
