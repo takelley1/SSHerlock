@@ -420,7 +420,6 @@ class TestCreateJobView(TestCase):
     def test_create_multiple_jobs(self):
         """Test creating multiple jobs with multiple target hosts."""
         data = {
-            "status": "Pending",
             "llm_api": self.llm_api.id,
             "credentials_for_target_hosts": [self.credential.id],
             "target_hosts": [self.target_host1.id, self.target_host2.id],
@@ -460,7 +459,6 @@ class TestCreateJobView(TestCase):
     def test_invalid_form_submission(self):
         """Test form submission with invalid data."""
         data = {
-            "status": "Pending",
             "llm_api": "",
             "credentials_for_target_hosts": [self.credential.id],
             "target_hosts": [self.target_host1.id],
@@ -482,7 +480,7 @@ class TestCreateJobView(TestCase):
 
 class RequestJob(TestCase):
     def setUp(self):
-        # Set up initial data
+        # Set up initial data.
         self.user = User.objects.create(email="testuser@example.com")
         self.llm_api = LlmApi.objects.create(
             base_url="http://api.example.com", api_key="apikey123", user=self.user
@@ -500,66 +498,80 @@ class RequestJob(TestCase):
             hostname="target.example.com", user=self.user, port=22
         )
 
-        # Create pending jobs
         self.job1 = Job.objects.create(
+            status="RUNNING",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
             credentials_for_target_hosts=self.credential,
             instructions="Job 1 instructions",
             user=self.user,
-            status="pending",
         )
         self.job1.target_hosts.add(self.target_host)
 
         self.job2 = Job.objects.create(
+            status="PENDING",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
             credentials_for_target_hosts=self.credential,
             instructions="Job 2 instructions",
             user=self.user,
-            status="pending",
         )
         self.job2.target_hosts.add(self.target_host)
 
-    def test_oldest_pending_job_is_returned(self):
-        # Make the GET request to the API endpoint
+        self.job3 = Job.objects.create(
+            status="PENDING",
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 3 instructions",
+            user=self.user,
+        )
+        self.job3.target_hosts.add(self.target_host)
+
+    def test_no_private_key_provided(self):
+        """Test that 404 is returned if no private key is provided."""
         response = self.client.get(reverse("request_job"))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["message"], "Private key not provided.")
 
-        # Check that the response is 200 OK
+    def test_incorrect_private_key(self):
+        """Test that 404 is returned if an incorrect private key is provided."""
+        headers = {'HTTP_Private-Key': 'wrongprivatekey'}
+        response = self.client.get(reverse("request_job"), **headers)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["message"], "Private key incorrect.")
+
+    def test_oldest_pending_job_is_returned(self):
+        headers = {'HTTP_Private-Key': 'myprivatekey'}
+        response = self.client.get(reverse("request_job"), **headers)
         self.assertEqual(response.status_code, 200)
-
-        # Parse the JSON response
         job_data = response.json()
 
-        # Verify the correct job is returned (the oldest one)
-        self.assertEqual(job_data["id"], self.job1.id)
-        self.assertEqual(job_data["instructions"], self.job1.instructions)
-        self.assertEqual(job_data["status"], self.job1.status)
-
-        # Verify the related fields
-        self.assertEqual(job_data["llm_api"], self.llm_api.id)
-        self.assertEqual(job_data["bastion_host"], self.bastion_host.id)
-        self.assertEqual(job_data["credentials_for_bastion_host"], self.credential.id)
-        self.assertEqual(job_data["target_hosts"], [self.target_host.id])
-        self.assertEqual(job_data["credentials_for_target_hosts"], [self.credential.id])
+        self.assertEqual(job_data["id"], str(self.job2.id))
+        self.assertEqual(job_data["instructions"], self.job2.instructions)
+        self.assertEqual(job_data["llm_api_baseurl"], self.llm_api.base_url)
+        self.assertEqual(job_data["llm_api_api_key"], self.llm_api.api_key)
+        self.assertEqual(job_data["bastion_host_hostname"], self.bastion_host.hostname)
+        self.assertEqual(job_data["bastion_host_port"], self.bastion_host.port)
+        self.assertEqual(job_data["credentials_for_bastion_host_username"], self.credential.username)
+        self.assertEqual(job_data["credentials_for_bastion_host_password"], self.credential.password)
+        self.assertEqual(job_data["target_host_hostname"], self.target_host.hostname)
+        self.assertEqual(job_data["target_host_port"], self.target_host.port)
+        self.assertEqual(job_data["credentials_for_target_hosts_username"], self.credential.username)
+        self.assertEqual(job_data["credentials_for_target_hosts_password"], self.credential.password)
 
     def test_no_pending_jobs(self):
-        # Delete the existing jobs to simulate no pending jobs
         Job.objects.all().delete()
-
-        # Make the GET request to the API endpoint
-        response = self.client.get(reverse("request_job"))
-
-        # Check that the response is 404 Not Found
+        headers = {'HTTP_Private-Key': 'myprivatekey'}
+        response = self.client.get(reverse("request_job"), **headers)
         self.assertEqual(response.status_code, 404)
-
-        # Verify the response message
         self.assertEqual(response.json()["message"], "No pending jobs found.")
 
     def test_internal_server_error(self):
-        # Simulate an exception by mocking the Job.objects.filter method
+        # Simulate an exception by mocking the Job.objects.filter method.
         with self.assertRaises(Exception):
             response = self.client.get(reverse("request_job"))
             self.assertEqual(response.status_code, 500)

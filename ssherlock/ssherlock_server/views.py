@@ -201,3 +201,58 @@ def target_host_list(request):
         "object_fields": object_fields,
     }
     return render(request, "ssherlock_server/objects/object_list.html", context)
+
+
+@require_http_methods(["GET"])
+def request_job(request):  # pylint: disable=unused-argument
+    """
+    Provide a job for runners to process.
+
+    This is the API endpoint used by runners to retrieve a job.
+    """
+    try:
+        # Only return data if the correct private key is in the header.
+        private_key = request.headers.get('Private-Key')
+        if not private_key:
+            return JsonResponse({"message": "Private key not provided."}, status=404)
+        elif private_key != "myprivatekey":
+            return JsonResponse({"message": "Private key incorrect."}, status=404)
+
+        # Query the oldest pending job
+        job = (
+            Job.objects.filter(status="PENDING").order_by("created_at").first()
+        )  # pylint: disable=no-member
+
+        if job is None:
+            return JsonResponse({"message": "No pending jobs found."}, status=404)
+
+        # Use getattr here since some fields may not have values.
+        job_data = {
+            "id": str(job.id),
+            "llm_api_baseurl": getattr(job.llm_api, "base_url", None),
+            "llm_api_api_key": getattr(job.llm_api, "api_key", None),
+            "bastion_host_hostname": getattr(job.bastion_host, "hostname", None),
+            "bastion_host_port": getattr(job.bastion_host, "port", None),
+            "credentials_for_bastion_host_username": getattr(
+                job.credentials_for_bastion_host, "username", None
+            ),
+            "credentials_for_bastion_host_password": getattr(
+                job.credentials_for_bastion_host, "password", None
+            ),
+            "target_host_hostname": getattr(
+                job.target_hosts.all()[0], "hostname", None
+            ),
+            "target_host_port": getattr(job.target_hosts.all()[0], "port", None),
+            "credentials_for_target_hosts_username": getattr(
+                job.credentials_for_target_hosts, "username", None
+            ),
+            "credentials_for_target_hosts_password": getattr(
+                job.credentials_for_target_hosts, "password", None
+            ),
+            "instructions": job.instructions,
+        }
+
+        return JsonResponse(job_data, status=200)
+
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
