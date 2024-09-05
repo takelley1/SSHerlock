@@ -1,0 +1,76 @@
+---
+
+- name: PACKAGES | Apt repositories configured
+  block:
+    - name: PACKAGES | REPOS | Set release
+      ansible.builtin.set_fact:
+        release: "{{ ansible_facts.distribution_release }}"
+
+    - name: PACKAGES | REPOS | Repo GPG keys configured
+      ansible.builtin.apt_key:
+        url: "{{ item }}"
+      loop: "{{ apt_keys }}"
+      when: apt_keys is defined
+
+    - name: PACKAGES | REPOS | Repos configured
+      ansible.builtin.apt_repository:
+        filename: "{{ item.filename }}"
+        repo: "{{ item.repo }}"
+        state: "{{ item.state | default('present') }}"
+        mode: "{{ item.mode | default('0644') }}"
+      loop: "{{ apt_repos }}"
+      when: apt_repos is defined
+
+- name: PACKAGES | Manage packages
+  block:
+    - name: PACKAGES | Base packages present
+      ansible.builtin.apt:
+        name: "{{ packages_present_ubuntu_server }}"
+        update_cache: true
+      when: packages_present_ubuntu_server is defined
+
+    - name: PACKAGES | Additional packages present
+      ansible.builtin.apt:
+        name: "{{ packages_present_ubuntu_server_additional }}"
+        update_cache: true
+      when: packages_present_ubuntu_server_additional is defined
+
+    - name: PACKAGES | Base packages absent
+      ansible.builtin.apt:
+        state: absent
+        name: "{{ packages_absent_ubuntu_server }}"
+        purge: true
+        autoremove: true
+      when: packages_absent_ubuntu_server is defined
+
+    - name: PACKAGES | Additional packages absent
+      ansible.builtin.apt:
+        state: absent
+        name: "{{ packages_absent_ubuntu_server_additional }}"
+        purge: true
+        autoremove: true
+      when: packages_absent_ubuntu_server_additional is defined
+
+- name: PACKAGES | Manage pip
+  block:
+    - name: PACKAGES | Pip present
+      ansible.builtin.package:
+        name: "{{ pip_package_name }}"
+
+    - name: PACKAGES | Pip configured to trust main sites
+      ansible.builtin.copy:
+        dest: /etc/pip.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          [global]
+          trusted_host = pypi.org pypi.python.org files.pythonhosted.org
+      when: use_proxy
+
+    - name: PACKAGES | Pip packages installed
+      ansible.builtin.pip:
+        name: "{{ pip_present_ubuntu_server }}"
+        state: present
+      when: pip_present_ubuntu_server is defined
+  when: install_pip

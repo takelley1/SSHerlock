@@ -1,0 +1,75 @@
+---
+
+# Ubuntu specific configs.
+
+- name: UBUNTU | Snaps, snapd removed
+  block:
+    # This command must inclue methods to determine if the task has changed
+    #   anything, otherwise the snaps_installed var will be empty and the
+    #   next task will fail.
+    - name: UBUNTU | Get snaps
+      ansible.builtin.shell: |
+        if hash snap 2>/dev/null; then
+        snap list | awk '!/^Name|^snapd/ {print $1}'
+        if [ -n "$(snap list | awk '!/^Name/')" ]; then
+        printf "%s\n" "RESULT-changed" >&2
+        fi
+        fi
+      register: snaps_installed
+      changed_when: "'RESULT-changed' in snaps_installed.stderr"
+
+    - name: UBUNTU | Snaps removed (manual)
+      community.general.snap:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ snaps_to_remove }}"
+      failed_when: false
+      when: snaps_to_remove is defined
+
+    - name: UBUNTU | Snaps removed (automatic)
+      community.general.snap:
+        name: "{{ snaps_installed.stdout_lines }}"
+        state: absent
+      failed_when: false
+      when: snaps_installed.changed
+
+    # The snapd snap must be removed last.
+    - name: UBUNTU | Snapd snap removed
+      community.general.snap:
+        name: snapd
+        state: absent
+      failed_when: false
+      when: snaps_installed.changed
+
+    - name: UBUNTU | Snapd package removed
+      ansible.builtin.apt:
+        name: snapd
+        state: absent
+        purge: true
+
+    - name: UBUNTU | Snapd directories removed
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /var/lib/snapd
+        - /var/cache/snapd
+        - /var/snap
+  when: common_remove_snapd
+
+- name: UBUNTU | Create minimal system
+  block:
+    - name: UBUNTU | MINIMAL | Prevent dpkg from installing unnecessary files
+      ansible.builtin.template:
+        src: etc/dpkg/dpkg.cfg.d/01_nodoc.j2
+        dest: /etc/dpkg/dpkg.cfg.d/01_nodoc
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: UBUNTU | MINIMAL | Remove unnecessary files
+      ansible.builtin.script: scripts/ubuntu-minimal.sh
+      register: result
+      failed_when: false
+      changed_when: "'RESULT-changed' in result.stdout"
+  when: common_ubuntu_minimal_system

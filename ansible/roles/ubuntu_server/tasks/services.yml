@@ -1,0 +1,104 @@
+---
+
+- name: SERVICES | Manage services
+  block:
+
+    - name: SERVICES | Base services enabled and running
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: "{{ services_enabled_ubuntu_server }}"
+      when: services_enabled_ubuntu_server is defined
+
+    - name: SERVICES | Base services disabled and stopped
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop: "{{ services_disabled_ubuntu_server }}"
+      when: services_disabled_ubuntu_server is defined
+
+- name: SERVICES | Manage UFW
+  block:
+    - name: SERVICES | UFW running
+      ansible.builtin.systemd:
+        name: ufw
+        state: started
+        enabled: true
+        masked: false
+
+    - name: SERVICES | UFW enabled and main services allowed
+      community.general.ufw:
+        state: enabled
+        rule: allow
+        name: "{{ item }}"
+      loop:
+        - OpenSSH
+        - mosh
+        - http
+        - https
+
+    - name: SERVICES | UFW set to default reject
+      community.general.ufw:
+        default: "{{ ufw_default_rule }}"
+  when: enable_ufw
+
+- name: SERVICES | Timesyncd enabled
+  block:
+    - name: SERVICES | Timesyncd config file directory path exists
+      ansible.builtin.file:
+        path: /etc/systemd/system/timesyncd.conf.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: SERVICES | Timesyncd config file deployed
+      ansible.builtin.template:
+        src: etc/systemd/system/timesyncd.conf.d/override.conf.j2
+        dest: /etc/systemd/system/timesyncd.conf.d/override.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart-systemd-timesyncd
+
+    - name: SERVICES | Timesyncd enabled and running
+      ansible.builtin.systemd:
+        name: systemd-timesyncd
+        state: started
+        enabled: true
+        masked: false
+  when: enable_timesyncd
+
+# For some reason Ubuntu Server may have automatic suspend enabled
+#   by default.
+- name: SERVICES | Check for systemd/sleep.conf
+  ansible.builtin.stat:
+    path: /etc/systemd/sleep.conf
+  register: file
+  when: common_disable_suspend
+
+- name: SERVICES | Systemd-suspend disabled
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/sleep.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - regexp: ^\s*AllowSuspend=(yes|no)\s*
+      line: AllowSuspend=no
+    - regexp: ^\s*AllowHibernation=(yes|no)\s*
+      line: AllowHibernation=no
+  when:
+    - common_disable_suspend
+    - file.stat.readable is defined
+    - file.stat.readable
+
+- name: SERVICES | Unattended-upgrades configured
+  ansible.builtin.template:
+    src: etc/apt/apt.conf.d/50unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart-unattended-upgrades

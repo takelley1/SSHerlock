@@ -1,0 +1,7 @@
+---
+
+use_proxy: false
+
+# proxy_url: http://10.0.0.1:8080
+# proxy_cert_path: etc/ssl/certs/cert.crt
+# proxy_cert_alias: MyCert

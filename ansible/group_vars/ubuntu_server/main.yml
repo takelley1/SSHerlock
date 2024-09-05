@@ -1,0 +1,21 @@
+---
+
+use_proxy: false
+pip_package_name: python3-pip
+
+common_include_debian_tasks: true
+common_disable_suspend: true
+common_mount_noatime: true
+
+# Determine how minimal the system should be.
+snaps_to_remove:
+  - lxd
+  - core18
+  - snapd
+common_remove_snapd: true
+common_debian_minimal_system: false
+services_enabled_ubuntu_server: "{{ services_enabled_ubuntu_server_mini }}"
+# services_disabled_ubuntu_server: "{{ services_disabled_ubuntu_server_mini }}"
+
+packages_present_ubuntu_server: "{{ packages_present_ubuntu_server_mini }}"
+packages_absent_ubuntu_server: "{{ packages_absent_ubuntu_server_mini }}"

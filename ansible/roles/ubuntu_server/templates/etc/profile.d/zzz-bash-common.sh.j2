@@ -1,0 +1,172 @@
+#{{ ansible_managed | comment }}
+# vim: ft=sh
+
+# Start an X session if it's available.
+[[ ! "${USER}" == "root" ]] &&
+    [[ -n "${PS1}" ]] &&
+    [[ -z "${DISPLAY}" ]] &&
+    [[ "$(tty)" == "/dev/tty1" ]] &&
+    hash startx 2>/dev/null &&
+    exec startx
+
+# Launch tmux if it's available.
+[[ ! "${USER}" == "root" ]] &&
+    [[ -z "${TMUX}" ]] &&
+    [[ -n "${PS1}" ]] &&
+    hash tmux 2>/dev/null &&
+    exec tmux -f /etc/tmux.conf attach
+
+cd() {
+    command cd "${@}" || exit 1
+    ls
+}
+
+mediainfo() {
+    command mediainfo "${@}" | less
+}
+
+alias u='cd ../'
+alias h='cd ~'
+alias c='clear'
+
+alias mv='mv -v'
+alias rm='rm -v'
+alias cp='cp -v'
+
+alias pm='podman'
+
+alias t='tmux'
+alias ta='tmux attach'
+
+alias sudo='sudo ' # This is required for bash aliases to work with sudo.
+alias less='less -XRF'
+alias grep='grep --color=always'
+alias mkdir='mkdir -pv'
+
+alias noproxy='export http_proxy=; export https_proxy=; export HTTP_PROXY=; export HTTPS_PROXY=; export npm_config_proxy='
+alias proxy='export http_proxy="{{ proxy_url }}"; export https_proxy="${http_proxy}"; export HTTP_PROXY="${http_proxy}"; export HTTPS_PROXY="${http_proxy}"; export npm_config_proxy="${http_proxy}"'
+
+alias ga='git add'
+alias gaa='git add --all ./'
+alias gaaa='git add --all'
+alias gau='git add --update ./'
+alias gb='git branch'
+alias gc='git commit'
+alias gch='git checkout'
+alias gcm='git commit --message'
+alias gd='git diff'
+alias gds='git diff --staged'
+alias gl='git log --graph --oneline --full-history --abbrev-commit --all --color --decorate --pretty=format:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s"'
+alias gm='git merge'
+alias gp='git push'
+alias gpu='git pull'
+alias grs='git restore --staged'
+alias gs='git status'
+alias gsp='git submodule foreach git push'
+alias gsur='git submodule update --remote'
+alias gt='git ls-tree -r master --name-only'
+
+# cd into the current ranger directory after exiting.
+r() {
+    temp_file="$(mktemp -t "ranger_cd.XXXXXXXXXX")"
+    ranger -r "/etc/ranger/config" --choosedir="${temp_file}" -- "${@:-$PWD}"
+    if chosen_dir="$(cat -- "${temp_file}")" &&
+        [[ -n "${chosen_dir}" ]] && [[ "${chosen_dir}" != "$PWD" ]]; then
+        cd -- "${chosen_dir}" || exit 1
+    fi
+    rm -f -- "${temp_file}" 1>/dev/null
+}
+
+if hash nvim 2>/dev/null; then
+    export EDITOR="nvim -u ~/.vimrc"
+    alias nvim="nvim -u ~/.vimrc"
+    alias vim='nvim -u ~/.vimrc'
+    alias vi='nvim -u ~/.vimrc'
+elif hash vim 2>/dev/null; then
+    export EDITOR="vim"
+    alias nvim='vim'
+    alias vi='vim'
+else
+    export EDITOR="vi -u /etc/vi.exrc"
+    alias nvim='vi -u /etc/vi.exrc'
+    alias vi='vi -u /etc/vi.exrc'
+    alias vim='vi -u /etc/vi.exrc'
+fi
+export VISUAL="${EDITOR}"
+export SUDO_EDITOR="${EDITOR}"
+
+if ! hash less 2>/dev/null; then
+    alias less='more'
+else
+    alias more='less'
+fi
+
+if [[ "${OSTYPE}" =~ "bsd" ]]; then
+    # Don't show colors since the default console color for
+    #   directories is way too dark.
+    alias ls='ls -FCGh'
+    alias ll='ls -l'
+    alias la='ls -al'
+else
+    export SHELL="/bin/bash"
+    # Add paths to $PATH. Prevent them from getting added multiple times.
+    [[ ":${PATH}:" =~ "${HOME}/.local/bin" ]] || PATH="${PATH}:${HOME}/.local/bin"
+    alias ls='ls --almost-all --classify --color=never --human-readable'
+    alias la='ls -a --classify --color=never --human-readable'
+    alias lr='ls --reverse'
+    alias lsr='lr'
+    alias ll='ls -l'
+    alias lar='ls -l --reverse'
+    alias lss='ls -l -S'
+    alias l='ls'
+fi
+
+set -o vi
+# Use jk to exit edit mode instead of ESC.
+bind '"jk":vi-movement-mode'
+
+export TERM="screen-256color"
+export PAGER="less"
+
+# Force colored manpages.
+export LESS_TERMCAP_mb=$'\E[01;31m'
+export LESS_TERMCAP_md=$'\E[01;31m'
+export LESS_TERMCAP_me=$'\E[0m'
+export LESS_TERMCAP_se=$'\E[0m'
+export LESS_TERMCAP_so=$'\E[01;44;33m'
+export LESS_TERMCAP_ue=$'\E[0m'
+export LESS_TERMCAP_us=$'\E[01;32m'
+
+# History modifications.
+export HISTFILESIZE=
+export HISTSIZE=
+export HISTIGNORE="&:ls:[bf]g:exit"
+export HISTCONTROL=ignoreboth
+export PROMPT_COMMAND='history -a'
+
+shopt -s histappend # Append history rather than overwriting it.
+shopt -q -s cmdhist # Combine multiline commands into one in history.
+shopt -s cdspell    # Correct minor cd typos.
+
+if [[ "${USER}" == "root" ]]; then
+    # Make username field of root prompts red.
+    user_color=31
+else
+    user_color=32
+fi
+
+# Use an Ansible variable to set unique colors for the hostname field.
+host_color={{ host_color }}
+
+# COLORS:
+# Black  30
+# Red    31
+# Green  32
+# Yellow 33
+# Blue   34
+# Purple 35
+# Cyan   36
+# White  37
+
+# Make hostname field of standard prompts yellow on servers.
+PS1="\[\033[01;${user_color}m\]\u\[\033[37m\]@\[\033[${host_color}m\]\h\[\033[37m\]:\[\033[36m\]\w\[\033[00m\]\$ "

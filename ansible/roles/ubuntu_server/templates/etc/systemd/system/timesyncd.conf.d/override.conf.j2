@@ -1,0 +1,6 @@
+{{ ansible_managed | comment }}
+{% if ntp_server is defined and ntp_server !="" %}
+NTP={{ ntp_server }} {{ ansible_default_ipv4.gateway }}
+{% else %}
+NTP={{ ansible_default_ipv4.gateway }}
+{% endif -%}

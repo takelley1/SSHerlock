@@ -1,0 +1,14 @@
+---
+
+# watson is the main application server.
+
+ansible_host: 192.168.1.29
+hostname: watson
+
+packages_present_ubuntu_server: "{{ packages_present_ubuntu_server_mini }}"
+packages_present_ubuntu_server_additional:
+  - git
+  - python3-pip
+  - ansible
+
+host_color: 35

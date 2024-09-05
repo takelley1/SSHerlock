@@ -1,0 +1,7 @@
+#{{ ansible_managed | comment }}
+# vim:ft=sh
+# Ensure profile.d scripts are sourced when launching a login shell (e.g. opening an ssh session).
+set nullglob
+for profiled_script in /etc/profile.d/*.sh; do
+  [ -r "${profiled_script}" ] && . "${profiled_script}"
+done

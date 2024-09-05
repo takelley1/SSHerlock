@@ -1,0 +1,9 @@
+---
+
+- name: HANDLERS | SSHerlock Runner Manager restarted
+  ansible.builtin.systemd:
+    name: ssherlock_runner_manager.service
+    state: restarted
+    enabled: true
+    masked: false
+  listen: restart-ssherlock-runner-manager

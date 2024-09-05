@@ -1,0 +1,45 @@
+---
+
+# Micro policy: Preserves vim, ranger, tuned, unattended-upgrades, and
+#   basic tools like less.
+
+services_enabled_ubuntu_server_micro:
+  - tuned
+services_disabled_ubuntu_server_micro:
+  - polkit
+
+packages_present_ubuntu_server_micro: "{{ packages_present_ubuntu_server_nano }}"
+packages_absent_ubuntu_server_micro: "{{ packages_absent_ubuntu_server_mini + packages_absent_ubuntu_server_micro_added }}"
+packages_absent_ubuntu_server_micro_added:
+  - apt-utils
+  - bind9-*
+  - bsdmainutils
+  - btrfs-progs
+  - busybox-static
+  - bzip2
+  - command-not-found
+  - cryptsetup-initramfs
+  - cryptsetup-run
+  - debconf-*n
+  - efibootmgr
+  - friendly-recovery
+  - iputils-ping
+  - iputils-tracepath
+  - isc-dhcp-common
+  - kbd
+  - libfile-fcntllock-perl*
+  - libfribidi*
+  - libksba*
+  - libsodium*
+  - locales
+  - man-db
+  - manpages*
+  - motd-news-config
+  - multipath-*
+  - os-prober
+  - pciutils
+  - rsyslog
+  - ssh-import-id
+  - strace
+  - tcpdump
+  - wget

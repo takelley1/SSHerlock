@@ -1,0 +1,94 @@
+---
+
+- name: SHELL | profile.d directory present
+  ansible.builtin.file:
+    path: /etc/profile.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: SHELL | ~/.profile absent
+  block:
+    - name: SHELL | Find ~/.profile files
+      ansible.builtin.find:
+        paths: /home
+        patterns: \..*profile$
+        hidden: true
+        use_regex: true
+        recurse: true
+        file_type: file
+      register: profile_files
+
+    - name: SHELL | Removed ~/.profile files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop_control:
+        label: "{{ item.path }}"
+      when: "'bash_profile' not in item.path"
+      loop: "{{ profile_files.files }}"
+
+- name: SHELL | Find shell rc files
+  ansible.builtin.find:
+    paths:
+      - /home
+      - /root
+      - /etc
+      - /usr/local/etc
+    patterns: "[^%]*shrc$"
+    hidden: true
+    use_regex: true
+    recurse: true
+    depth: 3
+    file_type: file
+  register: bashrc_files
+
+- name: SHELL | Default shell aliases commented out
+  ansible.builtin.script:
+    cmd: >
+      scripts/unaliaser.sh
+      /etc/profile.d/color*.sh
+      /usr/local/etc/*shrc
+      /etc/*shrc
+      /home/*/.*rc
+      /home/*/.*profile*
+      /root/.*rc
+      /root/.*profile*
+  register: result
+  changed_when: "'RESULT-changed' in result.stdout_lines"
+  failed_when:
+    - "'RESULT-changed' not in result.stdout_lines"
+    - "'RESULT-ok' not in result.stdout_lines"
+
+- name: SHELL | Source profile.d from bashrc
+  block:
+    - name: SHELL | Check for root bashrc
+      ansible.builtin.stat:
+        path: /root/.bashrc
+      register: file
+
+    - name: SHELL | Create root bashrc if not present
+      ansible.builtin.template:
+        src: root/bashrc.j2
+        dest: /root/.bashrc
+        owner: root
+        group: root
+        mode: "0644"
+      when: file.stat.readable is not defined
+
+    # Use "profiled_script" as the loop var to prevent matching other lines.
+    - name: SHELL | Add line to source /etc/profile.d from bashrc files
+      ansible.builtin.lineinfile:
+        path: "{{ item.path }}"
+        state: present
+        mode: "0644"
+        regexp: ^set nullglob; for profiled_script in.*; done$
+        line: >
+          set nullglob;
+          for profiled_script in /etc/profile.d/*.sh; do
+          [ -r "${profiled_script}" ] && . "${profiled_script}";
+          done
+      loop_control:
+        label: "{{ item.path }}"
+      loop: "{{ bashrc_files.files }}"

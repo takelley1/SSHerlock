@@ -1,0 +1,223 @@
+{{ ansible_managed | comment(decoration='" ') }}
+" vim: ft=vim
+"{% raw %}
+" OPTIONS ########################################################################################## {{{
+
+  filetype indent plugin on             " Identify the filetype, load indent and plugin files.
+  " Enable syntax highlighting.
+  if exists("g:syntax_on") | syntax off | else | syntax enable | endif
+  set lazyredraw                        " Don't redraw screen during macros.
+  set autoread                          " Auto update when a file is changed from the outside.
+  set noshowmode                        " Don't show mode since it's handled by Airline.
+  set noshowcmd                         " Don't show command on last line.
+  set hidden                            " Hide abandoned buffers. https://stackoverflow.com/questions/26708822/why-do-vim-experts-prefer-buffers-over-tabs?rq=1
+  set ignorecase                        " Case-insensitive search, except when using capitals.
+  set smartcase                         " Override ignorecase if search contains capital letters.
+  set wildmenu                          " Enable path autocompletion.
+  set wildmode=longest,list,full
+  " Don't auto-complete these filetypes.
+  set wildignore+=*/.git/*,*/.svn/*,*/__pycache__/*,*.pyc,*.jpg,*.png,*.jpeg,*.bmp,*.gif,*.tiff,*.svg,*.ico,*.mp4,*.mkv,*.avi
+  set autowriteall                      " Auto-save after certain events.
+  set clipboard+=unnamedplus            " Map vim copy buffer to system clipboard.
+  set splitbelow splitright             " Splits open at the bottom and right by default, rather than top and left.
+
+  " Disable Ex mode.
+  noremap q: <Nop>
+  " Screen redraws will clear search results.
+  noremap <C-L> :nohl<CR><C-L>
+
+  " Persistent undo https://sidneyliebrand.io/blog/vim-tip-persistent-undo
+  if has('persistent_undo')
+    let target_path = expand('~/.vim/undo/')
+    if !isdirectory(target_path)
+      call system('mkdir -p ' . target_path)
+    endif
+    let &undodir = target_path
+    set undofile
+  endif
+
+" }}}
+" AUTOCOMMANDS ##################################################################################### {{{
+
+  augroup mygroup
+    autocmd!
+  augroup END
+
+  " Update file if changed from outside.
+  autocmd mygroup FocusGained,BufEnter * if &readonly ==# 0 | silent! checktime | endif
+  " Auto-save file.
+  autocmd mygroup InsertLeave,BufLeave * if &readonly ==# 0 | silent! update | endif
+
+  " https://vim.fandom.com/wiki/Set_working_directory_to_the_current_file
+  " Set working dir to current file's dir.
+  autocmd mygroup BufEnter * silent! lcd %:p:h
+  " Change to home directory on startup.
+  autocmd mygroup VimEnter * cd ~
+
+  " https://github.com/jdhao/nvim-config/blob/master/core/autocommands.vim
+  " Return to last position when re-opening file.
+  autocmd mygroup BufReadPost if line("'\"") > 1 && line("'\"") <= line("$") && &ft !~# 'commit' | execute "normal! g`\"zvzz" | endif
+
+  " This func is slightly edited from the vim-workspace plugin.
+  function! CloseBuffers()
+    let l:visible_buffers = {}
+    for tabnr in range(1, tabpagenr('$'))
+      for bufnr in tabpagebuflist(tabnr)
+        let l:visible_buffers[bufnr] = 1
+      endfor
+    endfor
+    for bufnr in range(1, bufnr('$'))
+      if bufexists(bufnr) && !has_key(l:visible_buffers,bufnr)
+        execute printf('bdelete! %d', bufnr)
+      endif
+    endfor
+  endfunction
+
+  " Automatically close leftover hidden buffers.
+  autocmd mygroup VimEnter,TabLeave * silent! call CloseBuffers()
+
+" }}}
+" FORMATTING ####################################################################################### {{{
+
+  set encoding=utf-8     " Force unicode encoding.
+  set number             " Show line numbers.
+  set numberwidth=1      " Make line number column thinner.
+  set tabstop=4          " A <TAB> creates 4 spaces.
+  set softtabstop=4
+  set shiftwidth=4       " Number of auto-indent spaces.
+  set expandtab          " Convert tabs to spaces.
+
+  " Use 2-space tabs on certain file formats.
+  autocmd mygroup FileType config,markdown,text,vim,yaml setlocal nowrap shiftwidth=2 softtabstop=2 tabstop=2
+
+  set formatoptions=q    " Disable all auto-formatting.
+  set indentexpr=
+  " For some reason setting these options only works within an autocommand.
+  autocmd mygroup BufEnter * set formatoptions=q noautoindent nocindent nosmartindent indentexpr=
+  " Manual folding in vim and sh files.
+  autocmd mygroup FileType vim,sh setlocal foldlevelstart=0 foldmethod=marker
+  autocmd mygroup FileType help setlocal nonumber
+
+  " Force cursor to stay in the middle of the screen.
+  set scrolloff=999
+
+" }}}
+" SHORTCUTS ######################################################################################## {{{
+
+  " Leader key easier to reach.
+  let mapleader = ","
+  " Faster saving.
+  nnoremap <silent> <leader>w :write<CR><C-L>
+  " Jump back and forth between files.
+  noremap <silent> <BS> :e#<CR><C-L>
+
+  " Turn off highlighted search results.
+  nnoremap <silent> Q :nohl<CR><C-L>
+  " Easy turn on paste mode.
+  nnoremap <leader>p :set paste!<CR>
+
+" }}}
+" COLORS ########################################################################################### {{{
+
+  colorscheme peachpuff
+
+  " Color for folded blocks of text.
+  highlight Folded cterm=bold ctermfg=5 ctermbg=8
+  " Visual mode text highlight color.
+  highlight Visual ctermfg=2 ctermbg=8
+  " Search results highlight color.
+  highlight Search ctermfg=8 ctermbg=3
+  highlight IncSearch ctermfg=8 ctermbg=3
+
+  " Tabline.
+  highlight TabLineFill guibg=#333747 gui=None
+  highlight TabLineSel guifg=#292d3f guibg=#939ede gui=Bold
+
+" }}}
+" NAVIGATION ####################################################################################### {{{
+
+  " Easier exiting insert mode.
+  inoremap jk <Esc>
+  " Easier navigating soft-wrapped lines.
+  nnoremap j gj
+  nnoremap k gk
+  " Easier jumping to beginning and ends of lines.
+  nnoremap L $
+  nnoremap H ^
+
+  " Navigate quick-fix menus, location lists, and helpgrep results.
+  nnoremap <down>         :cnext<CR>
+  nnoremap <leader><down> :clast<CR>
+  nnoremap <up>           :cprevious<CR>
+  nnoremap <leader><up>   :cfirst<CR>
+  nnoremap <left>         :copen<CR>
+  nnoremap <right>        :clist<CR>
+
+  " CTRL-n/p to navigate tabs.
+  nnoremap <silent> <C-p>      :tabprevious<CR>
+  inoremap <silent> <C-p> <Esc>:tabprevious<CR>
+  nnoremap <silent> <C-n>      :tabnext<CR>
+  inoremap <silent> <C-n> <Esc>:tabnext<CR>
+
+  " Create and delete tabs web-browser-style.
+  nnoremap <silent> <C-t>      :tabnew<CR>
+  inoremap <silent> <C-t> <Esc>:tabnew<CR>
+  nnoremap <silent> <C-w>      :q!<CR>
+  inoremap <silent> <C-w> <Esc>:q!<CR>
+
+  " Create a split with an empty file.
+  nnoremap <silent> <C-s>      :cd ~/ <bar> new<CR>
+  inoremap <silent> <C-s> <Esc>:cd ~/ <bar> new<CR>
+  nnoremap <silent> <C-\>      :cd ~/ <bar> vnew<CR>
+  inoremap <silent> <C-\> <Esc>:cd ~/ <bar> vnew<CR>
+
+  nnoremap <silent> <C-k>      :wincmd k<CR>
+  inoremap <silent> <C-k> <Esc>:wincmd k<CR>
+  nnoremap <silent> <C-j>      :wincmd j<CR>
+  inoremap <silent> <C-j> <Esc>:wincmd j<CR>
+  nnoremap <silent> <C-h>      :wincmd h<CR>
+  inoremap <silent> <C-h> <Esc>:wincmd h<CR>
+  nnoremap <silent> <C-l>      :wincmd l<CR>
+  inoremap <silent> <C-l> <Esc>:wincmd l<CR>
+
+  " ALT-Up/Down/Left/Right to resize splits.
+  nnoremap <silent> <A-Right>      :vertical resize +2<CR><C-L>
+  inoremap <silent> <A-Right> <Esc>:vertical resize +2<CR><C-L>
+
+  nnoremap <silent> <A-Left>      :vertical resize -2<CR><C-L>
+  inoremap <silent> <A-Left> <Esc>:vertical resize -2<CR><C-L>
+
+  nnoremap <silent> <A-Up>      :resize +2<CR><C-L>
+  inoremap <silent> <A-Up> <Esc>:resize +2<CR><C-L>
+
+  nnoremap <silent> <A-Down>      :resize -2<CR><C-L>
+  inoremap <silent> <A-Down> <Esc>:resize -2<CR><C-L>
+
+  " Jump to tab by number.
+  " Using CTRL doesn't work here, so must use ALT.
+  nnoremap <silent> <A-1> 1gt
+  inoremap <silent> <A-1> <Esc>1gt<CR>
+  nnoremap <silent> <A-2> 2gt
+  inoremap <silent> <A-2> <Esc>2gt<CR>
+  nnoremap <silent> <A-3> 3gt
+  inoremap <silent> <A-3> <Esc>3gt<CR>
+  nnoremap <silent> <A-4> 4gt
+  inoremap <silent> <A-4> <Esc>4gt<CR>
+  nnoremap <silent> <A-5> 5gt
+  inoremap <silent> <A-5> <Esc>5gt<CR>
+  nnoremap <silent> <A-6> 6gt
+  inoremap <silent> <A-6> <Esc>6gt<CR>
+  nnoremap <silent> <A-7> 7gt
+  inoremap <silent> <A-7> <Esc>7gt<CR>
+  nnoremap <silent> <A-8> 8gt
+  inoremap <silent> <A-8> <Esc>8gt<CR>
+  nnoremap <silent> <A-9> 9gt
+  inoremap <silent> <A-9> <Esc>9gt<CR>
+  nnoremap <silent> <A-0> 10gt
+  inoremap <silent> <A-0> <Esc>10gt<CR>
+  nnoremap <silent> <A--> 11gt
+  inoremap <silent> <A--> <Esc>11gt<CR>
+  nnoremap <silent> <A-=> 12gt
+  inoremap <silent> <A-=> <Esc>12gt<CR>
+" }}}
+"{% endraw %}

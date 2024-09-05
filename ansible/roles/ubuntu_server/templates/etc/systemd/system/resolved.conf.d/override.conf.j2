@@ -1,0 +1,9 @@
+{{ ansible_managed | comment }}
+{% if dns_server is defined and dns_server !="" %}
+DNS={{ dns_server }} {{ ansible_default_ipv4.gateway }}
+{% else %}
+DNS={{ ansible_default_ipv4.gateway }}
+{% endif %}
+{% if domain is defined and domain !="" %}
+Domains={{ domain }}
+{% endif -%}

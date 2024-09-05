@@ -136,3 +136,19 @@ jobs:
       - name: Run Tests
         run: |
           bash ./test_ssherlock_runner.sh
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - test_runner
+  #     - test_app
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Install Dependencies
+  #       run: |
+  #         apt-get install -y ansible
+
+  #     - name: Run Deployment
+  #       run: |
+  #         deploy_ssherlock.sh

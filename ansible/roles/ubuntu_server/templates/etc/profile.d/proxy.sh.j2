@@ -1,0 +1,12 @@
+#{{ ansible_managed | comment }}
+# vim: ft=sh
+
+export http_proxy="{{ proxy_url }}"
+export https_proxy="${http_proxy}"
+export no_proxy="localhost,127.0.0.1"
+
+export HTTP_PROXY="${http_proxy}"
+export HTTPS_PROXY="${http_proxy}"
+export NO_PROXY="${no_proxy}"
+
+export npm_config_proxy="${http_proxy}"

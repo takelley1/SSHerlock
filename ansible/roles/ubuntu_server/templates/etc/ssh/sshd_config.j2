@@ -1,0 +1,115 @@
+{{ ansible_managed | comment }}
+# vim: ft=conf
+
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
+# This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+# Not supported in older versions of sshd
+# Include /etc/ssh/sshd_config.d/*.conf
+
+Port {{ sshd_Port | default('22') }}
+AddressFamily {{ sshd_AddressFamily | default('inet') }}
+ListenAddress {{ sshd_ListenAddress | default('0.0.0.0') }}
+
+# Logging
+#SyslogFacility default:AUTH
+#LogLevel default:INFO
+LogLevel {{ sshd_LogLevel | default('INFO') }}
+
+{% if sshd_AllowUsers is defined and sshd_AllowUsers !="" -%}
+AllowUsers {{ sshd_AllowUsers }}
+{% endif %}
+
+#LoginGraceTime default:2m
+LoginGraceTime {{ sshd_LoginGraceTime | default('1m') }}
+
+PermitRootLogin {{ sshd_PermitRootLogin | default('no') }}
+StrictModes {{ sshd_StrictModes | default('yes') }}
+
+#MaxAuthTries default:6
+MaxAuthTries {{ sshd_MaxAuthTries | default('2') }}
+#MaxSessions default:10
+MaxSessions {{ sshd_MaxSessions | default('1') }}
+
+#PubkeyAuthentication default:yes
+PubkeyAuthentication {{ sshd_PubkeyAuthentication | default('yes') }}
+
+# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
+# but this is overridden so installations will only check .ssh/authorized_keys
+AuthorizedKeysFile  .ssh/authorized_keys
+
+AuthorizedPrincipalsFile {{ sshd_AuthorizedPrincipalsFile | default('none') }}
+#AuthorizedKeysCommand default:none
+#AuthorizedKeysCommandUser default:nobody
+
+# For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+HostbasedAuthentication {{ sshd_HostbasedAuthentication | default('no') }}
+# Change to yes if you don't trust ~/.ssh/known_hosts for HostbasedAuthentication
+#IgnoreUserKnownHosts no
+
+# Don't read the user's ~/.rhosts and ~/.shosts files
+IgnoreRhosts {{ sshd_IgnoreRhosts | default('yes') }}
+
+# Change to yes to enable built-in password authentication.
+#PasswordAuthentication default:yes
+PasswordAuthentication {{ sshd_PasswordAuthentication | default('no') }}
+PermitEmptyPasswords {{ sshd_PermitEmptyPasswords | default('no') }}
+
+#ChallengeResponseAuthentication default:yes
+ChallengeResponseAuthentication {{ sshd_ChallengeResponseAuthentication | default('no') }}
+
+# Kerberos & GSSAPI options
+KerberosAuthentication {{ sshd_KerberosAuthentication | default('no') }}
+GSSAPIAuthentication {{ sshd_GSSAPIAuthentication | default('no') }}
+#GSSAPICleanupCredentials yes
+
+# Set this to 'no' to disable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+UsePAM {{ sshd_UsePAM | default('yes') }}
+
+#AllowAgentForwarding default:yes
+AllowAgentForwarding {{ sshd_AllowAgentForwarding | default('no') }}
+#AllowTcpForwarding default:yes
+AllowTcpForwarding {{ sshd_AllowTcpForwarding | default('local') }}
+#X11Forwarding default:yes
+X11Forwarding {{ sshd_X11Forwarding | default('no') }}
+
+GatewayPorts {{ sshd_GatewayPorts | default('no') }}
+
+#X11DisplayOffset default:10
+#X11UseLocalhost default:yes
+#PermitTTY default:yes
+
+#PrintMotd default:yes
+PrintMotd {{ sshd_PrintMotd | default('no') }}
+TCPKeepAlive {{ sshd_TCPKeepAlive | default('yes') }}
+PermitUserEnvironment {{ sshd_PermitUserEnvironment | default('no') }}
+Compression {{ sshd_Compression | default('delayed') }}
+
+#ClientAliveInterval default:0
+ClientAliveInterval {{ sshd_ClientAliveInterval | default('10') }}
+#ClientAliveCountMax default:3
+ClientAliveCountMax {{ sshd_ClientAliceCountMax | default('30') }}
+
+#UseDNS default:yes
+#PidFile default:/var/run/sshd.pid
+
+#MaxStartups default:10:30:100
+MaxStartups {{ sshd_MaxStartups | default('1:100:1') }}
+
+PermitTunnel {{ sshd_PermitTunnel | default('no') }}
+#ChrootDirectory default:none
+#UseBlacklist default:no
+
+AcceptEnv {{ sshd_AcceptEnv | default('LANG LC_*') }}
+Banner {{ sshd_Banner | default('none') }}
+
+Subsystem  sftp /usr/lib/sftp-server

@@ -1,0 +1,48 @@
+---
+
+- name: MAIN | Import ssh.yml
+  ansible.builtin.import_tasks: ssh.yml
+  tags: ubuntu_server_ssh
+
+- name: MAIN | Import shell.yml
+  ansible.builtin.import_tasks: shell.yml
+  tags: ubuntu_server_shell
+
+- name: MAIN | Import templates.yml
+  ansible.builtin.import_tasks: templates.yml
+  tags: ubuntu_server_template
+
+- name: MAIN | Get home dir list
+  ansible.builtin.find:
+    paths: /home/
+    recurse: false
+    file_type: directory
+    follow: false
+  register: user_dirs
+  tags: ubuntu_server_template
+
+- name: MAIN | Import templates-home.yml
+  ansible.builtin.include_tasks: templates-home.yml
+  loop_control:
+    loop_var: item_outer
+  loop: "{{ user_dirs.files }}"
+  tags: ubuntu_server_template
+
+- name: MAIN | Import distro-ubuntu.yml
+  ansible.builtin.import_tasks: distro-ubuntu.yml
+  tags: ubuntu_server_distro
+  when:
+    - ansible_facts.distribution == "Ubuntu"
+    - ansible_facts.system == "Linux"
+
+- name: MAIN | Import packages.yml
+  ansible.builtin.import_tasks: packages.yml
+  tags: ubuntu_server_package
+
+- name: MAIN | Import misc.yml
+  ansible.builtin.import_tasks: misc.yml
+  tags: ubuntu_server_misc
+
+- name: MAIN | Import services.yml
+  ansible.builtin.import_tasks: services.yml
+  tags: ubuntu_server_service

@@ -1,0 +1,6 @@
+---
+
+# dns_server: 192.168.1.1
+
+# Forcibly set the DNS server by writing to /etc/resolv.conf
+force_dns: false

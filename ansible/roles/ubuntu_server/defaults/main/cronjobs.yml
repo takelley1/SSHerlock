@@ -1,0 +1,9 @@
+---
+
+cronjobs:
+  - name: Daily mlocate database update
+    cron_file: updatedb
+    minute: 0
+    hour: 24
+    user: root
+    job: if hash updatedb >/dev/null 2>&1; then updatedb; fi

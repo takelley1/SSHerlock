@@ -1,0 +1,44 @@
+---
+
+- name: SSH | SSH configured for interactive user
+  block:
+    - name: SSH | User SSH directory exists
+      ansible.builtin.file:
+        path: "{{ (interactive_account.home_dir, '.ssh') | path_join }}"
+        owner: "{{ interactive_account.username }}"
+        group: "{{ interactive_account.username }}"
+        mode: "0700"
+        state: directory
+
+    - name: SSH | Interactive account key login authorized
+      ansible.posix.authorized_key:
+        user: "{{ interactive_account.username }}"
+        key: "{{ item }}"
+      when: interactive_account.pubkeys is defined
+      loop: "{{ interactive_account.pubkeys }}"
+
+    - name: SSH | Interactive account private keys deployed
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ (interactive_account.home_dir, '.ssh', (item | basename)) | path_join }}"
+        owner: "{{ interactive_account.username }}"
+        group: "{{ interactive_account.username }}"
+        mode: "0400"
+      when: interactive_account.private_keys is defined
+      loop: "{{ interactive_account.private_keys }}"
+  when: interactive_account is defined
+
+- name: SSH | SSHD enabled
+  ansible.builtin.service:
+    name: sshd
+    state: started
+    enabled: true
+
+- name: SSH | SSHD config deployed
+  ansible.builtin.template:
+    src: etc/ssh/sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    mode: "0644"
+    validate: sshd -t -f %s
+  notify: restart-sshd

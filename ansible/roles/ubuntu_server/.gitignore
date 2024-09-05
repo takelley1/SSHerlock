@@ -1,0 +1,9 @@
+*.cer
+*.cert
+*.crt
+*.csr
+*.key
+*.pem
+*.srl
+**/molecule/default
+public

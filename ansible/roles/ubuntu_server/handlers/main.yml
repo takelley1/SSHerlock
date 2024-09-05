@@ -1,0 +1,23 @@
+---
+
+- name: HANDLERS | Timesyncd restarted
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: restarted
+    enabled: true
+    masked: false
+  listen: restart-systemd-timesyncd
+
+- name: HANDLERS | Unattended-upgrades restarted
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    state: restarted
+    enabled: true
+    masked: false
+  listen: restart-unattended-upgrades
+
+- name: HANDLERS | SSHD restarted
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted
+  listen: restart-sshd

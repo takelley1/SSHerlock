@@ -1,0 +1,24 @@
+---
+
+# Nano policy: Removes almost everything possible, preserving tuned for
+#   performance, htop for monitoring, and unattended-upgrades for security.
+
+services_enabled_ubuntu_server_nano:
+  - systemd-networkd
+services_disabled_ubuntu_server_nano:
+  - polkit
+
+packages_present_ubuntu_server_nano:
+  - htop
+  - iso-codes  # Dependency for unattended-upgrades
+  - mdadm  # Required to boot, dependency for finalrd
+  - mosh
+  - tuned
+packages_absent_ubuntu_server_nano: "{{ packages_absent_ubuntu_server_micro + packages_absent_ubuntu_server_nano_added }}"
+packages_absent_ubuntu_server_nano_added:
+  - bash-completion
+  - cron
+  - ranger
+  - screen
+  - tmux
+  - vim

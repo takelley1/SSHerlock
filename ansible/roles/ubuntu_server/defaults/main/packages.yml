@@ -1,0 +1,68 @@
+---
+
+install_pip: false
+
+# pip_present_ubuntu_server:
+#   - ranger-fm
+
+# packages_present_ubuntu_server:
+#   - htop
+#   - neovim
+
+# packages_absent_ubuntu_server:
+#   - telnet
+#   - audit
+#   - bauh
+#   - bison
+#   - catdoc
+#   - catfish
+#   - cdparanoia
+#   - cdrdao
+#   - cdrskin
+#   - celt
+#   - chafa
+#   - dosfstools
+#   - drkonqi
+#   - dvd+rw-tools
+#   - engrampa
+#   - fuse-libs
+#   - growisofs
+#   - iio-sensor-proxy
+#   - ippusbxd
+#   - kcalc
+#   - keditbookmarks
+#   - kscreen
+#   - kwalletmanager
+#   - milou
+#   - modemmanager
+#   - mokutil
+#   - mousepad
+#   - mscompress
+#   - mtr-tiny
+#   - muon
+#   - nano
+#   - neofetch
+#   - noblenote
+#   - ofono
+#   - pastebinit
+#   - pcmanfm
+#   - ppp
+#   - pwgen
+#   - qlipper
+#   - qml-module
+#   - qpdfview
+#   - qps
+#   - qterminal
+#   - qtpass
+#   - screengrab
+#   - skanlite
+#   - sssd
+#   - subversion
+#   - sylpheed
+#   - tcpdump
+#   - teamd
+#   - transmission
+#   - trojita
+#   - trousers
+#   - tuned
+#   - ure

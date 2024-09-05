@@ -1,0 +1,16 @@
+---
+
+enable_ufw: true
+ufw_default_rule: reject
+
+enable_timesyncd: true
+
+# Whether to prevent systemd from automatically suspending.
+# This is usually only an issue on Ubuntu.
+common_disable_suspend: true
+
+# Whether to remove all snaps and the snapd package.
+common_remove_snapd: false
+
+# Whether to remove all locales, docs, icons, sound drivers, and manpages.
+common_ubuntu_minimal_system: false

@@ -1,0 +1,12 @@
+---
+
+skip_list:
+  - no-handler
+  - command-instead-of-shell
+
+exclude_paths:
+  - .cache/
+  - .github/
+  - molecule/
+
+# vim: ft=yaml

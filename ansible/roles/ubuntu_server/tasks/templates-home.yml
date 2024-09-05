@@ -1,0 +1,29 @@
+---
+
+- name: TEMPLATES-HOME | Common user directory paths exist
+  ansible.builtin.file:
+    path: "{{ (item_outer.path, item.path) | path_join }}"
+    state: directory
+    owner: "{{ item_outer.path | basename }}"
+    group: "{{ item_outer.path | basename }}"
+    mode: "0750"
+  tags: ubuntu_server_template
+  loop:
+    - path: .config/ranger
+
+- name: TEMPLATES-HOME | Templates deployed to home directories
+  ansible.builtin.template:
+    src: "{{ item.src }}.j2"
+    dest: "{{ (item_outer.path, item.dest) | path_join }}"
+    owner: "{{ item_outer.path | basename }}"
+    group: "{{ item_outer.path | basename }}"
+    mode: "{{ item.mode | default('0644') }}"
+  tags: ubuntu_server_template
+  loop:
+    - src: etc/ranger/config/scope.sh
+      dest: .config/ranger/scope.sh
+      mode: "0750"
+    - src: home/vimrc
+      dest: .vimrc
+    - src: home/bash_profile
+      dest: .bash_profile

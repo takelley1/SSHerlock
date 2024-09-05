@@ -1,0 +1,41 @@
+{{ ansible_managed | comment }}
+# TMUX CONFIGURATION FILE
+# vim: ft=conf
+
+# These are recommended by Neovim's :checkhealth command.
+set -g default-terminal 'screen-256color'
+set -sa terminal-overrides ',screen-256color:RGB'
+
+# Force tmux to source ~/.bashrc since I removed ~/.bash_profile.
+set -g default-command "bash"
+# Increase scrollback size.
+set -g history-limit 50000
+# Remove clock on status bar so auto-screenshot deduplication is more effective.
+set -g status-right "#H"
+
+# Start numbering windows at 1 rather than 0.
+set -g base-index 1
+# Renumber windows after deleting one.
+set -g renumber-windows on
+# Don't automatically rename windows.
+set-window-option -g automatic-rename off
+
+# Use vi-style hotkeys instead of emacs.
+setw -g mode-keys vi
+set -g status-keys vi
+# Make switching to Normal mode in Vim with ESC more responsive.
+set -s escape-time 0
+
+# This causes `tmux attach` to create a new session if one does not already exist.
+new-session -n $HOST
+
+bind -n M-n  next-window
+bind -n M-p  previous-window
+bind -n M-k  select-pane -U
+bind -n M-j  select-pane -D
+bind -n M-l  select-pane -R
+bind -n M-h  select-pane -L
+bind -n M-y  copy-mode
+bind -n M-s  split-window -v
+bind -n M-\\ split-window -h
+bind -n M-e  kill-pane

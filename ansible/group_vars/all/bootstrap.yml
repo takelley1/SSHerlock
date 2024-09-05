@@ -1,0 +1,21 @@
+---
+
+# These vars apply to the boostrap role.
+
+home: /home/akelley
+
+interactive_account:
+  username: akelley
+  comment: Austin
+  home_dir: /home/akelley
+  private_keys:
+    - ../../keys/id_rsa
+  pubkeys:
+    - "{{ lookup('file', '../../keys/id_rsa.pub') }}"
+
+service_account:
+  username: ansible
+  comment: Ansible service account
+  home_dir: /var/lib/ansible
+  pubkeys:
+    - "{{ lookup('file', '../../keys/id_rsa.pub') }}"

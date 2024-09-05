@@ -1,0 +1,43 @@
+---
+
+- name: TEMPLATES | Directory paths exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item.mode | default('0755') }}"
+  loop:
+    - path: /etc/ranger/config
+      mode: "0757"  # This allows non-root users to use the "r" alias.
+    - path: /root/.config/ranger
+    - path: /etc/systemd/system/resolved.conf.d
+    - path: /usr/share/vim
+
+- name: TEMPLATES | Templates deployed
+  ansible.builtin.template:
+    src: "{{ item.src }}.j2"
+    dest: "{{ item.dest | default('/' + item.src) }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+      # Make sure file is sourced last to override defaults.
+    - src: etc/profile.d/zzz-bash-common.sh
+      dest: /etc/profile.d/zzz-bash-common.sh
+    - src: etc/vi.exrc
+    - src: etc/htoprc
+    - src: etc/tmux.conf
+    - src: etc/locale.conf
+    - src: etc/ranger/config/commands_full.py
+    - src: etc/ranger/config/commands.py
+    - src: etc/ranger/config/rc.conf
+    - src: etc/ranger/config/rifle.conf
+    - src: etc/ranger/config/scope.sh
+    - src: etc/ranger/config/scope.sh
+      dest: /root/.config/ranger/scope.sh
+    - src: home/vimrc
+      dest: /root/.vimrc
+    - src: etc/systemd/system/resolved.conf.d/override.conf
+    - src: etc/updatedb.conf
+    - src: etc/sysctl.d/00-sysctl-disable-ipv6.conf

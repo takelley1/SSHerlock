@@ -1,0 +1,17 @@
+---
+
+hostname: "{{ ansible_facts.ansible_hostname }}"
+
+timezone: America/New_York
+
+# ntp_server: 192.168.1.1
+
+# Units are in seconds.
+common_grub_timeout: 2
+
+common_active_consoles: 2
+
+# Whether to mount filesystems with the "noatime" option.
+common_mount_noatime: false
+
+host_color: 33
