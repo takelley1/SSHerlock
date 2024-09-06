@@ -13,7 +13,7 @@ SECRET_KEY=$(openssl rand -base64 64)
 # Update settings.py with deployment configurations.
 sed -E -i 's/DEBUG = [tT]rue/DEBUG = False/g' "ssherlock/ssherlock/settings.py"
 sed -E -i "s/SECRET_KEY = .+/SECRET_KEY = '${SECRET_KEY}'/g" "ssherlock/ssherlock/settings.py"
-sed -E -i 's/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = ["yourdomain.com"]/g' "ssherlock/ssherlock/settings.py"
+sed -E -i 's/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = ["yourdomain.com", "127.0.0.1", ".localhost"]/g' "ssherlock/ssherlock/settings.py"
 
 # Ensure secure settings for production.
 cat <<EOL >> "ssherlock/ssherlock/settings.py"

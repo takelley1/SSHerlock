@@ -3,8 +3,10 @@
 # pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
 
 import uuid
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
+from django.http import JsonResponse
+import json
 from ssherlock_server.models import (
     User,
     BastionHost,
@@ -478,7 +480,7 @@ class TestCreateJobView(TestCase):
         self.assertTemplateUsed(response, "ssherlock_server/objects/add_object.html")
 
 
-class RequestJob(TestCase):
+class TestRequestJob(TestCase):
     def setUp(self):
         # Set up initial data.
         self.user = User.objects.create(email="testuser@example.com")
@@ -535,17 +537,19 @@ class RequestJob(TestCase):
         """Test that 404 is returned if no private key is provided."""
         response = self.client.get(reverse("request_job"))
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json()["message"], "Private key not provided.")
+        self.assertEqual(
+            response.json()["message"], "Authorization header not provided."
+        )
 
     def test_incorrect_private_key(self):
         """Test that 404 is returned if an incorrect private key is provided."""
-        headers = {'HTTP_Private-Key': 'wrongprivatekey'}
+        headers = {"HTTP_AUTHORIZATION": "Bearer wrongprivatekey"}
         response = self.client.get(reverse("request_job"), **headers)
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json()["message"], "Private key incorrect.")
+        self.assertEqual(response.json()["message"], "Authorization token incorrect.")
 
     def test_oldest_pending_job_is_returned(self):
-        headers = {'HTTP_Private-Key': 'myprivatekey'}
+        headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
         response = self.client.get(reverse("request_job"), **headers)
         self.assertEqual(response.status_code, 200)
         job_data = response.json()
@@ -556,16 +560,24 @@ class RequestJob(TestCase):
         self.assertEqual(job_data["llm_api_api_key"], self.llm_api.api_key)
         self.assertEqual(job_data["bastion_host_hostname"], self.bastion_host.hostname)
         self.assertEqual(job_data["bastion_host_port"], self.bastion_host.port)
-        self.assertEqual(job_data["credentials_for_bastion_host_username"], self.credential.username)
-        self.assertEqual(job_data["credentials_for_bastion_host_password"], self.credential.password)
+        self.assertEqual(
+            job_data["credentials_for_bastion_host_username"], self.credential.username
+        )
+        self.assertEqual(
+            job_data["credentials_for_bastion_host_password"], self.credential.password
+        )
         self.assertEqual(job_data["target_host_hostname"], self.target_host.hostname)
         self.assertEqual(job_data["target_host_port"], self.target_host.port)
-        self.assertEqual(job_data["credentials_for_target_hosts_username"], self.credential.username)
-        self.assertEqual(job_data["credentials_for_target_hosts_password"], self.credential.password)
+        self.assertEqual(
+            job_data["credentials_for_target_hosts_username"], self.credential.username
+        )
+        self.assertEqual(
+            job_data["credentials_for_target_hosts_password"], self.credential.password
+        )
 
     def test_no_pending_jobs(self):
         Job.objects.all().delete()
-        headers = {'HTTP_Private-Key': 'myprivatekey'}
+        headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
         response = self.client.get(reverse("request_job"), **headers)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["message"], "No pending jobs found.")
@@ -575,3 +587,122 @@ class RequestJob(TestCase):
         with self.assertRaises(Exception):
             response = self.client.get(reverse("request_job"))
             self.assertEqual(response.status_code, 500)
+
+
+class TestUpdateJobStatus(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.valid_private_key = "Bearer myprivatekey"
+        self.invalid_private_key = "Bearer wrongkey"
+        self.user = User.objects.create(email="testuser@example.com")
+        self.llm_api = LlmApi.objects.create(
+            base_url="http://api.example.com", api_key="apikey123", user=self.user
+        )
+        self.bastion_host = BastionHost.objects.create(
+            hostname="bastion.example.com", user=self.user, port=22
+        )
+        self.credential = Credential.objects.create(
+            credential_name="admin",
+            user=self.user,
+            username="admin",
+            password="password",
+        )
+        self.target_host = TargetHost.objects.create(
+            hostname="target.example.com", user=self.user, port=22
+        )
+
+        self.job1 = Job.objects.create(
+            status="RUNNING",
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 1 instructions",
+            user=self.user,
+        )
+        self.job1.target_hosts.add(self.target_host)
+        self.url = reverse("update_job_status", args=[self.job1.id])
+
+    def test_update_job_status_to_completed_with_valid_key_and_status(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps({"status": "COMPLETED"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_private_key,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.job1.refresh_from_db()
+        self.assertEqual(self.job1.status, "COMPLETED")
+
+    def test_update_job_status_to_canceled_with_valid_key_and_status(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps({"status": "CANCELED"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_private_key,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.job1.refresh_from_db()
+        self.assertEqual(self.job1.status, "CANCELED")
+
+    def test_update_job_status_with_invalid_key(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps({"status": "COMPLETED"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.invalid_private_key,
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertJSONEqual(
+            response.content.decode("utf-8"),
+            '{"message": "Authorization token incorrect."}',
+        )
+
+    def test_update_job_status_without_key(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps({"status": "COMPLETED"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertJSONEqual(
+            response.content.decode("utf-8"),
+            '{"message": "Authorization header not provided."}',
+        )
+
+    def test_update_job_status_with_invalid_header_format(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps({"status": "COMPLETED"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION="InvalidFormatKey",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(
+            response.content.decode("utf-8"),
+            '{"message": "Invalid Authorization header format."}',
+        )
+
+    def test_update_job_status_without_status(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_private_key,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(
+            response.content.decode("utf-8"), '{"message": "Status not provided."}'
+        )
+
+    def test_update_job_status_with_invalid_job_id(self):
+        # Create an invalid UUID by modifying the last character
+        invalid_uuid = str(self.job1.id)[:-1] + "f"  # Assuming 'x' makes it invalid
+        invalid_url = reverse("update_job_status", args=[invalid_uuid])
+        response = self.client.post(
+            invalid_url,
+            data=json.dumps({"status": "COMPLETED"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_private_key,
+        )
+        self.assertEqual(response.status_code, 500)
