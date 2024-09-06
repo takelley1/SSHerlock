@@ -3,10 +3,9 @@
 # pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
 
 import uuid
+import json
 from django.test import TestCase, Client
 from django.urls import reverse
-from django.http import JsonResponse
-import json
 from ssherlock_server.models import (
     User,
     BastionHost,

@@ -1,6 +1,6 @@
 """Tests for all classes in forms.py"""
 
-# pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member
+# pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
 
 from django.test import TestCase
 from ssherlock_server.forms import (

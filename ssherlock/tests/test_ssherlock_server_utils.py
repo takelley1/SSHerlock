@@ -1,9 +1,12 @@
+"""Tests for all classes in utils.py"""
+
+# pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
+
 from django.test import TestCase, RequestFactory
 from django.http import JsonResponse
 from ssherlock_server.utils import (
     check_private_key,
 )  # Adjust the import according to your app structure
-import json
 
 
 class CheckPrivateKeyTests(TestCase):

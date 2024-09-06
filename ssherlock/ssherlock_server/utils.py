@@ -1,4 +1,7 @@
+"""Miscellaneous utility functions."""
+
 from django.http import JsonResponse
+
 
 def check_private_key(request):
     """
@@ -7,7 +10,7 @@ def check_private_key(request):
     authorization_header = request.headers.get("Authorization")
     if not authorization_header:
         return JsonResponse({"message": "Authorization header not provided."}, status=404)
-    elif not authorization_header.startswith("Bearer "):
+    if not authorization_header.startswith("Bearer "):
         return JsonResponse({"message": "Invalid Authorization header format."}, status=400)
 
     token = authorization_header.split(" ")[1]
