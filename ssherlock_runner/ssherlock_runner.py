@@ -1,7 +1,7 @@
 """Main runner."""
-
 # pylint: disable=import-error
 import logging as log
+import sys
 import time
 
 import fabric
@@ -30,7 +30,7 @@ class Runner:  # pylint: disable=too-many-arguments
         initial_prompt,
         target_host,
         target_host_user,
-        llm_api_key="",
+        llm_api_key="Bearer no-key",
         model_context_size=0,
         log_level="WARNING",
         target_host_user_password="",
@@ -56,7 +56,9 @@ class Runner:  # pylint: disable=too-many-arguments
         self.bastion_host_user_keyfile = bastion_host_user_keyfile
         self.llm_api_base_url = llm_api_base_url
         self.llm_api_key = llm_api_key
-        self.shell_environment = "DEBIAN_FRONTEND=noninteractive ASSUME_YES=1 LC_ALL=C"
+        self.shell_environment = (
+            "DEBIAN_FRONTEND=noninteractive SYSTEMD_PAGER='' EDITOR='' PAGER=''"
+        )
         self.system_prompt = (
             "You're an autonomous system administrator managing a server non-interactively."
             "Your objective is print the next command to run to complete the task and NOTHING ELSE!"
@@ -69,6 +71,7 @@ class Runner:  # pylint: disable=too-many-arguments
             "6. If you get a 'Permission denied' error, try a different method."
             "7. Add -y to package installation commands."
             "8. If you get errors of any kind, try a different command."
+            "9. NEVER use vim, nano, or less!"
         )
         self.system_prompt_summarize = (
             "You are a helpful AI assistant that summarizes text."
@@ -95,6 +98,9 @@ class Runner:  # pylint: disable=too-many-arguments
     def initialize(self) -> None:
         """Run general setup and safety checks."""
         self.configure_logging()
+        if not self.can_target_server_be_reached():
+            log.critical("Can't reach target server!")
+            sys.exit(1)
         self.wait_for_llm_to_become_available()
 
     @log_function_call
@@ -154,7 +160,30 @@ class Runner:  # pylint: disable=too-many-arguments
         try:
             self.query_llm(prompt=prompt)
             return True
-        except openai.InternalServerError:
+        except (openai.InternalServerError, openai.APITimeoutError):
+            return False
+
+    @log_function_call
+    def can_target_server_be_reached(self) -> None:
+        """
+        Check if the target server can be reached via SSH.
+
+        Returns:
+            bool: True if the server can be reached, False otherwise.
+        """
+        log.warning("Checking target server connectivity...")
+        try:
+            connect_args = self.setup_ssh_connection_params()
+            with fabric.Connection(
+                host=self.target_host,
+                user=self.target_host_user,
+                connect_kwargs=connect_args,
+                connect_timeout=30,
+            ) as ssh:
+                ssh.run("echo 'Server is reachable'", hide=True)
+            return True
+        except Exception as e:
+            log.error("Failed to reach the target server: %s", e)
             return False
 
     @log_function_call
@@ -229,10 +258,8 @@ class Runner:  # pylint: disable=too-many-arguments
         """
         # Skip if the context size hasn't been set.
         if self.model_context_size == 0:
-            print("Returning false since size is 0")
             return False
         num_tokens = count_tokens(messages)
-        print("Current token count is ", num_tokens)
         log.warning("Currently using %s tokens", num_tokens)
         if num_tokens > (threshold * self.model_context_size):
             log.warning("REACHED %s OF MODEL CONTEXT SIZE", str(threshold))
@@ -254,15 +281,18 @@ class Runner:  # pylint: disable=too-many-arguments
         """
         command = f"{self.shell_environment} ; {command}"
 
+        # Set pty=False to prevent interactive commands.
+        # Set hide="both" to prevent echoing stdout and stderr.
         if self.target_host_user_sudo_password:
             result = connection.sudo(
                 command,
                 warn=True,
-                pty=True,
+                pty=False,
                 password=self.target_host_user_sudo_password,
+                hide="both",
             )
         else:
-            result = connection.run(command, warn=True, pty=True)
+            result = connection.run(command, warn=True, pty=False, hide="both")
 
         # Combine output streams for the LLM.
         output = result.stdout.strip() + result.stderr.strip()
