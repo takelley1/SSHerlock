@@ -1,9 +1,11 @@
 """Main runner."""
+
 # pylint: disable=import-error
 import logging as log
 import sys
 import time
 
+import requests
 import fabric
 import openai
 import tiktoken
@@ -300,6 +302,28 @@ class Runner:  # pylint: disable=too-many-arguments
         return output
 
     @log_function_call
+    def is_job_cancelled(self) -> bool:
+        """
+        Call the SSHerlock server API to get the current status of the job.
+
+        Returns:
+            bool: True if the job is cancelled, False otherwise.
+        """
+        try:
+            response = requests.get(
+                f"{self.llm_api_base_url}/job_status",
+                headers={"Authorization": f"Bearer {self.llm_api_key}"},
+            )
+            response.raise_for_status()
+            status = response.json().get("status")
+            if status == "CANCELLED":
+                return True
+            return False
+        except requests.RequestException as e:
+            log.error("Error checking job status: %s", e)
+            return False
+
+    @log_function_call
     def initialize_messages(self) -> list:
         """
         Initialize the messages list with the system and user prompts.
@@ -368,6 +392,10 @@ class Runner:  # pylint: disable=too-many-arguments
 
                 if is_llm_done(llm_reply):
                     log.critical("All done!")
+                    return
+
+                if self.is_job_cancelled():
+                    log.critical("Job canceled!")
                     return
 
                 ssh_reply = self.handle_ssh_command(ssh, llm_reply)
