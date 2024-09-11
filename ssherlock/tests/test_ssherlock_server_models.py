@@ -3,7 +3,7 @@
 # pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
 
 import datetime
-import json
+from django.core.exceptions import ValidationError
 import uuid
 from django.test import TestCase
 from ssherlock_server.models import (
@@ -302,6 +302,13 @@ class TestJob(TestCase):
 
     def test_str_method(self):
         self.assertEqual(str(self.job1), str(self.job1.id))
+
+    def test_invalid_status_choice(self):
+        job = Job.objects.get(id=self.job1.id)
+        job.status = "INVALID_STATUS"
+        with self.assertRaises(ValidationError):
+            job.full_clean()
+            job.save()
 
     def test_to_json_method(self):
         expected_json = {

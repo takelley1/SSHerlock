@@ -115,20 +115,19 @@ class Job(models.Model):
     duration = models.DurationField(
         "Amount of time job took to complete", blank=True, null=True, editable=False
     )
-    STATUS_CHOICES = {
+    STATUS_CHOICES = [
         ("PE", "PENDING"),
         ("RU", "RUNNING"),
         ("CA", "CANCELED"),
         ("CO", "COMPLETED"),
         ("CE", "CONTEXT_EXCEEDED"),
         ("FA", "FAILED"),
-    }
+    ]
     status = models.CharField(
         "Current status of job",
         max_length=32,
         choices=STATUS_CHOICES,
         default="PENDING",
-        editable=False,
     )
     llm_api = models.ForeignKey(LlmApi, on_delete=models.SET_NULL, null=True)
     bastion_host = models.ForeignKey(
