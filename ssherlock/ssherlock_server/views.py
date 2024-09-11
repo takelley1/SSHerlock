@@ -6,6 +6,8 @@ import json
 from django.http import Http404, JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .forms import BastionHostForm, CredentialForm, JobForm, LlmApiForm, TargetHostForm
 from .models import BastionHost, Credential, Job, LlmApi, TargetHost
 from .utils import check_private_key
@@ -179,7 +181,18 @@ def update_job_status(request, job_id):
 
         job = get_object_or_404(Job, pk=job_id)
         job.status = new_status
-        job.save()
+
+        if new_status == "RUNNING":
+            job.started_at = timezone.now()
+        if new_status == "COMPLETED":
+            job.completed_at = timezone.now()
+
+        # Validate the job before saving.
+        try:
+            job.full_clean()
+            job.save()
+        except ValidationError as e:
+            return JsonResponse({"message": str(e)}, status=400)
 
         return HttpResponse(status=200)
 

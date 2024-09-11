@@ -4,6 +4,7 @@
 
 import uuid
 import json
+from django.utils import timezone
 from django.test import TestCase, Client
 from django.urls import reverse
 from ssherlock_server.models import (
@@ -622,6 +623,18 @@ class TestUpdateJobStatus(TestCase):
         self.job1.target_hosts.add(self.target_host)
         self.url = reverse("update_job_status", args=[self.job1.id])
 
+        self.job2 = Job.objects.create(
+            status="PENDING",
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 1 instructions",
+            user=self.user,
+        )
+        self.job2.target_hosts.add(self.target_host)
+        self.url2 = reverse("update_job_status", args=[self.job2.id])
+
     def test_update_job_status_to_completed_with_valid_key_and_status(self):
         response = self.client.post(
             self.url,
@@ -643,6 +656,15 @@ class TestUpdateJobStatus(TestCase):
         self.assertEqual(response.status_code, 200)
         self.job1.refresh_from_db()
         self.assertEqual(self.job1.status, "CANCELED")
+
+    def test_update_job_status_to_invalid_status(self):
+        response = self.client.post(
+            self.url2,
+            data=json.dumps({"status": "INVALID"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_private_key,
+        )
+        self.assertEqual(response.status_code, 400)
 
     def test_update_job_status_with_invalid_key(self):
         response = self.client.post(
@@ -696,7 +718,7 @@ class TestUpdateJobStatus(TestCase):
 
     def test_update_job_status_with_invalid_job_id(self):
         # Create an invalid UUID by modifying the last character
-        invalid_uuid = str(self.job1.id)[:-1] + "f"  # Assuming 'x' makes it invalid
+        invalid_uuid = str(self.job1.id)[:-1] + "f"
         invalid_url = reverse("update_job_status", args=[invalid_uuid])
         response = self.client.post(
             invalid_url,
@@ -705,3 +727,33 @@ class TestUpdateJobStatus(TestCase):
             HTTP_AUTHORIZATION=self.valid_private_key,
         )
         self.assertEqual(response.status_code, 500)
+
+    def test_update_job_status_to_running_also_adds_started_at_time(self):
+        response = self.client.post(
+            self.url2,
+            data=json.dumps({"status": "RUNNING"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_private_key,
+        )
+
+        self.job2.refresh_from_db()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.job2.status, 'RUNNING')
+        self.assertIsNotNone(self.job2.started_at)
+        self.assertTrue(timezone.now() - self.job2.started_at < timezone.timedelta(seconds=1))
+
+    def test_update_job_status_to_completed_also_adds_completed_at_time(self):
+        response = self.client.post(
+            self.url2,
+            data=json.dumps({"status": "COMPLETED"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_private_key,
+        )
+
+        self.job2.refresh_from_db()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.job2.status, 'COMPLETED')
+        self.assertIsNotNone(self.job2.completed_at)
+        self.assertTrue(timezone.now() - self.job2.completed_at < timezone.timedelta(seconds=1))

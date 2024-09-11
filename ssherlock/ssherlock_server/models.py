@@ -109,6 +109,9 @@ class Job(models.Model):
     started_at = models.DateTimeField(
         "Date job was started", blank=True, null=True, editable=False
     )
+    completed_at = models.DateTimeField(
+        "Date job was completed", blank=True, null=True, editable=False
+    )
     stopped_at = models.DateTimeField(
         "Date job was stopped", blank=True, null=True, editable=False
     )
@@ -128,6 +131,7 @@ class Job(models.Model):
         max_length=32,
         choices=STATUS_CHOICES,
         default="PENDING",
+        editable=False
     )
     llm_api = models.ForeignKey(LlmApi, on_delete=models.SET_NULL, null=True)
     bastion_host = models.ForeignKey(
