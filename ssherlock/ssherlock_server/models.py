@@ -102,9 +102,7 @@ class Job(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-
     created_at = models.DateTimeField(
         "Date job was created", auto_now_add=True, editable=False
     )
@@ -132,9 +130,7 @@ class Job(models.Model):
         default="PENDING",
         editable=False,
     )
-
     llm_api = models.ForeignKey(LlmApi, on_delete=models.SET_NULL, null=True)
-
     bastion_host = models.ForeignKey(
         BastionHost, on_delete=models.SET_NULL, blank=True, null=True
     )
@@ -145,12 +141,10 @@ class Job(models.Model):
         null=True,
         related_name="bastion_hosts",
     )
-
     target_hosts = models.ManyToManyField(TargetHost)
     credentials_for_target_hosts = models.ForeignKey(
         Credential, on_delete=models.SET_NULL, null=True, related_name="target_hosts"
     )
-
     instructions = models.TextField()
 
     class Meta:
@@ -158,3 +152,28 @@ class Job(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+    def dict(self) -> dict[any]:
+        """Return relevant object data as a dict."""
+        return {
+            "id": str(self.id),
+            "llm_api_baseurl": getattr(self.llm_api, "base_url", None),
+            "llm_api_api_key": getattr(self.llm_api, "api_key", None),
+            "bastion_host_hostname": getattr(self.bastion_host, "hostname", None),
+            "bastion_host_port": getattr(self.bastion_host, "port", None),
+            "credentials_for_bastion_host_username": getattr(
+                self.credentials_for_bastion_host, "username", None
+            ),
+            "credentials_for_bastion_host_password": getattr(
+                self.credentials_for_bastion_host, "password", None
+            ),
+            "target_host_hostname": getattr(self.target_hosts.first(), "hostname", None),
+            "target_host_port": getattr(self.target_hosts.first(), "port", None),
+            "credentials_for_target_hosts_username": getattr(
+                self.credentials_for_target_hosts, "username", None
+            ),
+            "credentials_for_target_hosts_password": getattr(
+                self.credentials_for_target_hosts, "password", None
+            ),
+            "instructions": self.instructions,
+        }

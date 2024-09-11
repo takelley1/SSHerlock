@@ -158,31 +158,7 @@ def request_job(request):
         job = Job.objects.filter(status="PENDING").order_by("created_at").first()
         if not job:
             return JsonResponse({"message": "No pending jobs found."}, status=404)
-
-        job_data = {
-            "id": str(job.id),
-            "llm_api_baseurl": getattr(job.llm_api, "base_url", None),
-            "llm_api_api_key": getattr(job.llm_api, "api_key", None),
-            "bastion_host_hostname": getattr(job.bastion_host, "hostname", None),
-            "bastion_host_port": getattr(job.bastion_host, "port", None),
-            "credentials_for_bastion_host_username": getattr(
-                job.credentials_for_bastion_host, "username", None
-            ),
-            "credentials_for_bastion_host_password": getattr(
-                job.credentials_for_bastion_host, "password", None
-            ),
-            "target_host_hostname": getattr(job.target_hosts.first(), "hostname", None),
-            "target_host_port": getattr(job.target_hosts.first(), "port", None),
-            "credentials_for_target_hosts_username": getattr(
-                job.credentials_for_target_hosts, "username", None
-            ),
-            "credentials_for_target_hosts_password": getattr(
-                job.credentials_for_target_hosts, "password", None
-            ),
-            "instructions": job.instructions,
-        }
-
-        return JsonResponse(job_data, status=200)
+        return JsonResponse(job.dict(), status=200)
 
     except Exception as e:
         return JsonResponse({"message": str(e)}, status=500)

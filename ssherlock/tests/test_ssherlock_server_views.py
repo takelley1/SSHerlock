@@ -551,7 +551,7 @@ class TestRequestJob(TestCase):
         headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
         response = self.client.get(reverse("request_job"), **headers)
         self.assertEqual(response.status_code, 200)
-        job_data = response.json()
+        job_data = json.loads(response.content)
 
         self.assertEqual(job_data["id"], str(self.job2.id))
         self.assertEqual(job_data["instructions"], self.job2.instructions)

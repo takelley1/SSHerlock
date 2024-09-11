@@ -3,6 +3,7 @@
 # pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
 
 import datetime
+import json
 import uuid
 from django.test import TestCase
 from ssherlock_server.models import (
@@ -301,3 +302,22 @@ class TestJob(TestCase):
 
     def test_str_method(self):
         self.assertEqual(str(self.job1), str(self.job1.id))
+
+    def test_to_json_method(self):
+        expected_json = {
+            "id": str(self.job1.id),
+            "llm_api_baseurl": self.llm_api.base_url,
+            "llm_api_api_key": self.llm_api.api_key,
+            "bastion_host_hostname": self.bastion_host.hostname,
+            "bastion_host_port": self.bastion_host.port,
+            "credentials_for_bastion_host_username": self.credential.username,
+            "credentials_for_bastion_host_password": self.credential.password,
+            "target_host_hostname": self.target_host.hostname,
+            "target_host_port": self.target_host.port,
+            "credentials_for_target_hosts_username": self.credential.username,
+            "credentials_for_target_hosts_password": self.credential.password,
+            "instructions": self.job1.instructions,
+        }
+
+        job_json = self.job1.dict()
+        self.assertEqual(job_json, expected_json)
