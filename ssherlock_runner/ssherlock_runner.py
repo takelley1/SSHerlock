@@ -10,6 +10,19 @@ import fabric
 import openai
 import tiktoken
 
+import multiprocessing
+from queue import Empty
+import json
+
+
+MAX_RUNNERS = 10
+SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
+SSHERLOCK_SERVER_PROTOCOL = "http"
+SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
+
+
+log.basicConfig(level=log.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+
 
 def log_function_call(func):
     """Easily decorage functions with @log_function_call to log calls."""
@@ -23,11 +36,167 @@ def log_function_call(func):
     return wrapper
 
 
+def update_job_status(job_id, status):
+    """
+    Update the status of a job via an API call.
+
+    Args:
+        job_id (str): The ID of the job.
+        status (str): The new status of the job.
+
+    Returns:
+        None
+    """
+    try:
+        response = requests.post(
+            f"{SSHERLOCK_SERVER_PROTOCOL}://{SSHERLOCK_SERVER_DOMAIN}/update_job_status/{job_id}",
+            headers={
+                "Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
+                "Content-Type": "application/json",
+            },
+            data=json.dumps({"status": status}),
+            timeout=10,
+        )
+        if response.status_code != 200:
+            log.error(
+                "Failed to update job %s status to %s. Status code: %d. Output: %s",
+                job_id,
+                status,
+                response.status_code,
+                response.content
+            )
+    except Exception as e:
+        log.error("Error updating job status for job %s: %s", job_id, e)
+
+
+def run_job(job_data):
+    """
+    Execute a job using the provided job data.
+
+    Args:
+        job_data (dict): A dictionary containing job details.
+
+    Returns:
+        None
+    """
+    job_id = job_data["id"]
+
+    # Update job status to RUNNING
+    update_job_status(job_id, "RUNNING")
+
+    log.info("Running job: %s", job_id)
+
+    # Initialize Runner with parameters from job_data
+    runner = Runner(
+        job_id=job_data["id"],
+        llm_api_base_url=job_data["llm_api_baseurl"],
+        initial_prompt=job_data["instructions"],
+        target_host=job_data["target_host_hostname"],
+        target_host_user=job_data["credentials_for_target_hosts_username"],
+        llm_api_key=job_data["llm_api_api_key"],
+        target_host_user_password=job_data["credentials_for_target_hosts_password"],
+        bastion_host=job_data["bastion_host_hostname"],
+        bastion_host_user=job_data["credentials_for_bastion_host_username"],
+        bastion_host_user_password=job_data["credentials_for_bastion_host_password"],
+    )
+
+    runner.run()
+    log.info("Job %s completed", job_id)
+
+    # Update job status to COMPLETED
+    update_job_status(job_id, "COMPLETED")
+
+
+def get_next_job():
+    """
+    Fetch the next available job from the API.
+
+    Returns:
+        dict: A dictionary containing job details if available, otherwise None.
+    """
+    try:
+        response = requests.get(
+            f"{SSHERLOCK_SERVER_PROTOCOL}://{SSHERLOCK_SERVER_DOMAIN}/request_job",
+            timeout=60,
+            headers={"Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"},
+        )
+        log.debug("RESPONSE IS %s", response.content)
+        if response.status_code == 200:
+            return response.json()
+        log.warning("No pending jobs found or error occurred: %d", response.status_code)
+        return None
+    except Exception as e:
+        log.error("Error fetching job: %s", e)
+        return None
+
+
+def launch_runner(job_queue):
+    """
+    Worker process that continuously processes jobs from the job queue.
+
+    Args:
+        job_queue (multiprocessing.JoinableQueue): The queue from which to fetch jobs.
+
+    Returns:
+        None
+    """
+    while True:
+        try:
+            job_data = job_queue.get(timeout=10)  # Wait for job from queue
+            run_job(job_data)
+            job_queue.task_done()
+        except Empty:
+            log.info("No job available. Exiting runner.")
+            break
+
+
+def job_manager():
+    """
+    Manage job processing by spawning worker processes and fetching jobs from the API.
+
+    Returns:
+        None
+    """
+    job_queue = multiprocessing.JoinableQueue()
+
+    # List to track active runner processes
+    active_runners = []
+
+    try:
+        while True:
+            # Check if there are available jobs and not exceeding max runners
+            if len(active_runners) < MAX_RUNNERS:
+                job_data = get_next_job()
+
+                if job_data:
+                    job_queue.put(job_data)
+                    # Spawn a new runner process
+                    p = multiprocessing.Process(target=launch_runner, args=(job_queue,))
+                    p.start()
+                    active_runners.append(p)
+
+            # Clean up finished runners
+            for p in active_runners:
+                if not p.is_alive():
+                    active_runners.remove(p)
+
+            # Throttle the job manager loop
+            time.sleep(2)
+
+    except KeyboardInterrupt:
+        log.info("Shutting down job manager...")
+    finally:
+        # Clean up all runners
+        for p in active_runners:
+            p.join()
+
+
 class Runner:  # pylint: disable=too-many-arguments
     """Main class for runner configuration."""
 
     def __init__(
         self,
+        job_id,
         llm_api_base_url,
         initial_prompt,
         target_host,
@@ -44,6 +213,7 @@ class Runner:  # pylint: disable=too-many-arguments
         bastion_host_user_keyfile="",
     ):
         """Initialize main runner configuration."""
+        self.job_id = job_id
         self.log_level = log_level
         self.initial_prompt = initial_prompt
         self.model_context_size = model_context_size
@@ -60,6 +230,7 @@ class Runner:  # pylint: disable=too-many-arguments
         self.llm_api_key = llm_api_key
         self.shell_environment = (
             "DEBIAN_FRONTEND=noninteractive SYSTEMD_PAGER='' EDITOR='' PAGER=''"
+        )
         self.system_prompt = (
             "You're an autonomous system administrator managing a server non-interactively."
             "Your objective is print the next command to run to complete the task and NOTHING ELSE!"
@@ -101,6 +272,7 @@ class Runner:  # pylint: disable=too-many-arguments
         self.configure_logging()
         if not self.can_target_server_be_reached():
             log.critical("Can't reach target server!")
+            update_job_status(self.job_id, "FAILED")
             sys.exit(1)
         self.wait_for_llm_to_become_available()
 
@@ -310,8 +482,9 @@ class Runner:  # pylint: disable=too-many-arguments
         """
         try:
             response = requests.get(
-                f"{self.llm_api_base_url}/job_status",
-                headers={"Authorization": f"Bearer {self.llm_api_key}"},
+                f"{SSHERLOCK_SERVER_PROTOCOL}://{SSHERLOCK_SERVER_DOMAIN}/job_status",
+                headers={"Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"},
+                timeout=5,
             )
             response.raise_for_status()
             status = response.json().get("status")
@@ -422,7 +595,7 @@ class Runner:  # pylint: disable=too-many-arguments
         return ssh_reply
 
     @log_function_call
-    def main(self):
+    def run(self):
         """Initialize and run the job."""
         self.initialize()
 
@@ -533,3 +706,7 @@ def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
     """
     messages.append({"role": "assistant", "content": llm_reply})
     messages.append({"role": "user", "content": ssh_reply})
+
+
+if __name__ == "__main__":
+    job_manager()

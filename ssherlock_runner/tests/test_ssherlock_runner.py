@@ -1,4 +1,5 @@
 """Test the functions in the runner."""
+
 # pylint: disable=import-error, wrong-import-position
 import sys
 from unittest.mock import MagicMock
@@ -356,7 +357,7 @@ def test_main():
         runner, "process_interaction_loop"
     ) as mock_process_interaction_loop:
 
-        runner.main()
+        runner.run()
 
         mock_initialize.assert_called_once()
         mock_initialize_messages.assert_called_once()
