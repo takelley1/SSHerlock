@@ -198,3 +198,18 @@ def update_job_status(request, job_id):
 
     except Exception as e:
         return JsonResponse({"message": str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def get_job_status(request, job_id):
+    """Get the status of a job. This is the API endpoint used by runners."""
+    try:
+        key_check_response = check_private_key(request)
+        if key_check_response:
+            return key_check_response
+
+        job = get_object_or_404(Job, pk=job_id)
+        return JsonResponse({"status": str(job.status)}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)

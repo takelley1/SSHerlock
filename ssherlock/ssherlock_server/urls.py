@@ -23,4 +23,7 @@ urlpatterns = [
     path(
         "update_job_status/<uuid:job_id>/", views.update_job_status, name="update_job_status"
     ),
+    path(
+        "get_job_status/<uuid:job_id>/", views.get_job_status, name="get_job_status"
+    ),
 ]

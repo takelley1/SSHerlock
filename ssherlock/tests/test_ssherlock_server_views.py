@@ -757,3 +757,67 @@ class TestUpdateJobStatus(TestCase):
         self.assertEqual(self.job2.status, 'COMPLETED')
         self.assertIsNotNone(self.job2.completed_at)
         self.assertTrue(timezone.now() - self.job2.completed_at < timezone.timedelta(seconds=1))
+
+
+class TestGetJobStatus(TestCase):
+    def setUp(self):
+        # Set up initial data.
+        self.user = User.objects.create(email="testuser@example.com")
+        self.llm_api = LlmApi.objects.create(
+            base_url="http://api.example.com", api_key="apikey123", user=self.user
+        )
+        self.bastion_host = BastionHost.objects.create(
+            hostname="bastion.example.com", user=self.user, port=22
+        )
+        self.credential = Credential.objects.create(
+            credential_name="admin",
+            user=self.user,
+            username="admin",
+            password="password",
+        )
+        self.target_host = TargetHost.objects.create(
+            hostname="target.example.com", user=self.user, port=22
+        )
+
+        self.job1 = Job.objects.create(
+            status="RUNNING",
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 1 instructions",
+            user=self.user,
+        )
+        self.job1.target_hosts.add(self.target_host)
+
+        self.client = Client()
+
+    def test_no_private_key_provided(self):
+        """Test that 404 is returned if no private key is provided."""
+        response = self.client.get(reverse("get_job_status", args=[self.job1.id]))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.json()["message"], "Authorization header not provided."
+        )
+
+    def test_incorrect_private_key(self):
+        """Test that 404 is returned if an incorrect private key is provided."""
+        headers = {"HTTP_AUTHORIZATION": "Bearer wrongprivatekey"}
+        response = self.client.get(reverse("get_job_status", args=[self.job1.id]), **headers)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["message"], "Authorization token incorrect.")
+
+    def test_get_job_status_success(self):
+        """Test that job status is returned successfully with correct private key."""
+        headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
+        response = self.client.get(reverse("get_job_status", args=[self.job1.id]), **headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], self.job1.status)
+
+    def test_job_not_found(self):
+        """Test that 404 is returned if job is not found."""
+        headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
+        invalid_uuid = str(self.job1.id)[:-1] + "f"
+        response = self.client.get(reverse("get_job_status", args=[invalid_uuid]), **headers)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json()["message"], "No Job matches the given query.")
