@@ -60,20 +60,19 @@ class Runner:  # pylint: disable=too-many-arguments
         self.llm_api_key = llm_api_key
         self.shell_environment = (
             "DEBIAN_FRONTEND=noninteractive SYSTEMD_PAGER='' EDITOR='' PAGER=''"
-        )
         self.system_prompt = (
             "You're an autonomous system administrator managing a server non-interactively."
             "Your objective is print the next command to run to complete the task and NOTHING ELSE!"
-            "You MUST FOLLOW ALL THE FOLLOWING RULES EXACTLY:"
-            "1. If your objective has been completed successfully, print DONE."
-            "2. Prepend privileged actions with sudo."
-            "3. Don't use tools that require interaction with the terminal, like vim or nano."
-            "4. Don't include explanations of anything, only print commands."
-            "5. Don't print multiple commands at one time."
-            "6. If you get a 'Permission denied' error, try a different method."
-            "7. Add -y to package installation commands."
-            "8. If you get errors of any kind, try a different command."
-            "9. NEVER use vim, nano, or less!"
+            "You MUST FOLLOW ALL OF THESE RULES EXACTLY!!!"
+            "1. If your objective has been completed successfully, print DONE"
+            "2. Prepend privileged actions with sudo!"
+            "3. Don't use tools that require interaction with the terminal, like vim or nano!"
+            "4. Don't include explanations of anything, only print commands!"
+            "5. Don't print multiple commands at one time!"
+            "6. Add -y to package installation commands!"
+            "7. If you get errors of any kind, try a different command!"
+            "8. Don't do anything that could break the system!"
+            "9. If using a package installation command, ensure the output is quiet and stdout is limited."
         )
         self.system_prompt_summarize = (
             "You are a helpful AI assistant that summarizes text."
