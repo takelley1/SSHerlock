@@ -9,7 +9,7 @@ def check_private_key(request):
     """
     authorization_header = request.headers.get("Authorization")
     if not authorization_header:
-        return JsonResponse({"message": "Authorization header not provided."}, status=404)
+        return JsonResponse({"message": "Authorization header not provided."}, status=400)
     if not authorization_header.startswith("Bearer "):
         return JsonResponse({"message": "Invalid Authorization header format."}, status=400)
 

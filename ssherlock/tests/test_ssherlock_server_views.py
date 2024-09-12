@@ -536,7 +536,7 @@ class TestRequestJob(TestCase):
     def test_no_private_key_provided(self):
         """Test that 404 is returned if no private key is provided."""
         response = self.client.get(reverse("request_job"))
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json()["message"], "Authorization header not provided."
         )
@@ -685,7 +685,7 @@ class TestUpdateJobStatus(TestCase):
             data=json.dumps({"status": "COMPLETED"}),
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
         self.assertJSONEqual(
             response.content.decode("utf-8"),
             '{"message": "Authorization header not provided."}',
@@ -795,7 +795,7 @@ class TestGetJobStatus(TestCase):
     def test_no_private_key_provided(self):
         """Test that 404 is returned if no private key is provided."""
         response = self.client.get(reverse("get_job_status", args=[self.job1.id]))
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json()["message"], "Authorization header not provided."
         )

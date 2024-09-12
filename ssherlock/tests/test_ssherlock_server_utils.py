@@ -17,7 +17,7 @@ class CheckPrivateKeyTests(TestCase):
         request = self.factory.get("/request_job")
         response = check_private_key(request)
         expected_response = JsonResponse(
-            {"message": "Authorization header not provided."}, status=404
+            {"message": "Authorization header not provided."}, status=400
         )
 
         self.assertEqual(response.status_code, expected_response.status_code)
