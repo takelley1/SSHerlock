@@ -21,9 +21,9 @@ urlpatterns = [
     path("target_host_list", views.target_host_list, name="target_host_list"),
     path("request_job", views.request_job, name="request_job"),
     path(
-        "update_job_status/<uuid:job_id>/", views.update_job_status, name="update_job_status"
+        "update_job_status/<uuid:job_id>", views.update_job_status, name="update_job_status"
     ),
     path(
-        "get_job_status/<uuid:job_id>/", views.get_job_status, name="get_job_status"
+        "get_job_status/<uuid:job_id>", views.get_job_status, name="get_job_status"
     ),
 ]

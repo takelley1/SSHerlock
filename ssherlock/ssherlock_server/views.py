@@ -5,6 +5,7 @@
 import json
 from django.http import Http404, JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -150,6 +151,7 @@ def render_object_list(request, model, column_headers, object_fields, object_nam
 
 
 @require_http_methods(["GET"])
+@csrf_exempt
 def request_job(request):
     """Provide a job for runners to process. This is the API endpoint used by runners to retrieve a job."""
     try:
@@ -167,6 +169,7 @@ def request_job(request):
 
 
 @require_http_methods(["POST"])
+@csrf_exempt
 def update_job_status(request, job_id):
     """Update the status of a job. This is the API endpoint used by runners to update the status of a job."""
     try:
@@ -201,6 +204,7 @@ def update_job_status(request, job_id):
 
 
 @require_http_methods(["GET"])
+@csrf_exempt
 def get_job_status(request, job_id):
     """Get the status of a job. This is the API endpoint used by runners."""
     try:
