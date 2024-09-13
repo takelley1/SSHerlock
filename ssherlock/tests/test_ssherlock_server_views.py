@@ -16,6 +16,10 @@ from ssherlock_server.models import (
     TargetHost,
 )
 
+SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
+SSHERLOCK_SERVER_PROTOCOL = "http"
+SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
+
 
 class TestHandleObject(TestCase):
     """Tests for the handle_object view."""
@@ -592,7 +596,6 @@ class TestRequestJob(TestCase):
 class TestUpdateJobStatus(TestCase):
     def setUp(self):
         self.client = Client()
-        self.valid_private_key = "Bearer myprivatekey"
         self.invalid_private_key = "Bearer wrongkey"
         self.user = User.objects.create(email="testuser@example.com")
         self.llm_api = LlmApi.objects.create(
@@ -640,7 +643,7 @@ class TestUpdateJobStatus(TestCase):
             self.url,
             data=json.dumps({"status": "COMPLETED"}),
             content_type="application/json",
-            HTTP_AUTHORIZATION=self.valid_private_key,
+            HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
         self.assertEqual(response.status_code, 200)
         self.job1.refresh_from_db()
@@ -651,7 +654,7 @@ class TestUpdateJobStatus(TestCase):
             self.url,
             data=json.dumps({"status": "CANCELED"}),
             content_type="application/json",
-            HTTP_AUTHORIZATION=self.valid_private_key,
+            HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
         self.assertEqual(response.status_code, 200)
         self.job1.refresh_from_db()
@@ -662,7 +665,7 @@ class TestUpdateJobStatus(TestCase):
             self.url2,
             data=json.dumps({"status": "INVALID"}),
             content_type="application/json",
-            HTTP_AUTHORIZATION=self.valid_private_key,
+            HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
         self.assertEqual(response.status_code, 400)
 
@@ -709,7 +712,7 @@ class TestUpdateJobStatus(TestCase):
             self.url,
             data=json.dumps({}),
             content_type="application/json",
-            HTTP_AUTHORIZATION=self.valid_private_key,
+            HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
         self.assertEqual(response.status_code, 400)
         self.assertJSONEqual(
@@ -724,7 +727,7 @@ class TestUpdateJobStatus(TestCase):
             invalid_url,
             data=json.dumps({"status": "COMPLETED"}),
             content_type="application/json",
-            HTTP_AUTHORIZATION=self.valid_private_key,
+            HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
         self.assertEqual(response.status_code, 500)
 
@@ -733,7 +736,7 @@ class TestUpdateJobStatus(TestCase):
             self.url2,
             data=json.dumps({"status": "RUNNING"}),
             content_type="application/json",
-            HTTP_AUTHORIZATION=self.valid_private_key,
+            HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
 
         self.job2.refresh_from_db()
@@ -748,7 +751,7 @@ class TestUpdateJobStatus(TestCase):
             self.url2,
             data=json.dumps({"status": "COMPLETED"}),
             content_type="application/json",
-            HTTP_AUTHORIZATION=self.valid_private_key,
+            HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
 
         self.job2.refresh_from_db()
@@ -809,14 +812,14 @@ class TestGetJobStatus(TestCase):
 
     def test_get_job_status_success(self):
         """Test that job status is returned successfully with correct private key."""
-        headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
+        headers = {"HTTP_AUTHORIZATION": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"}
         response = self.client.get(reverse("get_job_status", args=[self.job1.id]), **headers)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], self.job1.status)
 
     def test_job_not_found(self):
         """Test that 404 is returned if job is not found."""
-        headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
+        headers = {"HTTP_AUTHORIZATION": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"}
         invalid_uuid = str(self.job1.id)[:-1] + "f"
         response = self.client.get(reverse("get_job_status", args=[invalid_uuid]), **headers)
         self.assertEqual(response.status_code, 500)

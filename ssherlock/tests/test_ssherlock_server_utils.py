@@ -8,6 +8,8 @@ from ssherlock_server.utils import (
     check_private_key,
 )  # Adjust the import according to your app structure
 
+SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
+
 
 class CheckPrivateKeyTests(TestCase):
     def setUp(self):
@@ -53,7 +55,7 @@ class CheckPrivateKeyTests(TestCase):
 
     def test_correct_authorization_token(self):
         request = self.factory.get(
-            "/request_job", HTTP_AUTHORIZATION="Bearer myprivatekey"
+            "/request_job", HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"
         )
         response = check_private_key(request)
 
