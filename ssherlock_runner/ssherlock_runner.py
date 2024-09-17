@@ -1,18 +1,16 @@
 """Main runner."""
-
 # pylint: disable=import-error
+import json
 import logging as log
+import multiprocessing
 import sys
 import time
+from queue import Empty
 
-import requests
 import fabric
 import openai
+import requests
 import tiktoken
-
-import multiprocessing
-from queue import Empty
-import json
 
 
 MAX_RUNNERS = 10
@@ -337,7 +335,7 @@ class Runner:  # pylint: disable=too-many-arguments
             return False
 
     @log_function_call
-    def can_target_server_be_reached(self) -> None:
+    def can_target_server_be_reached(self) -> bool:
         """
         Check if the target server can be reached via SSH.
 
