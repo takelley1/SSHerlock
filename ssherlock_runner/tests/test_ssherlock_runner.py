@@ -404,14 +404,14 @@ def test_update_job_status_success():
         mock_response.status_code = 200
         mock_post.return_value = mock_response
 
-        update_job_status("job123", "COMPLETED")
+        update_job_status("job123", "Completed")
         mock_post.assert_called_once_with(
             f"{SSHERLOCK_SERVER_PROTOCOL}://{SSHERLOCK_SERVER_DOMAIN}/update_job_status/job123",
             headers={
                 "Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
                 "Content-Type": "application/json",
             },
-            data=json.dumps({"status": "COMPLETED"}),
+            data=json.dumps({"status": "Completed"}),
             timeout=10,
         )
 
@@ -426,11 +426,11 @@ def test_update_job_status_failure():
         mock_response.content = b"Internal Server Error"
         mock_post.return_value = mock_response
 
-        update_job_status("job123", "FAILED")
+        update_job_status("job123", "Failed")
         mock_log_error.assert_called_once_with(
             "Failed to update job %s status to %s. Status code: %d. Output: %s",
             "job123",
-            "FAILED",
+            "Failed",
             500,
             b"Internal Server Error",
         )
@@ -442,7 +442,7 @@ def test_update_job_status_exception():
         "requests.post", side_effect=Exception("Connection error")
     ) as mock_post, patch("ssherlock_runner.log.error") as mock_log_error:
 
-        update_job_status("job123", "FAILED")
+        update_job_status("job123", "Failed")
 
         mock_log_error.assert_called_once_with(
             "Error updating job status for job %s: %s", "job123", "Connection error"
@@ -471,8 +471,8 @@ def test_run_job():
         mock_runner_instance = MockRunner.return_value
         run_job(job_data)
 
-        mock_update_status.assert_any_call("job123", "RUNNING")
-        mock_update_status.assert_any_call("job123", "COMPLETED")
+        mock_update_status.assert_any_call("job123", "Running")
+        mock_update_status.assert_any_call("job123", "Completed")
         mock_runner_instance.run.assert_called_once()
 
 

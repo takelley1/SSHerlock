@@ -419,7 +419,7 @@ class TestCreateJobView(TestCase):
 
         # Verify the job is created
         job = Job.objects.get()
-        self.assertEqual(job.status, "PENDING")
+        self.assertEqual(job.status, "Pending")
         self.assertEqual(job.llm_api, self.llm_api)
         self.assertIn(self.target_host1, job.target_hosts.all())  # codespell:ignore
 
@@ -446,7 +446,7 @@ class TestCreateJobView(TestCase):
         # All the matters is that each job has a single target host -- it doesn't matter which
         #  target host.
         job1 = jobs[0]
-        self.assertEqual(job1.status, "PENDING")
+        self.assertEqual(job1.status, "Pending")
         self.assertEqual(job1.llm_api, self.llm_api)
         self.assertTrue(
             self.target_host1 == job1.target_hosts.all()[0]
@@ -455,7 +455,7 @@ class TestCreateJobView(TestCase):
 
         # Check the second job
         job2 = jobs[1]
-        self.assertEqual(job2.status, "PENDING")
+        self.assertEqual(job2.status, "Pending")
         self.assertEqual(job2.llm_api, self.llm_api)
         self.assertTrue(
             self.target_host1 == job2.target_hosts.all()[0]
@@ -516,7 +516,7 @@ class TestRequestJob(TestCase):
         self.job1.target_hosts.add(self.target_host)
 
         self.job2 = Job.objects.create(
-            status="PENDING",
+            status="Pending",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
@@ -527,7 +527,7 @@ class TestRequestJob(TestCase):
         self.job2.target_hosts.add(self.target_host)
 
         self.job3 = Job.objects.create(
-            status="PENDING",
+            status="Pending",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
@@ -627,7 +627,7 @@ class TestUpdateJobStatus(TestCase):
         self.url = reverse("update_job_status", args=[self.job1.id])
 
         self.job2 = Job.objects.create(
-            status="PENDING",
+            status="Pending",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,

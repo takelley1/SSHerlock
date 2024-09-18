@@ -130,7 +130,7 @@ class Job(models.Model):
         "Current status of job",
         max_length=32,
         choices=STATUS_CHOICES,
-        default="PENDING",
+        default="Pending",
         editable=False,
     )
     llm_api = models.ForeignKey(LlmApi, on_delete=models.SET_NULL, null=True)

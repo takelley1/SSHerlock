@@ -158,7 +158,7 @@ def request_job(request):
         if key_check_response:
             return key_check_response
 
-        job = Job.objects.filter(status="PENDING").order_by("created_at").first()
+        job = Job.objects.filter(status="Pending").order_by("created_at").first()
         if not job:
             return JsonResponse({"message": "No pending jobs found."}, status=404)
         return JsonResponse(job.dict(), status=200)

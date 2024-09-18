@@ -267,7 +267,7 @@ class TestJob(TestCase):
         job = Job.objects.get(id=self.job1.id)
 
         self.assertEqual(job.instructions, "Run diagnostics")
-        self.assertEqual(job.status, "PENDING")
+        self.assertEqual(job.status, "Pending")
         self.assertEqual(job.llm_api, self.llm_api)
         self.assertEqual(job.bastion_host, self.bastion_host)
         self.assertEqual(job.credentials_for_bastion_host, self.credential)
