@@ -160,6 +160,7 @@ class Job(models.Model):
         """Return relevant object data as a dict."""
         return {
             "id": str(self.id),
+            "status": str(self.status),
             "llm_api_baseurl": getattr(self.llm_api, "base_url", None),
             "llm_api_api_key": getattr(self.llm_api, "api_key", None),
             "bastion_host_hostname": getattr(self.bastion_host, "hostname", None),
