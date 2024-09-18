@@ -4,6 +4,9 @@
 import sys
 from unittest.mock import MagicMock
 from unittest.mock import patch
+import json
+import requests
+import itertools
 
 import openai
 import pytest
@@ -15,12 +18,23 @@ from ssherlock_runner import (
     is_string_too_long,
     count_tokens,
     is_llm_done,
+    update_job_status,
+    run_job,
+    get_next_job,
+    launch_runner,
+    job_manager,
 )
+
+
+SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
+SSHERLOCK_SERVER_PROTOCOL = "http"
+SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
 
 
 def test_configure_logging():
     """Ensure the correct log level is used."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -65,6 +79,7 @@ def test_count_tokens():
 def test_context_size_warning_check():
     """Ensure we get warned properly when the context is about to be exceeded."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -80,6 +95,7 @@ def test_context_size_warning_check():
 
     # If the model context size isn't set, the function should return false.
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -89,6 +105,7 @@ def test_context_size_warning_check():
     assert runner.context_size_warning_check(messages, threshold=0.85) is False
 
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -109,6 +126,7 @@ def test_initialize_messages():
     """Ensure the initial prompt gets added properly."""
     initial_prompt = "Initial prompt here."
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt=initial_prompt,
         target_host="test",
@@ -124,6 +142,7 @@ def test_initialize_messages():
 def test_setup_ssh_connection_params_with_keyfile():
     """Ensure the SSH connect args use a keyfile when one is passed."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -137,6 +156,7 @@ def test_setup_ssh_connection_params_with_keyfile():
 def test_setup_ssh_connection_params_with_password():
     """Ensure the SSH connect args use a password when one is passed."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -151,6 +171,7 @@ def test_setup_ssh_connection_params_with_password():
 def test_query_llm():
     """Ensure querying the LLM returns expected results."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -174,6 +195,7 @@ def test_query_llm():
 def test_can_llm_be_reached_success():
     """Ensure the correct bool is returned when we check the reachability of the LLM and succeed."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -186,6 +208,7 @@ def test_can_llm_be_reached_success():
 def test_can_llm_be_reached_failure():
     """Ensure the correct bool is returned when we check the reachability of the LLM and fail."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -207,6 +230,7 @@ def test_can_llm_be_reached_failure():
 def test_wait_for_llm_to_become_available_success():
     """Ensure waiting for LLM to be available after multiple failed attempts works correctly."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -222,6 +246,7 @@ def test_wait_for_llm_to_become_available_success():
 def test_wait_for_llm_to_become_available_timeout():
     """Ensure waiting for the LLM to become available and timing out throws an error."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -241,6 +266,7 @@ def test_wait_for_llm_to_become_available_timeout():
 def test_summarize_string():
     """Mock the OpernAI API to test string summarization function."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -261,6 +287,7 @@ def test_summarize_string():
 def test_run_ssh_cmd_with_sudo():
     """Ensure stdout and stderr get combined correctly in mocked SSH command with sudo."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -281,6 +308,7 @@ def test_run_ssh_cmd_with_sudo():
 def test_run_ssh_cmd_without_sudo():
     """Ensure stdout and stderr get combined correctly in mocked SSH command without sudo."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -301,6 +329,7 @@ def test_run_ssh_cmd_without_sudo():
 def test_handle_ssh_command_no_summarization():
     """Ensure running an SSH command works correctly without output summarization."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -319,6 +348,7 @@ def test_handle_ssh_command_no_summarization():
 def test_handle_ssh_command_with_summarization():
     """Ensure running an SSH command works correctly with output summarization."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -343,6 +373,7 @@ def test_handle_ssh_command_with_summarization():
 def test_main():
     """Test code for the main function."""
     runner = Runner(
+        job_id="123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host="test",
@@ -365,4 +396,111 @@ def test_main():
         mock_process_interaction_loop.assert_called_once_with(
             mock_initialize_messages.return_value,
             mock_setup_ssh_connection_params.return_value,
+        )
+
+
+def test_update_job_status_success():
+    """Ensure job status is updated successfully."""
+    with patch("requests.post") as mock_post:
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+
+        update_job_status("job123", "COMPLETED")
+        mock_post.assert_called_once_with(
+            f"{SSHERLOCK_SERVER_PROTOCOL}://{SSHERLOCK_SERVER_DOMAIN}/update_job_status/job123",
+            headers={
+                "Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
+                "Content-Type": "application/json",
+            },
+            data=json.dumps({"status": "COMPLETED"}),
+            timeout=10,
+        )
+
+
+def test_update_job_status_failure():
+    """Ensure proper logging on failure to update job status."""
+    with patch("requests.post") as mock_post, patch(
+        "ssherlock_runner.log.error"
+    ) as mock_log_error:
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.content = b"Internal Server Error"
+        mock_post.return_value = mock_response
+
+        update_job_status("job123", "FAILED")
+        mock_log_error.assert_called_once_with(
+            "Failed to update job %s status to %s. Status code: %d. Output: %s",
+            "job123",
+            "FAILED",
+            500,
+            b"Internal Server Error",
+        )
+
+
+def test_update_job_status_exception():
+    """Ensure proper logging on exception during job status update."""
+    with patch(
+        "requests.post", side_effect=Exception("Connection error")
+    ) as mock_post, patch("ssherlock_runner.log.error") as mock_log_error:
+
+        update_job_status("job123", "FAILED")
+
+        mock_log_error.assert_called_once_with(
+            "Error updating job status for job %s: %s", "job123", "Connection error"
+        )
+
+
+def test_run_job():
+    """Ensure run_job updates statuses and runs correctly."""
+    job_data = {
+        "job_id": "job123",
+        "llm_api_baseurl": "http://api.example.com",
+        "instructions": "Run this job",
+        "target_host_hostname": "localhost",
+        "credentials_for_target_hosts_username": "user",
+        "credentials_for_target_hosts_password": "password",
+        "llm_api_api_key": "api_key",
+        "bastion_host_hostname": "bastion",
+        "credentials_for_bastion_host_username": "bastion_user",
+        "credentials_for_bastion_host_password": "bastion_pass",
+    }
+
+    with patch("ssherlock_runner.update_job_status") as mock_update_status, patch(
+        "ssherlock_runner.Runner"
+    ) as MockRunner:
+
+        mock_runner_instance = MockRunner.return_value
+        run_job(job_data)
+
+        mock_update_status.assert_any_call("job123", "RUNNING")
+        mock_update_status.assert_any_call("job123", "COMPLETED")
+        mock_runner_instance.run.assert_called_once()
+
+
+def test_get_next_job_success():
+    """Ensure get_next_job fetches job data successfully."""
+    with patch("requests.get") as mock_get:
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"id": "job123"}
+        mock_get.return_value = mock_response
+
+        job_data = get_next_job()
+        assert job_data == {"id": "job123"}
+
+
+def test_get_next_job_failure():
+    """Ensure get_next_job handles failure gracefully."""
+    with patch("requests.get") as mock_get, patch(
+        "ssherlock_runner.log.warning"
+    ) as mock_log_warning:
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_get.return_value = mock_response
+
+        job_data = get_next_job()
+        assert job_data is None
+        mock_log_warning.assert_called_once_with(
+            "No pending jobs found or error occurred: %d", 404
         )
