@@ -28,19 +28,6 @@ log.basicConfig(
 )
 
 
-def log_function_call(func):
-    """Easily decorage functions with @log_function_call to log calls."""
-
-    def wrapper(*args, **kwargs):
-        log.debug("Calling %s with args=%s, kwargs=%s", func.__name__, args, kwargs)
-        result = func(*args, **kwargs)
-        log.debug("%s returned %s", func.__name__, result)
-        return result
-
-    return wrapper
-
-
-@log_function_call
 def update_job_status(job_id, status):
     """
     Update the status of a job via an API call.
@@ -75,7 +62,6 @@ def update_job_status(job_id, status):
         log.error("Error updating job status for job %s: %s", job_id, str(e))
 
 
-@log_function_call
 def run_job(job_data):
     """
     Execute a job using the provided job data.
@@ -86,7 +72,7 @@ def run_job(job_data):
     Returns:
         None
     """
-    job_id = job_data["job_id"]
+    job_id = job_data["id"]
 
     update_job_status(job_id, "RUNNING")
     log.info("Running job: %s", job_id)
@@ -108,7 +94,6 @@ def run_job(job_data):
     log.info("Job %s completed", job_id)
 
 
-@log_function_call
 def get_next_job():
     """
     Fetch the next available job from the API.
@@ -133,7 +118,6 @@ def get_next_job():
         return None
 
 
-@log_function_call
 def launch_runner(job_queue):
     """
     Worker process that continuously processes jobs from the job queue.
@@ -154,7 +138,6 @@ def launch_runner(job_queue):
             break
 
 
-@log_function_call
 def job_manager():
     """
     Manage job processing by spawning worker processes and fetching jobs from the API.
@@ -179,7 +162,9 @@ def job_manager():
                     job_queue.put(job_data)
                     log.debug("Spawning runner worker")
                     p = multiprocessing.Process(target=launch_runner, args=(job_queue,))
+                    log.debug("Starting worker runner")
                     p.start()
+                    log.debug("Adding worker runners to runner list")
                     active_runners.append(p)
 
             for p in active_runners:
@@ -265,7 +250,6 @@ class Runner:  # pylint: disable=too-many-arguments
             "4. Don't summarize over multiple lines."
         )
 
-    @log_function_call
     def initialize(self) -> None:
         """Run general setup and safety checks."""
         if not self.can_target_server_be_reached():
@@ -274,7 +258,6 @@ class Runner:  # pylint: disable=too-many-arguments
             sys.exit(1)
         self.wait_for_llm_to_become_available()
 
-    @log_function_call
     def query_llm(self, prompt) -> str:
         """
         Send a prompt to an LLM API and return its reply. LLM API must be OpenAI-compatible.
@@ -310,7 +293,6 @@ class Runner:  # pylint: disable=too-many-arguments
         response_string_stripped = strip_eot_from_string(response_string)
         return response_string_stripped
 
-    @log_function_call
     def can_llm_be_reached(self) -> bool:
         """
         Check if the LLM API can be reached with a quick prompt.
@@ -334,7 +316,6 @@ class Runner:  # pylint: disable=too-many-arguments
         except (openai.InternalServerError, openai.APITimeoutError):
             return False
 
-    @log_function_call
     def can_target_server_be_reached(self) -> bool:
         """
         Check if the target server can be reached via SSH.
@@ -357,7 +338,6 @@ class Runner:  # pylint: disable=too-many-arguments
             log.error("Failed to reach the target server: %s", e)
             return False
 
-    @log_function_call
     def wait_for_llm_to_become_available(self) -> None:
         """
         Wait in a loop until the LLM API can be reached successfully.
@@ -374,7 +354,6 @@ class Runner:  # pylint: disable=too-many-arguments
                 return
         raise RuntimeError("Timed out waiting for LLM server to become available!")
 
-    @log_function_call
     def summarize_string(self, string: str) -> str:
         """
         Summarize the given string with the LLM API.
@@ -402,7 +381,6 @@ class Runner:  # pylint: disable=too-many-arguments
         log.warning("SSH reply was summarized to: %s", llm_summarization)
         return llm_summarization
 
-    @log_function_call
     def context_size_warning_check(self, messages, threshold=0.85) -> bool:
         """
         Print a warning if we're about to exceed the context size of the model.
@@ -437,7 +415,6 @@ class Runner:  # pylint: disable=too-many-arguments
             return True
         return False
 
-    @log_function_call
     def run_ssh_cmd(self, connection: fabric.Connection, command: str) -> str:
         """
         Run a command over an existing SSH connection and return its output.
@@ -470,7 +447,6 @@ class Runner:  # pylint: disable=too-many-arguments
         log.debug("run_ssh_cmd output is: %s", output)
         return output
 
-    @log_function_call
     def is_job_canceled(self) -> bool:
         """
         Call the SSHerlock server API to get the current status of the job.
@@ -493,7 +469,6 @@ class Runner:  # pylint: disable=too-many-arguments
             log.error("Error checking job status: %s", e)
             return False
 
-    @log_function_call
     def initialize_messages(self) -> list:
         """
         Initialize the messages list with the system and user prompts.
@@ -510,7 +485,6 @@ class Runner:  # pylint: disable=too-many-arguments
             {"role": "user", "content": self.initial_prompt},
         ]
 
-    @log_function_call
     def setup_ssh_connection_params(self) -> dict:
         """
         Prepare SSH connection parameters based on the configuration.
@@ -525,7 +499,6 @@ class Runner:  # pylint: disable=too-many-arguments
             return {"key_filename": self.target_host_user_keyfile}
         return {"password": self.target_host_user_password}
 
-    @log_function_call
     def process_interaction_loop(self, messages: list, connect_args: dict) -> None:
         """
         Process the interaction loop with the LLM and SSH server.
@@ -572,7 +545,6 @@ class Runner:  # pylint: disable=too-many-arguments
                 update_conversation(messages, llm_reply, ssh_reply)
                 self.context_size_warning_check(messages)
 
-    @log_function_call
     def handle_ssh_command(self, ssh: fabric.Connection, llm_reply: str) -> str:
         """
         Send the LLM reply to the server via SSH and get the server's response.
@@ -592,7 +564,6 @@ class Runner:  # pylint: disable=too-many-arguments
 
         return ssh_reply
 
-    @log_function_call
     def run(self):
         """Initialize and run the job."""
         self.initialize()
@@ -607,7 +578,6 @@ class Runner:  # pylint: disable=too-many-arguments
         self.process_interaction_loop(messages, connect_args)
 
 
-@log_function_call
 def strip_eot_from_string(string: str) -> str:
     """
     Strip the <|eot_id|> from the end of the LLM response for more human-readable output.
@@ -624,7 +594,6 @@ def strip_eot_from_string(string: str) -> str:
     return string
 
 
-@log_function_call
 def is_string_too_long(string: str, threshold: int = 1000) -> bool:
     """
     Determine if the given string is longer than a certain threshold.
@@ -644,7 +613,6 @@ def is_string_too_long(string: str, threshold: int = 1000) -> bool:
     return False
 
 
-@log_function_call
 def count_tokens(messages) -> int:
     """
     Count the number of LLM tokens in the provided dictionary of context.
@@ -675,7 +643,6 @@ def count_tokens(messages) -> int:
     return num_tokens
 
 
-@log_function_call
 def is_llm_done(llm_reply: str) -> bool:
     """
     Check if the LLM has finished with its objective.
@@ -692,7 +659,6 @@ def is_llm_done(llm_reply: str) -> bool:
     return False
 
 
-@log_function_call
 def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
     """
     Update the conversation messages with the LLM's reply and the server's response.
