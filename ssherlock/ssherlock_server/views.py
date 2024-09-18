@@ -182,20 +182,28 @@ def update_job_status(request, job_id):
         if not new_status:
             return JsonResponse({"message": "Status not provided."}, status=400)
 
+        VALID_STATUSES = [
+            "Canceled",
+            "Completed",
+            "Context Exceeded",
+            "Failed",
+            "Pending",
+            "Running",
+        ]
+        if new_status not in VALID_STATUSES:
+            return JsonResponse(
+                {"message": f"Invalid status: {new_status}"}, status=400
+            )
+
         job = get_object_or_404(Job, pk=job_id)
         job.status = new_status
 
-        if new_status == "RUNNING":
+        if new_status == "Running":
             job.started_at = timezone.now()
-        if new_status == "COMPLETED":
+        elif new_status == "Completed":
             job.completed_at = timezone.now()
 
-        # Validate the job before saving.
-        try:
-            job.full_clean()
-            job.save()
-        except ValidationError as e:
-            return JsonResponse({"message": str(e)}, status=400)
+        job.save()
 
         return HttpResponse(status=200)
 

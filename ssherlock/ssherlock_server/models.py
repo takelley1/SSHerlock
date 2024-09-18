@@ -119,12 +119,12 @@ class Job(models.Model):
         "Amount of time job took to complete", blank=True, null=True, editable=False
     )
     STATUS_CHOICES = [
-        ("CA", "CANCELED"),
-        ("CE", "CONTEXT_EXCEEDED"),
-        ("CO", "COMPLETED"),
-        ("FA", "FAILED"),
-        ("PE", "PENDING"),
-        ("RU", "RUNNING"),
+        ("canceled", "Canceled"),
+        ("completed", "Completed"),
+        ("context_exceeded", "Context Exceeded"),
+        ("failed", "Failed"),
+        ("pending", "Pending"),
+        ("running", "Running"),
     ]
     status = models.CharField(
         "Current status of job",
