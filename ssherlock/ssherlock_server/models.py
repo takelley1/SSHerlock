@@ -131,7 +131,7 @@ class Job(models.Model):
         max_length=32,
         choices=STATUS_CHOICES,
         default="PENDING",
-        editable=False
+        editable=False,
     )
     llm_api = models.ForeignKey(LlmApi, on_delete=models.SET_NULL, null=True)
     bastion_host = models.ForeignKey(
@@ -144,11 +144,17 @@ class Job(models.Model):
         null=True,
         related_name="bastion_hosts",
     )
-    target_hosts = models.ManyToManyField(TargetHost)
     credentials_for_target_hosts = models.ForeignKey(
         Credential, on_delete=models.SET_NULL, null=True, related_name="target_hosts"
     )
     instructions = models.TextField()
+
+    target_hosts = models.ManyToManyField(TargetHost)
+
+    @property
+    def target_hosts_str(self):
+        """Compute a comma-separated string of target host names."""
+        return ", ".join([str(host) for host in self.target_hosts.all()])
 
     class Meta:
         ordering = ["id"]
@@ -171,7 +177,9 @@ class Job(models.Model):
             "credentials_for_bastion_host_password": getattr(
                 self.credentials_for_bastion_host, "password", None
             ),
-            "target_host_hostname": getattr(self.target_hosts.first(), "hostname", None),
+            "target_host_hostname": getattr(
+                self.target_hosts.first(), "hostname", None
+            ),
             "target_host_port": getattr(self.target_hosts.first(), "port", None),
             "credentials_for_target_hosts_username": getattr(
                 self.credentials_for_target_hosts, "username", None
