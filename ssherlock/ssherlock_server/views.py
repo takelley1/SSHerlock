@@ -7,7 +7,6 @@ from django.http import Http404, JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, redirect, render
-from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .forms import BastionHostForm, CredentialForm, JobForm, LlmApiForm, TargetHostForm
 from .models import BastionHost, Credential, Job, LlmApi, TargetHost
@@ -98,7 +97,7 @@ def home(request):
 def bastion_host_list(request):
     """List the bastion hosts."""
     return render_object_list(
-        request, BastionHost, ["Hostname", "Port"], ["hostname", "port"], "Bastion Host"
+        request, BastionHost, ["Creation", "Hostname", "Port"], ["created_at", "hostname", "port"], "Bastion Host"
     )
 
 
@@ -107,8 +106,8 @@ def credential_list(request):
     return render_object_list(
         request,
         Credential,
-        ["Name", "Username", "Password"],
-        ["credential_name", "username", "password"],
+        ["Creation", "Name", "Username", "Password"],
+        ["created_at", "credential_name", "username", "password"],
         "Credential",
     )
 
@@ -116,7 +115,7 @@ def credential_list(request):
 def llm_api_list(request):
     """List the LLM APIs."""
     return render_object_list(
-        request, LlmApi, ["Base URL", "API Key"], ["base_url", "api_key"], "LLM API"
+        request, LlmApi, ["Creation", "Base URL", "API Key"], ["created_at", "base_url", "api_key"], "LLM API"
     )
 
 
@@ -125,16 +124,16 @@ def job_list(request):
     return render_object_list(
         request,
         Job,
-        ["Status", "LLM API", "Target Hosts", "Target Host Credentials"],
-        ["status", "llm_api", "target_hosts", "credentials_for_target_hosts"],
-        "Job",
+        ["Creation", "Status", "LLM API", "Bastion Host", "Bastion Host Credentials", "Target Host", "Target Host Credentials"],
+        ["created_at", "status", "llm_api", "bastion_host", "credentials_for_bastion_host", "target_hosts_str", "credentials_for_target_hosts"],
+        "Job"
     )
 
 
 def target_host_list(request):
     """List the target hosts."""
     return render_object_list(
-        request, TargetHost, ["Hostname", "Port"], ["hostname", "port"], "Target Host"
+        request, TargetHost, ["Creation", "Hostname", "Port"], ["created_at", "hostname", "port"], "Target Host"
     )
 
 
