@@ -15,13 +15,19 @@ from queue import Empty
 import json
 
 
+# TODO: add debug logging for more processes
+# TODO: complete test coverage for runner code
+
 MAX_RUNNERS = 10
+
 SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
 SSHERLOCK_SERVER_PROTOCOL = "http"
 SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
 
 
-log.basicConfig(level=log.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+log.basicConfig(
+    level=log.DEBUG, format="%(asctime)s - %(levelname)s - %(funcName)s - %(message)s"
+)
 
 
 def log_function_call(func):
@@ -36,6 +42,7 @@ def log_function_call(func):
     return wrapper
 
 
+@log_function_call
 def update_job_status(job_id, status):
     """
     Update the status of a job via an API call.
@@ -48,6 +55,7 @@ def update_job_status(job_id, status):
         None
     """
     try:
+        log.debug("Updating job %s status to %s", job_id, status)
         response = requests.post(
             f"{SSHERLOCK_SERVER_PROTOCOL}://{SSHERLOCK_SERVER_DOMAIN}/update_job_status/{job_id}",
             headers={
@@ -63,12 +71,13 @@ def update_job_status(job_id, status):
                 job_id,
                 status,
                 response.status_code,
-                response.content
+                response.content,
             )
     except Exception as e:
-        log.error("Error updating job status for job %s: %s", job_id, e)
+        log.error("Error updating job status for job %s: %s", job_id, str(e))
 
 
+@log_function_call
 def run_job(job_data):
     """
     Execute a job using the provided job data.
@@ -79,16 +88,13 @@ def run_job(job_data):
     Returns:
         None
     """
-    job_id = job_data["id"]
+    job_id = job_data["job_id"]
 
-    # Update job status to RUNNING
     update_job_status(job_id, "RUNNING")
-
     log.info("Running job: %s", job_id)
 
-    # Initialize Runner with parameters from job_data
     runner = Runner(
-        job_id=job_data["id"],
+        job_id=job_data["job_id"],
         llm_api_base_url=job_data["llm_api_baseurl"],
         initial_prompt=job_data["instructions"],
         target_host=job_data["target_host_hostname"],
@@ -99,14 +105,12 @@ def run_job(job_data):
         bastion_host_user=job_data["credentials_for_bastion_host_username"],
         bastion_host_user_password=job_data["credentials_for_bastion_host_password"],
     )
-
     runner.run()
+    update_job_status(job_id, "COMPLETED")
     log.info("Job %s completed", job_id)
 
-    # Update job status to COMPLETED
-    update_job_status(job_id, "COMPLETED")
 
-
+@log_function_call
 def get_next_job():
     """
     Fetch the next available job from the API.
@@ -120,16 +124,18 @@ def get_next_job():
             timeout=60,
             headers={"Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"},
         )
-        log.debug("RESPONSE IS %s", response.content)
         if response.status_code == 200:
             return response.json()
-        log.warning("No pending jobs found or error occurred: %d", response.status_code)
+        log.warning(
+            "No pending jobs found: (%d) %s", response.status_code, response.content
+        )
         return None
     except Exception as e:
         log.error("Error fetching job: %s", e)
         return None
 
 
+@log_function_call
 def launch_runner(job_queue):
     """
     Worker process that continuously processes jobs from the job queue.
@@ -142,7 +148,7 @@ def launch_runner(job_queue):
     """
     while True:
         try:
-            job_data = job_queue.get(timeout=10)  # Wait for job from queue
+            job_data = job_queue.get(timeout=10)
             run_job(job_data)
             job_queue.task_done()
         except Empty:
@@ -150,6 +156,7 @@ def launch_runner(job_queue):
             break
 
 
+@log_function_call
 def job_manager():
     """
     Manage job processing by spawning worker processes and fetching jobs from the API.
@@ -166,27 +173,30 @@ def job_manager():
         while True:
             # Check if there are available jobs and not exceeding max runners
             if len(active_runners) < MAX_RUNNERS:
+                log.debug("Retrieving next job...")
                 job_data = get_next_job()
 
                 if job_data:
+                    log.debug("Got job data")
                     job_queue.put(job_data)
-                    # Spawn a new runner process
+                    log.debug("Spawning runner worker")
                     p = multiprocessing.Process(target=launch_runner, args=(job_queue,))
                     p.start()
                     active_runners.append(p)
 
-            # Clean up finished runners
             for p in active_runners:
+                log.debug("Cleaning up finished runners")
                 if not p.is_alive():
                     active_runners.remove(p)
 
-            # Throttle the job manager loop
-            time.sleep(2)
+            # Throttle the job manager loop.
+            time.sleep(3)
 
     except KeyboardInterrupt:
         log.info("Shutting down job manager...")
     finally:
         # Clean up all runners
+        log.debug("Cleaning up finished runners")
         for p in active_runners:
             p.join()
 
@@ -257,19 +267,9 @@ class Runner:  # pylint: disable=too-many-arguments
             "4. Don't summarize over multiple lines."
         )
 
-    def configure_logging(self) -> None:
-        """Set up logging."""
-        log.basicConfig(
-            format="%(asctime)s %(funcName)s: %(message)s", level=self.log_level.upper()
-        )
-        log.debug(
-            "Logging has been configured at a level of: %s", self.log_level.upper()
-        )
-
     @log_function_call
     def initialize(self) -> None:
         """Run general setup and safety checks."""
-        self.configure_logging()
         if not self.can_target_server_be_reached():
             log.critical("Can't reach target server!")
             update_job_status(self.job_id, "FAILED")
@@ -368,7 +368,7 @@ class Runner:  # pylint: disable=too-many-arguments
             Raises a RuntimeError if waiting times out.
         """
         log.warning("Checking LLM connectivity...")
-        for i in range(100):
+        for i in range(1, 100):
             if self.can_llm_be_reached() is False:
                 log.warning("Waiting for LLM server to become available ... %s/100", i)
                 time.sleep(10)
@@ -473,12 +473,12 @@ class Runner:  # pylint: disable=too-many-arguments
         return output
 
     @log_function_call
-    def is_job_cancelled(self) -> bool:
+    def is_job_canceled(self) -> bool:
         """
         Call the SSHerlock server API to get the current status of the job.
 
         Returns:
-            bool: True if the job is cancelled, False otherwise.
+            bool: True if the job is canceled, False otherwise.
         """
         try:
             response = requests.get(
@@ -488,7 +488,7 @@ class Runner:  # pylint: disable=too-many-arguments
             )
             response.raise_for_status()
             status = response.json().get("status")
-            if status == "CANCELLED":
+            if status == "CANCELED":
                 return True
             return False
         except requests.RequestException as e:
@@ -566,7 +566,7 @@ class Runner:  # pylint: disable=too-many-arguments
                     log.critical("All done!")
                     return
 
-                if self.is_job_cancelled():
+                if self.is_job_canceled():
                     log.critical("Job canceled!")
                     return
 
