@@ -145,7 +145,7 @@ def populate_database():
         credentials_for_bastion_host=credential1,
         credentials_for_target_hosts=credential1,
         instructions="Instructions for job1",
-        status="CANCELED",
+        status="Canceled",
     )
     job1.target_hosts.add(target_host1)
 
@@ -156,7 +156,7 @@ def populate_database():
         credentials_for_bastion_host=credential2,
         credentials_for_target_hosts=credential2,
         instructions="Instructions for job2",
-        status="CONTEXT_EXCEEDED",
+        status="Context exceeded",
     )
     job2.target_hosts.add(target_host2)
 
@@ -167,7 +167,7 @@ def populate_database():
         credentials_for_bastion_host=credential3,
         credentials_for_target_hosts=credential3,
         instructions="Instructions for job3",
-        status="COMPLETED",
+        status="Completed",
     )
     job3.target_hosts.add(target_host3)
 
@@ -178,7 +178,7 @@ def populate_database():
         credentials_for_bastion_host=credential4,
         credentials_for_target_hosts=credential4,
         instructions="Instructions for job4",
-        status="FAILED",
+        status="Failed",
     )
     job4.target_hosts.add(target_host4)
 
@@ -189,7 +189,7 @@ def populate_database():
         credentials_for_bastion_host=credential5,
         credentials_for_target_hosts=credential5,
         instructions="Instructions for job5",
-        status="PENDING",
+        status="Pending",
     )
     job5.target_hosts.add(target_host5)
 
@@ -200,7 +200,7 @@ def populate_database():
         credentials_for_bastion_host=credential6,
         credentials_for_target_hosts=credential6,
         instructions="Instructions for job6",
-        status="PENDING",
+        status="Pending",
     )
     job6.target_hosts.add(target_host6)
 
@@ -211,7 +211,7 @@ def populate_database():
         credentials_for_bastion_host=credential7,
         credentials_for_target_hosts=credential7,
         instructions="Instructions for job7",
-        status="RUNNING",
+        status="Running",
     )
     job7.target_hosts.add(target_host7)
 

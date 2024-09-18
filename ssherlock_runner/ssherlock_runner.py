@@ -74,7 +74,7 @@ def run_job(job_data):
     """
     job_id = job_data["id"]
 
-    update_job_status(job_id, "RUNNING")
+    update_job_status(job_id, "Running")
     log.info("Running job: %s", job_id)
 
     runner = Runner(
@@ -90,7 +90,7 @@ def run_job(job_data):
         bastion_host_user_password=job_data["credentials_for_bastion_host_password"],
     )
     runner.run()
-    update_job_status(job_id, "COMPLETED")
+    update_job_status(job_id, "Completed")
     log.info("Job %s completed", job_id)
 
 
@@ -254,7 +254,7 @@ class Runner:  # pylint: disable=too-many-arguments
         """Run general setup and safety checks."""
         if not self.can_target_server_be_reached():
             log.critical("Can't reach target server!")
-            update_job_status(self.job_id, "FAILED")
+            update_job_status(self.job_id, "Failed")
             sys.exit(1)
         self.wait_for_llm_to_become_available()
 
@@ -462,7 +462,7 @@ class Runner:  # pylint: disable=too-many-arguments
             )
             response.raise_for_status()
             status = response.json().get("status")
-            if status == "CANCELED":
+            if status == "Canceled":
                 return True
             return False
         except requests.RequestException as e:

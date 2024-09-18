@@ -5,8 +5,6 @@ import sys
 from unittest.mock import MagicMock
 from unittest.mock import patch
 import json
-import requests
-import itertools
 
 import openai
 import pytest
