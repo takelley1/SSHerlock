@@ -505,7 +505,7 @@ class TestRequestJob(TestCase):
         )
 
         self.job1 = Job.objects.create(
-            status="RUNNING",
+            status="Running",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
@@ -615,7 +615,7 @@ class TestUpdateJobStatus(TestCase):
         )
 
         self.job1 = Job.objects.create(
-            status="RUNNING",
+            status="Running",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
@@ -641,24 +641,24 @@ class TestUpdateJobStatus(TestCase):
     def test_update_job_status_to_completed_with_valid_key_and_status(self):
         response = self.client.post(
             self.url,
-            data=json.dumps({"status": "COMPLETED"}),
+            data=json.dumps({"status": "Completed"}),
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
         self.assertEqual(response.status_code, 200)
         self.job1.refresh_from_db()
-        self.assertEqual(self.job1.status, "COMPLETED")
+        self.assertEqual(self.job1.status, "Completed")
 
     def test_update_job_status_to_canceled_with_valid_key_and_status(self):
         response = self.client.post(
             self.url,
-            data=json.dumps({"status": "CANCELED"}),
+            data=json.dumps({"status": "Canceled"}),
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
         self.assertEqual(response.status_code, 200)
         self.job1.refresh_from_db()
-        self.assertEqual(self.job1.status, "CANCELED")
+        self.assertEqual(self.job1.status, "Canceled")
 
     def test_update_job_status_to_invalid_status(self):
         response = self.client.post(
@@ -672,7 +672,7 @@ class TestUpdateJobStatus(TestCase):
     def test_update_job_status_with_invalid_key(self):
         response = self.client.post(
             self.url,
-            data=json.dumps({"status": "COMPLETED"}),
+            data=json.dumps({"status": "Completed"}),
             content_type="application/json",
             HTTP_AUTHORIZATION=self.invalid_private_key,
         )
@@ -685,7 +685,7 @@ class TestUpdateJobStatus(TestCase):
     def test_update_job_status_without_key(self):
         response = self.client.post(
             self.url,
-            data=json.dumps({"status": "COMPLETED"}),
+            data=json.dumps({"status": "Completed"}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
@@ -697,7 +697,7 @@ class TestUpdateJobStatus(TestCase):
     def test_update_job_status_with_invalid_header_format(self):
         response = self.client.post(
             self.url,
-            data=json.dumps({"status": "COMPLETED"}),
+            data=json.dumps({"status": "Completed"}),
             content_type="application/json",
             HTTP_AUTHORIZATION="InvalidFormatKey",
         )
@@ -725,7 +725,7 @@ class TestUpdateJobStatus(TestCase):
         invalid_url = reverse("update_job_status", args=[invalid_uuid])
         response = self.client.post(
             invalid_url,
-            data=json.dumps({"status": "COMPLETED"}),
+            data=json.dumps({"status": "Completed"}),
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
@@ -734,7 +734,7 @@ class TestUpdateJobStatus(TestCase):
     def test_update_job_status_to_running_also_adds_started_at_time(self):
         response = self.client.post(
             self.url2,
-            data=json.dumps({"status": "RUNNING"}),
+            data=json.dumps({"status": "Running"}),
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
@@ -742,14 +742,16 @@ class TestUpdateJobStatus(TestCase):
         self.job2.refresh_from_db()
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.job2.status, 'RUNNING')
+        self.assertEqual(self.job2.status, "Running")
         self.assertIsNotNone(self.job2.started_at)
-        self.assertTrue(timezone.now() - self.job2.started_at < timezone.timedelta(seconds=1))
+        self.assertTrue(
+            timezone.now() - self.job2.started_at < timezone.timedelta(seconds=1)
+        )
 
     def test_update_job_status_to_completed_also_adds_completed_at_time(self):
         response = self.client.post(
             self.url2,
-            data=json.dumps({"status": "COMPLETED"}),
+            data=json.dumps({"status": "Completed"}),
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
         )
@@ -757,9 +759,11 @@ class TestUpdateJobStatus(TestCase):
         self.job2.refresh_from_db()
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.job2.status, 'COMPLETED')
+        self.assertEqual(self.job2.status, "Completed")
         self.assertIsNotNone(self.job2.completed_at)
-        self.assertTrue(timezone.now() - self.job2.completed_at < timezone.timedelta(seconds=1))
+        self.assertTrue(
+            timezone.now() - self.job2.completed_at < timezone.timedelta(seconds=1)
+        )
 
 
 class TestGetJobStatus(TestCase):
@@ -783,7 +787,7 @@ class TestGetJobStatus(TestCase):
         )
 
         self.job1 = Job.objects.create(
-            status="RUNNING",
+            status="Running",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
@@ -806,21 +810,27 @@ class TestGetJobStatus(TestCase):
     def test_incorrect_private_key(self):
         """Test that 404 is returned if an incorrect private key is provided."""
         headers = {"HTTP_AUTHORIZATION": "Bearer wrongprivatekey"}
-        response = self.client.get(reverse("get_job_status", args=[self.job1.id]), **headers)
+        response = self.client.get(
+            reverse("get_job_status", args=[self.job1.id]), **headers
+        )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["message"], "Authorization token incorrect.")
 
     def test_get_job_status_success(self):
         """Test that job status is returned successfully with correct private key."""
         headers = {"HTTP_AUTHORIZATION": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"}
-        response = self.client.get(reverse("get_job_status", args=[self.job1.id]), **headers)
+        response = self.client.get(
+            reverse("get_job_status", args=[self.job1.id]), **headers
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], self.job1.status)
 
     def test_job_not_found(self):
         """Test that 404 is returned if job is not found."""
         headers = {"HTTP_AUTHORIZATION": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"}
-        invalid_uuid = str(self.job1.id)[:-1] + "f"
-        response = self.client.get(reverse("get_job_status", args=[invalid_uuid]), **headers)
+        invalid_uuid = str(self.job1.id)[:-12] + "123456abcdef"
+        response = self.client.get(
+            reverse("get_job_status", args=[invalid_uuid]), **headers
+        )
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.json()["message"], "No Job matches the given query.")
