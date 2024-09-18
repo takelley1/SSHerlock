@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Populate the current working database with a bunch of test objects.
 
 import sys
@@ -22,7 +21,6 @@ from ssherlock_server.models import (
 
 
 def populate_database():
-    # Create Users
     user1, _ = User.objects.get_or_create(email="user1@example.com")
     user2, _ = User.objects.get_or_create(email="user2@example.com")
     user3, _ = User.objects.get_or_create(email="user3@example.com")
@@ -31,7 +29,6 @@ def populate_database():
     user6, _ = User.objects.get_or_create(email="user6@example.com")
     user7, _ = User.objects.get_or_create(email="user7@example.com")
 
-    # Create BastionHosts
     bastion1, _ = BastionHost.objects.get_or_create(
         hostname="bastion1.example.com", port=21, user=user1
     )
@@ -54,7 +51,6 @@ def populate_database():
         hostname="bastion7.example.com", port=27, user=user7
     )
 
-    # Create Credentials
     credential1, _ = Credential.objects.get_or_create(
         credential_name="credential1",
         username="user1",
@@ -217,7 +213,8 @@ def populate_database():
         instructions="Instructions for job7",
         status="RUNNING",
     )
-    job7.target_hosts.add(target_host5)
+    job7.target_hosts.add(target_host7)
+
 
 if __name__ == "__main__":
     populate_database()
