@@ -1,4 +1,5 @@
 """Main runner."""
+
 # pylint: disable=import-error
 import json
 import logging as log
@@ -24,7 +25,8 @@ SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
 
 
 log.basicConfig(
-    level=log.DEBUG, format="%(asctime)s - %(levelname)s - %(funcName)s - %(message)s"
+    level=log.DEBUG,
+    format="%(asctime)s %(levelname)s %(filename)s:%(funcName)s - %(message)s",
 )
 
 
@@ -78,7 +80,7 @@ def run_job(job_data):
     log.info("Running job: %s", job_id)
 
     runner = Runner(
-        job_id=job_data["job_id"],
+        job_id=job_data["id"],
         llm_api_base_url=job_data["llm_api_baseurl"],
         initial_prompt=job_data["instructions"],
         target_host=job_data["target_host_hostname"],
@@ -323,7 +325,7 @@ class Runner:  # pylint: disable=too-many-arguments
         Returns:
             bool: True if the server can be reached, False otherwise.
         """
-        log.warning("Checking target server connectivity...")
+        log.warning("Checking target server reachability...")
         try:
             connect_args = self.setup_ssh_connection_params()
             with fabric.Connection(
@@ -429,23 +431,28 @@ class Runner:  # pylint: disable=too-many-arguments
         """
         command = f"{self.shell_environment} ; {command}"
 
-        # Set pty=False to prevent interactive commands.
-        # Set hide="both" to prevent echoing stdout and stderr.
-        if self.target_host_user_sudo_password:
-            result = connection.sudo(
-                command,
-                warn=True,
-                pty=False,
-                password=self.target_host_user_sudo_password,
-                hide="both",
-            )
-        else:
-            result = connection.run(command, warn=True, pty=False, hide="both")
+        try:
+            # Set pty=False to prevent interactive commands.
+            # Set hide="both" to prevent echoing stdout and stderr.
+            if self.target_host_user_sudo_password:
+                result = connection.sudo(
+                    command,
+                    warn=True,
+                    pty=False,
+                    password=self.target_host_user_sudo_password,
+                    hide="both",
+                )
+            else:
+                result = connection.run(command, warn=True, pty=False, hide="both")
 
-        # Combine output streams for the LLM.
-        output = result.stdout.strip() + result.stderr.strip()
-        log.debug("run_ssh_cmd output is: %s", output)
-        return output
+            # Combine output streams for the LLM.
+            output = result.stdout.strip() + result.stderr.strip()
+            log.debug("run_ssh_cmd output is: %s", output)
+            return output
+        except Exception as e:
+            log.error("SSH command failed: %s", e)
+            update_job_status(self.job_id, "Failed")
+            raise
 
     def is_job_canceled(self) -> bool:
         """
