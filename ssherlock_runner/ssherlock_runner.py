@@ -2,11 +2,10 @@
 
 # pylint: disable=import-error
 import json
+import signal
 import logging as log
-import multiprocessing
 import sys
 import time
-from queue import Empty
 
 import fabric
 import openai
@@ -17,12 +16,9 @@ import tiktoken
 # TODO: add debug logging for more processes
 # TODO: complete test coverage for runner code
 
-MAX_RUNNERS = 10
-
 SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
 SSHERLOCK_SERVER_PROTOCOL = "http"
 SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
-
 
 log.basicConfig(
     level=log.DEBUG,
@@ -66,37 +62,36 @@ def update_job_status(job_id, status):
 
 def run_job(job_data):
     """
-    Execute a job using the provided job data.
+    Execute a job based on the provided job data.
 
     Args:
-        job_data (dict): A dictionary containing job details.
-
-    Returns:
-        None
+        job_data (dict): Dictionary containing job information including id, API base URL,
+                         instructions, target host details, and credentials.
     """
-    job_id = job_data["id"]
+    try:
+        log.info("Running job: %s", job_data["id"])
+        runner = Runner(
+            job_id=job_data["id"],
+            llm_api_base_url=job_data["llm_api_baseurl"],
+            initial_prompt=job_data["instructions"],
+            target_host_hostname=job_data["target_host_hostname"],
+            credentials_for_target_hosts_username=job_data["credentials_for_target_hosts_username"],
+            llm_api_api_key=job_data["llm_api_api_key"],
+            credentials_for_target_hosts_password=job_data["credentials_for_target_hosts_password"],
+            bastion_host_hostname=job_data["bastion_host_hostname"],
+            credentials_for_bastion_host_username=job_data["credentials_for_bastion_host_username"],
+            credentials_for_bastion_host_password=job_data[
+                "credentials_for_bastion_host_password"
+            ],
+        )
+        runner.run()
+        log.info("Job %s completed", job_data["id"])
+    except Exception as e:
+        log.error("Error running job: %s", e)
+        sys.exit(1)
 
-    update_job_status(job_id, "Running")
-    log.info("Running job: %s", job_id)
 
-    runner = Runner(
-        job_id=job_data["id"],
-        llm_api_base_url=job_data["llm_api_baseurl"],
-        initial_prompt=job_data["instructions"],
-        target_host=job_data["target_host_hostname"],
-        target_host_user=job_data["credentials_for_target_hosts_username"],
-        llm_api_key=job_data["llm_api_api_key"],
-        target_host_user_password=job_data["credentials_for_target_hosts_password"],
-        bastion_host=job_data["bastion_host_hostname"],
-        bastion_host_user=job_data["credentials_for_bastion_host_username"],
-        bastion_host_user_password=job_data["credentials_for_bastion_host_password"],
-    )
-    runner.run()
-    update_job_status(job_id, "Completed")
-    log.info("Job %s completed", job_id)
-
-
-def get_next_job():
+def request_job():
     """
     Fetch the next available job from the API.
 
@@ -120,72 +115,6 @@ def get_next_job():
         return None
 
 
-def launch_runner(job_queue):
-    """
-    Worker process that continuously processes jobs from the job queue.
-
-    Args:
-        job_queue (multiprocessing.JoinableQueue): The queue from which to fetch jobs.
-
-    Returns:
-        None
-    """
-    while True:
-        try:
-            job_data = job_queue.get(timeout=10)
-            run_job(job_data)
-            job_queue.task_done()
-        except Empty:
-            log.info("No job available. Exiting runner.")
-            break
-
-
-def job_manager():
-    """
-    Manage job processing by spawning worker processes and fetching jobs from the API.
-
-    Returns:
-        None
-    """
-    job_queue = multiprocessing.JoinableQueue()
-
-    # List to track active runner processes
-    active_runners = []
-
-    try:
-        while True:
-            # Check if there are available jobs and not exceeding max runners
-            if len(active_runners) < MAX_RUNNERS:
-                log.debug("Retrieving next job...")
-                job_data = get_next_job()
-
-                if job_data:
-                    log.debug("Got job data")
-                    job_queue.put(job_data)
-                    log.debug("Spawning runner worker")
-                    p = multiprocessing.Process(target=launch_runner, args=(job_queue,))
-                    log.debug("Starting worker runner")
-                    p.start()
-                    log.debug("Adding worker runners to runner list")
-                    active_runners.append(p)
-
-            for p in active_runners:
-                log.debug("Cleaning up finished runners")
-                if not p.is_alive():
-                    active_runners.remove(p)
-
-            # Throttle the job manager loop.
-            time.sleep(3)
-
-    except KeyboardInterrupt:
-        log.info("Shutting down job manager...")
-    finally:
-        # Clean up all runners
-        log.debug("Cleaning up finished runners")
-        for p in active_runners:
-            p.join()
-
-
 class Runner:  # pylint: disable=too-many-arguments
     """Main class for runner configuration."""
 
@@ -194,35 +123,35 @@ class Runner:  # pylint: disable=too-many-arguments
         job_id,
         llm_api_base_url,
         initial_prompt,
-        target_host,
-        target_host_user,
-        llm_api_key="Bearer no-key",
+        target_host_hostname,
+        credentials_for_target_hosts_username,
+        llm_api_api_key="Bearer no-key",
         model_context_size=0,
         log_level="WARNING",
-        target_host_user_password="",
-        target_host_user_keyfile="",
-        target_host_user_sudo_password="",
-        bastion_host="",
-        bastion_host_user="",
-        bastion_host_user_password="",
-        bastion_host_user_keyfile="",
+        credentials_for_target_hosts_password="",
+        credentials_for_target_hosts_keyfile="",
+        credentials_for_target_hosts_sudo_password="",
+        bastion_host_hostname="",
+        credentials_for_bastion_host_username="",
+        credentials_for_bastion_host_password="",
+        credentials_for_bastion_host_keyfile="",
     ):
         """Initialize main runner configuration."""
         self.job_id = job_id
         self.log_level = log_level
         self.initial_prompt = initial_prompt
         self.model_context_size = model_context_size
-        self.target_host = target_host
-        self.target_host_user = target_host_user
-        self.target_host_user_password = target_host_user_password
-        self.target_host_user_keyfile = target_host_user_keyfile
-        self.target_host_user_sudo_password = target_host_user_sudo_password
-        self.bastion_host = bastion_host
-        self.bastion_host_user = bastion_host_user
-        self.bastion_host_user_password = bastion_host_user_password
-        self.bastion_host_user_keyfile = bastion_host_user_keyfile
+        self.target_host_hostname = target_host_hostname
+        self.credentials_for_target_hosts_username = credentials_for_target_hosts_username
+        self.credentials_for_target_hosts_password = credentials_for_target_hosts_password
+        self.credentials_for_target_hosts_keyfile = credentials_for_target_hosts_keyfile
+        self.credentials_for_target_hosts_sudo_password = credentials_for_target_hosts_sudo_password
+        self.bastion_host_hostname = bastion_host_hostname
+        self.credentials_for_bastion_host_username = credentials_for_bastion_host_username
+        self.credentials_for_bastion_host_password = credentials_for_bastion_host_password
+        self.credentials_for_bastion_host_keyfile = credentials_for_bastion_host_keyfile
         self.llm_api_base_url = llm_api_base_url
-        self.llm_api_key = llm_api_key
+        self.llm_api_api_key = llm_api_api_key
         self.shell_environment = (
             "DEBIAN_FRONTEND=noninteractive SYSTEMD_PAGER='' EDITOR='' PAGER=''"
         )
@@ -256,8 +185,7 @@ class Runner:  # pylint: disable=too-many-arguments
         """Run general setup and safety checks."""
         if not self.can_target_server_be_reached():
             log.critical("Can't reach target server!")
-            update_job_status(self.job_id, "Failed")
-            sys.exit(1)
+            raise RuntimeError
         self.wait_for_llm_to_become_available()
 
     def query_llm(self, prompt) -> str:
@@ -283,7 +211,7 @@ class Runner:  # pylint: disable=too-many-arguments
         """
         client = openai.OpenAI(
             base_url=self.llm_api_base_url,
-            api_key=self.llm_api_key,
+            api_key=self.llm_api_api_key,
         )
 
         llm_reply = client.chat.completions.create(
@@ -329,15 +257,16 @@ class Runner:  # pylint: disable=too-many-arguments
         try:
             connect_args = self.setup_ssh_connection_params()
             with fabric.Connection(
-                host=self.target_host,
-                user=self.target_host_user,
+                host=self.target_host_hostname,
+                user=self.credentials_for_target_hosts_username,
                 connect_kwargs=connect_args,
                 connect_timeout=30,
             ) as ssh:
                 ssh.run("echo 'Server is reachable'", hide=True)
             return True
         except Exception as e:
-            log.error("Failed to reach the target server: %s", e)
+            log.error("Failed to reach the target server: %s", str(e))
+            update_job_status(self.job_id, "Failed")
             return False
 
     def wait_for_llm_to_become_available(self) -> None:
@@ -354,6 +283,7 @@ class Runner:  # pylint: disable=too-many-arguments
                 time.sleep(10)
             else:
                 return
+        update_job_status(self.job_id, "Failed")
         raise RuntimeError("Timed out waiting for LLM server to become available!")
 
     def summarize_string(self, string: str) -> str:
@@ -434,12 +364,12 @@ class Runner:  # pylint: disable=too-many-arguments
         try:
             # Set pty=False to prevent interactive commands.
             # Set hide="both" to prevent echoing stdout and stderr.
-            if self.target_host_user_sudo_password:
+            if self.credentials_for_target_hosts_sudo_password:
                 result = connection.sudo(
                     command,
                     warn=True,
                     pty=False,
-                    password=self.target_host_user_sudo_password,
+                    password=self.credentials_for_target_hosts_sudo_password,
                     hide="both",
                 )
             else:
@@ -473,7 +403,7 @@ class Runner:  # pylint: disable=too-many-arguments
                 return True
             return False
         except requests.RequestException as e:
-            log.error("Error checking job status: %s", e)
+            log.error("Error checking job status: %s", str(e))
             return False
 
     def initialize_messages(self) -> list:
@@ -502,9 +432,9 @@ class Runner:  # pylint: disable=too-many-arguments
         Returns:
             dict: SSH connection parameters.
         """
-        if self.target_host_user_keyfile:
-            return {"key_filename": self.target_host_user_keyfile}
-        return {"password": self.target_host_user_password}
+        if self.credentials_for_target_hosts_keyfile:
+            return {"key_filename": self.credentials_for_target_hosts_keyfile}
+        return {"password": self.credentials_for_target_hosts_password}
 
     def process_interaction_loop(self, messages: list, connect_args: dict) -> None:
         """
@@ -516,36 +446,39 @@ class Runner:  # pylint: disable=too-many-arguments
         """
         # Setup gateway connection if a bastion host is provided.
         gateway = None
-        if self.bastion_host:
+        if self.bastion_host_hostname:
             gateway_connect_kwargs = {}
-            if self.bastion_host_user_keyfile:
-                gateway_connect_kwargs["key_filename"] = self.bastion_host_user_keyfile
+            if self.credentials_for_bastion_host_keyfile:
+                gateway_connect_kwargs["key_filename"] = self.credentials_for_bastion_host_keyfile
             else:
-                gateway_connect_kwargs["password"] = self.bastion_host_user_password
+                gateway_connect_kwargs["password"] = self.credentials_for_bastion_host_password
 
             # Connect to the bastion host.
             gateway = fabric.Connection(
-                host=self.bastion_host,
-                user=self.bastion_host_user,
+                host=self.bastion_host_hostname,
+                user=self.credentials_for_bastion_host_username,
                 connect_kwargs=gateway_connect_kwargs,
             )
 
         with fabric.Connection(
-            host=self.target_host,
-            user=self.target_host_user,
+            host=self.target_host_hostname,
+            user=self.credentials_for_target_hosts_username,
             connect_kwargs=connect_args,
             gateway=gateway,
         ) as ssh:
+            update_job_status(self.job_id, "Running")
             while True:
                 llm_reply = self.query_llm(messages)
                 log.warning("LLM reply was: %s", llm_reply)
 
                 if is_llm_done(llm_reply):
                     log.critical("All done!")
+                    update_job_status(self.job_id, "Completed")
                     return
 
                 if self.is_job_canceled():
                     log.critical("Job canceled!")
+                    update_job_status(self.job_id, "Canceled")
                     return
 
                 ssh_reply = self.handle_ssh_command(ssh, llm_reply)
@@ -573,7 +506,10 @@ class Runner:  # pylint: disable=too-many-arguments
 
     def run(self):
         """Initialize and run the job."""
-        self.initialize()
+        try:
+            self.initialize()
+        except RuntimeError as e:
+            raise e
 
         # Initialize the conversation messages.
         messages = self.initialize_messages()
@@ -679,5 +615,14 @@ def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
     messages.append({"role": "user", "content": ssh_reply})
 
 
+def main():
+    job_data = request_job()
+    while job_data is None:
+        log.info("Waiting for a job...")
+        time.sleep(3)
+        job_data = request_job()
+    run_job(job_data)
+
+
 if __name__ == "__main__":
-    job_manager()
+    main()

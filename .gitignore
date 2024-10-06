@@ -163,3 +163,4 @@ ssheldon/ssheldon_server/migrations
 ssherlock/ssherlock_server/migrations
 ALEPreviewWindow
 .vscode/settings.json
+.DS_Store

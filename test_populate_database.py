@@ -6,7 +6,6 @@ import django
 
 # Set up Django environment
 sys.path.insert(1, "./ssherlock")
-sys.path.insert(1, "./ssherlock/ssherlock_server")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ssherlock.settings")
 django.setup()
 
