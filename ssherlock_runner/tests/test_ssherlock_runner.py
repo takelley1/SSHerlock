@@ -28,6 +28,8 @@ from ssherlock_runner import (
     run_job,
     request_job,
     log,
+    update_conversation,
+    main,
 )
 
 
@@ -521,3 +523,236 @@ def test_is_job_canceled_failure(mock_log_error, mock_requests_get, runner):
     mock_log_error.assert_called_once_with(
         "Error checking job status: %s", "Network error"
     )
+
+
+@patch("ssherlock_runner.fabric.Connection")
+@patch("ssherlock_runner.Runner.query_llm")
+@patch("ssherlock_runner.update_job_status")
+def test_process_interaction_with_exception(
+    mock_update_job_status, mock_query_llm, mock_fabric_connection, runner
+):
+    # Setup mock to raise an exception during SSH command execution
+    mock_query_llm.side_effect = ["command1"]
+
+    # Mock SSH connection behavior with an exception
+    mock_ssh_connection = MagicMock()
+    mock_ssh_connection.run.side_effect = Exception("SSH error")
+    mock_fabric_connection.return_value.__enter__.return_value = mock_ssh_connection
+
+    # Initialize messages and connect_args
+    messages = runner.initialize_messages()
+    connect_args = runner.setup_ssh_connection_params()
+
+    # Run the process_interaction_loop and expect it to handle the exception
+    with pytest.raises(Exception) as excinfo:
+        runner.process_interaction_loop(messages, connect_args)
+    assert str(excinfo.value) == "SSH error"
+
+    # Assertions
+    mock_update_job_status.assert_any_call(runner.job_id, "Running")
+    mock_update_job_status.assert_any_call(runner.job_id, "Failed")
+
+
+@patch("ssherlock_runner.fabric.Connection")
+@patch("ssherlock_runner.Runner.query_llm")
+@patch("ssherlock_runner.update_job_status")
+def test_process_interaction_job_canceled(
+    mock_update_job_status, mock_query_llm, mock_fabric_connection, runner
+):
+    # Setup mock responses
+    mock_query_llm.side_effect = ["command1", "command2"]
+
+    # Mock SSH connection behavior
+    mock_ssh_connection = MagicMock()
+    mock_ssh_connection.run.return_value.stdout.strip.return_value = "Command executed"
+    mock_fabric_connection.return_value.__enter__.return_value = mock_ssh_connection
+
+    # Override is_job_canceled to simulate job cancellation
+    runner.is_job_canceled = MagicMock(return_value=True)
+
+    # Initialize messages and connect_args
+    messages = runner.initialize_messages()
+    connect_args = runner.setup_ssh_connection_params()
+
+    # Run the process_interaction_loop
+    runner.process_interaction_loop(messages, connect_args)
+
+    # Assertions
+    assert runner.is_job_canceled.called
+    mock_update_job_status.assert_any_call(runner.job_id, "Canceled")
+
+
+@patch("ssherlock_runner.fabric.Connection")
+@patch("ssherlock_runner.Runner.query_llm")
+@patch("ssherlock_runner.update_job_status")
+def test_run_function(
+    mock_update_job_status, mock_query_llm, mock_fabric_connection, runner
+):
+    # Setup mocks
+    mock_query_llm.side_effect = ["command1", "DONE"]
+
+    # Mock SSH connection behavior
+    mock_ssh_connection = MagicMock()
+    mock_ssh_connection.run.return_value.stdout = "Server is reachable"
+    mock_fabric_connection.return_value.__enter__.return_value = mock_ssh_connection
+
+    # Run the runner's run method
+    runner.run()
+
+    # Assertions
+    mock_update_job_status.assert_any_call(runner.job_id, "Running")
+    mock_update_job_status.assert_any_call(runner.job_id, "Completed")
+    assert mock_query_llm.call_count == 2
+    assert mock_ssh_connection.run.called
+
+
+def test_update_conversation_normal():
+    # Initial conversation messages
+    messages = [
+        {"role": "system", "content": "You're a helpful AI assistant."},
+        {"role": "user", "content": "What is the capital of Japan?"},
+        {"role": "assistant", "content": "Tokyo"},
+    ]
+
+    # LLM and SSH replies
+    llm_reply = "What is its population?"
+    ssh_reply = "Approximately 126 million."
+
+    # Call the update_conversation function
+    update_conversation(messages, llm_reply, ssh_reply)
+
+    # Expected messages after update
+    expected_messages = [
+        {"role": "system", "content": "You're a helpful AI assistant."},
+        {"role": "user", "content": "What is the capital of Japan?"},
+        {"role": "assistant", "content": "Tokyo"},
+        {"role": "assistant", "content": "What is its population?"},
+        {"role": "user", "content": "Approximately 126 million."},
+    ]
+
+    assert messages == expected_messages
+
+
+def test_update_conversation_empty_replies():
+    # Initial conversation messages
+    messages = [
+        {"role": "system", "content": "You're a helpful AI assistant."},
+        {"role": "user", "content": "What is the capital of Japan?"},
+    ]
+
+    # Empty LLM and SSH replies
+    llm_reply = ""
+    ssh_reply = ""
+
+    # Call the update_conversation function
+    update_conversation(messages, llm_reply, ssh_reply)
+
+    # Expected messages after update
+    expected_messages = [
+        {"role": "system", "content": "You're a helpful AI assistant."},
+        {"role": "user", "content": "What is the capital of Japan?"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": ""},
+    ]
+
+    assert messages == expected_messages
+
+
+def test_update_conversation_large_ssh_reply():
+    # Initial conversation messages
+    messages = [
+        {"role": "system", "content": "You're a helpful AI assistant."},
+        {"role": "user", "content": "Run a disk check."},
+    ]
+
+    # LLM reply and large SSH reply
+    llm_reply = "Check disk usage."
+    ssh_reply = "Disk usage: 95% full. Please clean up space."
+
+    # Call the update_conversation function
+    update_conversation(messages, llm_reply, ssh_reply)
+
+    # Expected messages after update
+    expected_messages = [
+        {"role": "system", "content": "You're a helpful AI assistant."},
+        {"role": "user", "content": "Run a disk check."},
+        {"role": "assistant", "content": "Check disk usage."},
+        {"role": "user", "content": "Disk usage: 95% full. Please clean up space."},
+    ]
+
+    assert messages == expected_messages
+
+
+# Patch the necessary components used in main()
+@patch("ssherlock_runner.run_job")
+@patch("ssherlock_runner.request_job")
+@patch("ssherlock_runner.time.sleep", return_value=None)  # To skip actual sleeping
+def test_main_successful_job_retrieval(mock_sleep, mock_request_job, mock_run_job):
+    # Mock request_job to return a job data dictionary
+    mock_request_job.side_effect = [
+        None,  # First call returns None to simulate waiting
+        {
+            "id": "job123",
+            "llm_api_baseurl": "http://api.example.com",
+            "instructions": "Do this",
+            "target_host_hostname": "host1",
+            "credentials_for_target_hosts_username": "user",
+            "llm_api_api_key": "key",
+            "credentials_for_target_hosts_password": "pass",
+            "bastion_host_hostname": "",
+            "credentials_for_bastion_host_username": "",
+            "credentials_for_bastion_host_password": "",
+        },
+    ]
+
+    # Call main()
+    main()
+
+    # Assertions
+    assert mock_request_job.call_count == 2
+    mock_run_job.assert_called_once_with(
+        {
+            "id": "job123",
+            "llm_api_baseurl": "http://api.example.com",
+            "instructions": "Do this",
+            "target_host_hostname": "host1",
+            "credentials_for_target_hosts_username": "user",
+            "llm_api_api_key": "key",
+            "credentials_for_target_hosts_password": "pass",
+            "bastion_host_hostname": "",
+            "credentials_for_bastion_host_username": "",
+            "credentials_for_bastion_host_password": "",
+        }
+    )
+
+
+@patch("ssherlock_runner.run_job")
+@patch("ssherlock_runner.request_job")
+@patch("ssherlock_runner.time.sleep", return_value=None)
+def test_main_no_jobs_available(mock_sleep, mock_request_job, mock_run_job):
+    # Mock request_job to always return None
+    mock_request_job.side_effect = [None, None, {"id": "job123"}]
+
+    # Call main()
+    main()
+
+    # Assertions
+    assert mock_request_job.call_count >= 3  # Ensure it loops until a job is found
+    mock_run_job.assert_called_once_with({"id": "job123"})
+
+
+@patch("ssherlock_runner.run_job")
+@patch("ssherlock_runner.request_job")
+@patch("ssherlock_runner.time.sleep", return_value=None)
+def test_main_exception_handling_in_request_job(
+    mock_sleep, mock_request_job, mock_run_job
+):
+    # Mock request_job to raise an exception on first call, then return a job
+    mock_request_job.side_effect = [Exception("Network error"), {"id": "job123"}]
+
+    # Call main()
+    main()
+
+    # Assertions
+    assert mock_request_job.call_count == 2
+    mock_run_job.assert_called_once_with({"id": "job123"})

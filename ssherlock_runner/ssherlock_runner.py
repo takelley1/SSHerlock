@@ -75,11 +75,17 @@ def run_job(job_data):
             llm_api_base_url=job_data["llm_api_baseurl"],
             initial_prompt=job_data["instructions"],
             target_host_hostname=job_data["target_host_hostname"],
-            credentials_for_target_hosts_username=job_data["credentials_for_target_hosts_username"],
+            credentials_for_target_hosts_username=job_data[
+                "credentials_for_target_hosts_username"
+            ],
             llm_api_api_key=job_data["llm_api_api_key"],
-            credentials_for_target_hosts_password=job_data["credentials_for_target_hosts_password"],
+            credentials_for_target_hosts_password=job_data[
+                "credentials_for_target_hosts_password"
+            ],
             bastion_host_hostname=job_data["bastion_host_hostname"],
-            credentials_for_bastion_host_username=job_data["credentials_for_bastion_host_username"],
+            credentials_for_bastion_host_username=job_data[
+                "credentials_for_bastion_host_username"
+            ],
             credentials_for_bastion_host_password=job_data[
                 "credentials_for_bastion_host_password"
             ],
@@ -142,13 +148,23 @@ class Runner:  # pylint: disable=too-many-arguments
         self.initial_prompt = initial_prompt
         self.model_context_size = model_context_size
         self.target_host_hostname = target_host_hostname
-        self.credentials_for_target_hosts_username = credentials_for_target_hosts_username
-        self.credentials_for_target_hosts_password = credentials_for_target_hosts_password
+        self.credentials_for_target_hosts_username = (
+            credentials_for_target_hosts_username
+        )
+        self.credentials_for_target_hosts_password = (
+            credentials_for_target_hosts_password
+        )
         self.credentials_for_target_hosts_keyfile = credentials_for_target_hosts_keyfile
-        self.credentials_for_target_hosts_sudo_password = credentials_for_target_hosts_sudo_password
+        self.credentials_for_target_hosts_sudo_password = (
+            credentials_for_target_hosts_sudo_password
+        )
         self.bastion_host_hostname = bastion_host_hostname
-        self.credentials_for_bastion_host_username = credentials_for_bastion_host_username
-        self.credentials_for_bastion_host_password = credentials_for_bastion_host_password
+        self.credentials_for_bastion_host_username = (
+            credentials_for_bastion_host_username
+        )
+        self.credentials_for_bastion_host_password = (
+            credentials_for_bastion_host_password
+        )
         self.credentials_for_bastion_host_keyfile = credentials_for_bastion_host_keyfile
         self.llm_api_base_url = llm_api_base_url
         self.llm_api_api_key = llm_api_api_key
@@ -449,9 +465,13 @@ class Runner:  # pylint: disable=too-many-arguments
         if self.bastion_host_hostname:
             gateway_connect_kwargs = {}
             if self.credentials_for_bastion_host_keyfile:
-                gateway_connect_kwargs["key_filename"] = self.credentials_for_bastion_host_keyfile
+                gateway_connect_kwargs["key_filename"] = (
+                    self.credentials_for_bastion_host_keyfile
+                )
             else:
-                gateway_connect_kwargs["password"] = self.credentials_for_bastion_host_password
+                gateway_connect_kwargs["password"] = (
+                    self.credentials_for_bastion_host_password
+                )
 
             # Connect to the bastion host.
             gateway = fabric.Connection(
@@ -616,11 +636,17 @@ def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
 
 
 def main():
-    job_data = request_job()
+    job_data = None
     while job_data is None:
-        log.info("Waiting for a job...")
-        time.sleep(3)
-        job_data = request_job()
+        try:
+            job_data = request_job()
+            if job_data is None:
+                log.info("Waiting for a job...")
+                time.sleep(3)
+        except Exception as e:
+            log.error("Error requesting job: %s", str(e))
+            log.info("Retrying to fetch job...")
+            time.sleep(3)
     run_job(job_data)
 
 
