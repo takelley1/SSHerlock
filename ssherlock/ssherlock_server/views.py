@@ -67,6 +67,14 @@ def delete_object(request, model_type, uuid):
     return redirect(f"/{model_type}_list")
 
 
+def retry_job(request, uuid):
+    """Changes a given job's status to 'Pending.'"""
+    job = get_object_or_404(Job, pk=uuid)
+    job.status = "Pending"
+    job.save()
+    return redirect("/job_list")
+
+
 def create_job(request):
     """Handle creating jobs. When the create job form is submitted, a new job is created for every target host."""
     form = JobForm(request.POST)

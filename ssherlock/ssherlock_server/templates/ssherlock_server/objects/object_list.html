@@ -16,6 +16,9 @@
         {% endfor %}
         <th scope="col">Edit</th>
         <th scope="col">Delete</th>
+        {% if object_name == "Job" %}
+          <th scope="col">Retry</th>
+        {% endif %}
       </tr>
     </thead>
     <tbody>
@@ -29,6 +32,10 @@
             <td><a href="edit/{{ object_name.split | join:"_" | lower}}/{{ item.id }}" class="button">edit</a></td>
             <td><a href="delete/{{ object_name.split | join:"_" | lower}}/{{ item.id }}" class="button">delete</a></td>
           {#% endif %#}
+          {# Jobs get a "retry" button. #}
+          {% if object_name == "Job" %}
+            <td><a href="retry/job/{{ item.id }}" class="button">retry</a></td>
+          {% endif %}
         </tr>
       {% endfor %}
     <tbody>

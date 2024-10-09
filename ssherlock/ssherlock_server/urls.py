@@ -14,6 +14,9 @@ urlpatterns = [
     path(
         "delete/<str:model_type>/<uuid:uuid>", views.delete_object, name="delete_object"
     ),
+    path(
+        "retry/job/<uuid:uuid>", views.retry_job, name="retry_job"
+    ),
     path("bastion_host_list", views.bastion_host_list, name="bastion_host_list"),
     path("credential_list", views.credential_list, name="credential_list"),
     path("job_list", views.job_list, name="job_list"),
