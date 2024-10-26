@@ -285,13 +285,16 @@ def log_job_data(request, job_id):
         # Define the directory and file path for storing logs.
         # Use the .git/objects method of storing job files.
         # The first two characters of the job ID become a subdirectory.
+        # The next two characters of the job ID become another subdirectory.
         # The remainining characters of the job ID become the name of the log file.
+        # This is to prevent letting directories fill up with tons of files.
         job_id = str(job_id)
-        log_dir = os.path.join(settings.BASE_DIR.parent, "ssherlock_runner_job_logs", job_id[:2])
+        log_dir = os.path.join(
+            settings.BASE_DIR.parent, "ssherlock_runner_job_logs", job_id[:2], job_id[2:4])
 
         os.makedirs(log_dir, exist_ok=True)
 
-        log_file_path = os.path.join(log_dir, f"{job_id[2:]}.log")
+        log_file_path = os.path.join(log_dir, f"{job_id[4:]}.log")
 
         # Write the log data to the file
         with open(log_file_path, "a", encoding="utf-8", buffering=1) as log_file:
