@@ -29,4 +29,7 @@ urlpatterns = [
     path(
         "get_job_status/<uuid:job_id>", views.get_job_status, name="get_job_status"
     ),
+    path(
+        "log_job_data/<uuid:job_id>", views.log_job_data, name="log_job_data"
+    ),
 ]

@@ -4,9 +4,11 @@
 
 import uuid
 import json
+from unittest.mock import patch, mock_open
 from django.utils import timezone
 from django.test import TestCase, Client
 from django.urls import reverse
+from django.http import JsonResponse
 from ssherlock_server.models import (
     User,
     BastionHost,
@@ -835,6 +837,7 @@ class TestGetJobStatus(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.json()["message"], "No Job matches the given query.")
 
+
 class TestRetryJob(TestCase):
 
     def setUp(self):
@@ -872,7 +875,7 @@ class TestRetryJob(TestCase):
         self.assertNotEqual(self.job.status, "Pending")
 
         # Call the retry_job view
-        response = self.client.get(reverse('retry_job', args=[self.job.pk]))
+        response = self.client.get(reverse("retry_job", args=[self.job.pk]))
 
         # Refresh the job from the database
         self.job.refresh_from_db()
@@ -880,21 +883,99 @@ class TestRetryJob(TestCase):
         # Check if the job status has changed to 'Pending'
         self.assertEqual(self.job.status, "Pending")
         # Check if the response redirects to the job list
-        self.assertRedirects(response, '/job_list')
+        self.assertRedirects(response, "/job_list")
 
     def test_retry_job_non_existent_job(self):
         # Attempt to retry a job with an invalid UUID
         invalid_uuid = "00000000-0000-0000-0000-000000000000"
-        response = self.client.get(reverse('retry_job', args=[invalid_uuid]))
+        response = self.client.get(reverse("retry_job", args=[invalid_uuid]))
 
         # Check if the response is 404
         self.assertEqual(response.status_code, 404)
 
     def test_retry_job_correct_response(self):
         # Call the retry_job view
-        response = self.client.get(reverse('retry_job', args=[self.job.pk]))
+        response = self.client.get(reverse("retry_job", args=[self.job.pk]))
 
         # Check if the response is a redirect (HTTP 302)
         self.assertEqual(response.status_code, 302)
         # Check if the redirection URL is correct
-        self.assertRedirects(response, '/job_list')
+        self.assertRedirects(response, "/job_list")
+
+
+class TestLogJobData(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.job_id = "f6e752d6-b065-4c49-9241-e4eefbc274e3"
+        self.valid_log_content = {"log": "This is a log entry."}
+        self.invalid_log_content = {"invalid_key": "No log here."}
+        self.url = reverse("log_job_data", args=[self.job_id])
+        self.valid_token = "Bearer myprivatekey"
+        self.invalid_token = "Bearer wrongprivatekey"
+
+    @patch("ssherlock_server.utils.check_private_key")
+    def test_valid_log_entry(self, mock_check_private_key):
+        mock_check_private_key.return_value = None
+        with patch("builtins.open", mock_open()) as mocked_file:
+            response = self.client.post(
+                self.url,
+                data=json.dumps(self.valid_log_content),
+                content_type="application/json",
+                HTTP_AUTHORIZATION=self.valid_token,
+            )
+            self.assertEqual(response.status_code, 200)
+            mocked_file().write.assert_called_once_with(
+                self.valid_log_content["log"] + "\n"
+            )
+
+    @patch("ssherlock_server.utils.check_private_key")
+    def test_missing_log_content(self, mock_check_private_key):
+        mock_check_private_key.return_value = None
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.invalid_log_content),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_token,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(response.content, {"message": "Log content not provided."})
+
+    @patch("ssherlock_server.utils.check_private_key")
+    def test_invalid_authorization(self, mock_check_private_key):
+        mock_check_private_key.return_value = JsonResponse(
+            {"message": "Authorization token incorrect."}, status=404
+        )
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_log_content),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.invalid_token,
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertJSONEqual(response.content, {"message": "Authorization token incorrect."})
+
+    @patch("ssherlock_server.utils.check_private_key")
+    def test_no_authorization_header(self, mock_check_private_key):
+        mock_check_private_key.return_value = None
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_log_content),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(response.content, {"message": "Authorization header not provided."})
+
+    @patch("ssherlock_server.views.log_job_data")
+    @patch("ssherlock_server.utils.check_private_key")
+    def test_exception_handling(self, mock_check_private_key, mock_log_job_data):
+        mock_check_private_key.return_value = None
+        mock_log_job_data.side_effect = Exception("Test exception")
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_log_content),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_token,
+        )
+        self.assertEqual(response.status_code, 500)
+        self.assertJSONEqual(response.content, {"message": "Test exception"})

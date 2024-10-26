@@ -3,10 +3,12 @@
 # pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name, unused-argument
 
 import json
+import os
 from django.http import Http404, JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, redirect, render
+from django.conf import settings
 from django.utils import timezone
 from .forms import BastionHostForm, CredentialForm, JobForm, LlmApiForm, TargetHostForm
 from .models import BastionHost, Credential, Job, LlmApi, TargetHost
@@ -257,6 +259,44 @@ def get_job_status(request, job_id):
 
         job = get_object_or_404(Job, pk=job_id)
         return JsonResponse({"status": str(job.status)}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def log_job_data(request, job_id):
+    """Receive log data from the runners and write it to a file based on job_id."""
+    try:
+        # Check for valid authorization key
+        key_check_response = check_private_key(request)
+        if key_check_response:
+            return key_check_response
+
+        # Parse the incoming JSON data
+        data = json.loads(request.body)
+        log_content = data.get("log")
+
+        if not log_content:
+            return JsonResponse({"message": "Log content not provided."}, status=400)
+
+        # Define the directory and file path for storing logs.
+        # Use the .git/objects method of storing job files.
+        # The first two characters of the job ID become a subdirectory.
+        # The remainining characters of the job ID become the name of the log file.
+        job_id = str(job_id)
+        log_dir = os.path.join(settings.BASE_DIR.parent, "ssherlock_runner_job_logs", job_id[:2])
+
+        os.makedirs(log_dir, exist_ok=True)
+
+        log_file_path = os.path.join(log_dir, f"{job_id[2:]}.log")
+
+        # Write the log data to the file
+        with open(log_file_path, "a", encoding="utf-8", buffering=1) as log_file:
+            log_file.write(log_content + "\n")
+
+        return HttpResponse(status=200)
 
     except Exception as e:
         return JsonResponse({"message": str(e)}, status=500)
