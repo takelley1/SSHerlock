@@ -45,7 +45,7 @@ jobs:
 
       - name: Lint with yamllint
         run: |
-          yamllint --config-file ./conf/.yamllint .
+          yamllint --config-file ./conf/.yamllint $(git ls-files '*.yml')
 
   flake8:
     runs-on: ubuntu-latest
@@ -99,7 +99,7 @@ jobs:
 
       - name: Lint with pydocstyle
         run: |
-          pydocstyle --config=./conf/.pydocstyle
+          pydocstyle --config=./conf/.pydocstyle $(git ls-files)
 
 
   test_app:
