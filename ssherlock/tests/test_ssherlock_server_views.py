@@ -4,8 +4,10 @@
 
 import uuid
 import json
-from unittest.mock import patch, mock_open
+import os
+from unittest.mock import patch
 from django.utils import timezone
+from django.conf import settings
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.http import JsonResponse
@@ -941,20 +943,37 @@ class TestLogJobData(TestCase):
         self.valid_token = "Bearer myprivatekey"
         self.invalid_token = "Bearer wrongprivatekey"
 
+        # Define expected log directory and file path
+        self.log_dir = os.path.join(
+            settings.BASE_DIR.parent,
+            "ssherlock_runner_job_logs",
+            self.job_id[:2],
+            self.job_id[2:4],
+        )
+        self.log_file_path = os.path.join(self.log_dir, f"{self.job_id[4:]}.log")
+
     @patch("ssherlock_server.utils.check_private_key")
     def test_valid_log_entry(self, mock_check_private_key):
         mock_check_private_key.return_value = None
-        with patch("builtins.open", mock_open()) as mocked_file:
-            response = self.client.post(
-                self.url,
-                data=json.dumps(self.valid_log_content),
-                content_type="application/json",
-                HTTP_AUTHORIZATION=self.valid_token,
-            )
-            self.assertEqual(response.status_code, 200)
-            mocked_file().write.assert_called_once_with(
-                self.valid_log_content["log"] + "\n"
-            )
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self.valid_log_content),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=self.valid_token,
+        )
+
+        # Ensure the response is successful
+        self.assertEqual(response.status_code, 200)
+
+        # Check if the log directory exists
+        self.assertTrue(os.path.isdir(self.log_dir))
+
+        # Check if the log file exists and contains the correct data
+        self.assertTrue(os.path.isfile(self.log_file_path))
+        with open(self.log_file_path, "r", encoding="utf-8") as log_file:
+            content = log_file.read()
+            self.assertIn(self.valid_log_content["log"], content)
 
     @patch("ssherlock_server.utils.check_private_key")
     def test_missing_log_content(self, mock_check_private_key):
@@ -1011,3 +1030,10 @@ class TestLogJobData(TestCase):
         )
         self.assertEqual(response.status_code, 500)
         self.assertJSONEqual(response.content, {"message": "Test exception"})
+
+    def tearDown(self):
+        # Clean up by removing the created log file and directories
+        if os.path.exists(self.log_file_path):
+            os.remove(self.log_file_path)
+        if os.path.exists(self.log_dir):
+            os.removedirs(self.log_dir)
