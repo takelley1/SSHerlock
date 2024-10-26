@@ -26,7 +26,8 @@ jobs:
 
       - name: Look for misspellings with codespell
         run: |
-          codespell
+          # Skip venv, Ansible Jinja files.
+          codespell -S "./venv/*,*ansible*.j2"
 
   yamllint:
     runs-on: ubuntu-latest
