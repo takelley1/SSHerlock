@@ -18,7 +18,7 @@ codespell -S "./venv/*,*ansible*.j2"
 echo "############################################"
 echo "####    RUNNING YAMLLINT                ####"
 echo "############################################"
-yamllint --config-file ./conf/.yamllint .
+yamllint --config-file ./conf/.yamllint $(git ls-files '*.yml')
 
 echo "############################################"
 echo "####    RUNNING FLAKE8                  ####"
