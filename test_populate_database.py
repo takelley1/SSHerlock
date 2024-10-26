@@ -1,5 +1,7 @@
 # Populate the current working database with a bunch of test objects.
 
+# pylint: disable=wrong-import-position,too-many-locals,missing-function-docstring
+
 import sys
 import os
 import django

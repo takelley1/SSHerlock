@@ -2,7 +2,6 @@
 
 # pylint: disable=import-error
 import json
-import signal
 import logging as log
 import sys
 import time
@@ -12,9 +11,6 @@ import openai
 import requests
 import tiktoken
 
-
-# TODO: add debug logging for more processes
-# TODO: complete test coverage for runner code
 
 SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
 SSHERLOCK_SERVER_PROTOCOL = "http"
@@ -27,8 +23,7 @@ log.basicConfig(
 
 
 def update_job_status(job_id, status):
-    """
-    Update the status of a job via an API call.
+    """Update the status of a job via an API call.
 
     Args:
         job_id (str): The ID of the job.
@@ -61,8 +56,7 @@ def update_job_status(job_id, status):
 
 
 def run_job(job_data):
-    """
-    Execute a job based on the provided job data.
+    """Execute a job based on the provided job data.
 
     Args:
         job_data (dict): Dictionary containing job information including id, API base URL,
@@ -98,8 +92,7 @@ def run_job(job_data):
 
 
 def request_job():
-    """
-    Fetch the next available job from the API.
+    """Fetch the next available job from the API.
 
     Returns:
         dict: A dictionary containing job details if available, otherwise None.
@@ -205,8 +198,7 @@ class Runner:  # pylint: disable=too-many-arguments
         self.wait_for_llm_to_become_available()
 
     def query_llm(self, prompt) -> str:
-        """
-        Send a prompt to an LLM API and return its reply. LLM API must be OpenAI-compatible.
+        """Send a prompt to an LLM API and return its reply. LLM API must be OpenAI-compatible.
 
         Args:
             base_url (string): The base URL of the LLM API, like "https://codeium.example.com/v1".
@@ -240,8 +232,7 @@ class Runner:  # pylint: disable=too-many-arguments
         return response_string_stripped
 
     def can_llm_be_reached(self) -> bool:
-        """
-        Check if the LLM API can be reached with a quick prompt.
+        """Check if the LLM API can be reached with a quick prompt.
 
         Returns:
             bool: True if the API can be reached, False otherwise.
@@ -263,8 +254,7 @@ class Runner:  # pylint: disable=too-many-arguments
             return False
 
     def can_target_server_be_reached(self) -> bool:
-        """
-        Check if the target server can be reached via SSH.
+        """Check if the target server can be reached via SSH.
 
         Returns:
             bool: True if the server can be reached, False otherwise.

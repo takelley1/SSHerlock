@@ -4,7 +4,7 @@
 
 - name: UBUNTU | Snaps, snapd removed
   block:
-    # This command must inclue methods to determine if the task has changed
+    # This command must include methods to determine if the task has changed
     #   anything, otherwise the snaps_installed var will be empty and the
     #   next task will fail.
     - name: UBUNTU | Get snaps

@@ -3,7 +3,6 @@
 # pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name
 
 import datetime
-from django.core.exceptions import ValidationError
 import uuid
 from django.test import TestCase
 from ssherlock_server.models import (

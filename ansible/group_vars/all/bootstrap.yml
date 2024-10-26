@@ -1,6 +1,6 @@
 ---
 
-# These vars apply to the boostrap role.
+# These vars apply to the bootstrap role.
 
 home: /home/akelley
 

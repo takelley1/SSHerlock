@@ -22,7 +22,7 @@
     group: root
     mode: "0644"
   loop:
-      # Make sure file is sourced last to override defaults.
+    # Make sure file is sourced last to override defaults.
     - src: etc/profile.d/zzz-bash-common.sh
       dest: /etc/profile.d/zzz-bash-common.sh
     - src: etc/vi.exrc
