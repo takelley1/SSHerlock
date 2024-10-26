@@ -72,7 +72,8 @@ def delete_object(request, model_type, uuid):
 def retry_job(request, uuid):
     """Changes a given job's status to 'Pending.'"""
     job = get_object_or_404(Job, pk=uuid)
-    job.status = "Pending"
+    if job.status == "Failed":
+        job.status = "Pending"
     job.save()
     return redirect("/job_list")
 
