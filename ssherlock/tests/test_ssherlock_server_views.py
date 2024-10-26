@@ -859,8 +859,9 @@ class TestRetryJob(TestCase):
             hostname="target.example.com", user=self.user, port=22
         )
 
-        self.job = Job.objects.create(
-            status="Running",
+        # Create a job with 'Failed' status
+        self.failed_job = Job.objects.create(
+            status="Failed",
             llm_api=self.llm_api,
             bastion_host=self.bastion_host,
             credentials_for_bastion_host=self.credential,
@@ -868,20 +869,47 @@ class TestRetryJob(TestCase):
             instructions="Job 1 instructions",
             user=self.user,
         )
-        self.job.target_hosts.add(self.target_host)
+        self.failed_job.target_hosts.add(self.target_host)
 
-    def test_retry_job_changes_status_to_pending(self):
-        # Ensure the job's current status is not 'Pending'
-        self.assertNotEqual(self.job.status, "Pending")
+        # Create a job with 'Completed' status
+        self.completed_job = Job.objects.create(
+            status="Completed",
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 2 instructions",
+            user=self.user,
+        )
+        self.completed_job.target_hosts.add(self.target_host)
+
+    def test_retry_failed_job_changes_status_to_pending(self):
+        # Ensure the job's current status is 'Failed'
+        self.assertEqual(self.failed_job.status, "Failed")
 
         # Call the retry_job view
-        response = self.client.get(reverse("retry_job", args=[self.job.pk]))
+        response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
 
         # Refresh the job from the database
-        self.job.refresh_from_db()
+        self.failed_job.refresh_from_db()
 
         # Check if the job status has changed to 'Pending'
-        self.assertEqual(self.job.status, "Pending")
+        self.assertEqual(self.failed_job.status, "Pending")
+        # Check if the response redirects to the job list
+        self.assertRedirects(response, "/job_list")
+
+    def test_retry_non_failed_job_does_not_change_status(self):
+        # Ensure the job's current status is 'Completed'
+        self.assertEqual(self.completed_job.status, "Completed")
+
+        # Call the retry_job view
+        response = self.client.get(reverse("retry_job", args=[self.completed_job.pk]))
+
+        # Refresh the job from the database
+        self.completed_job.refresh_from_db()
+
+        # Check if the job status has not changed
+        self.assertEqual(self.completed_job.status, "Completed")
         # Check if the response redirects to the job list
         self.assertRedirects(response, "/job_list")
 
@@ -894,8 +922,8 @@ class TestRetryJob(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_retry_job_correct_response(self):
-        # Call the retry_job view
-        response = self.client.get(reverse("retry_job", args=[self.job.pk]))
+        # Call the retry_job view for a failed job
+        response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
 
         # Check if the response is a redirect (HTTP 302)
         self.assertEqual(response.status_code, 302)
@@ -952,7 +980,9 @@ class TestLogJobData(TestCase):
             HTTP_AUTHORIZATION=self.invalid_token,
         )
         self.assertEqual(response.status_code, 404)
-        self.assertJSONEqual(response.content, {"message": "Authorization token incorrect."})
+        self.assertJSONEqual(
+            response.content, {"message": "Authorization token incorrect."}
+        )
 
     @patch("ssherlock_server.utils.check_private_key")
     def test_no_authorization_header(self, mock_check_private_key):
@@ -963,7 +993,9 @@ class TestLogJobData(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
-        self.assertJSONEqual(response.content, {"message": "Authorization header not provided."})
+        self.assertJSONEqual(
+            response.content, {"message": "Authorization header not provided."}
+        )
 
     @patch("ssherlock_server.views.log_job_data")
     @patch("ssherlock_server.utils.check_private_key")
