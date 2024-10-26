@@ -33,4 +33,4 @@ pylint --rcfile=./conf/.pylintrc $(git ls-files '*.py')
 echo "############################################"
 echo "####    RUNNING PYDOCSTYLE              ####"
 echo "############################################"
-pydocstyle --config=./conf/.pydocstyle
+pydocstyle --config=./conf/.pydocstyle $(git ls-files)
