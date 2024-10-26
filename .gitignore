@@ -164,3 +164,4 @@ ssherlock/ssherlock_server/migrations
 ALEPreviewWindow
 .vscode/settings.json
 .DS_Store
+.aider*
