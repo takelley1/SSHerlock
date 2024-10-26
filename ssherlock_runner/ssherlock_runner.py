@@ -3,7 +3,6 @@
 # pylint: disable=import-error
 import json
 import logging as log
-import sys
 import time
 
 import fabric
@@ -15,6 +14,32 @@ import tiktoken
 SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
 SSHERLOCK_SERVER_PROTOCOL = "http"
 SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
+
+
+class HttpPostHandler(log.Handler):
+    """Custom logging handler to send logs to the SSHerlock server via HTTP POST."""
+
+    def __init__(self, job_id):
+        super().__init__()
+        self.job_id = job_id
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        try:
+            response = requests.post(
+                f"{SSHERLOCK_SERVER_PROTOCOL}://{SSHERLOCK_SERVER_DOMAIN}/log_job_data/{self.job_id}",
+                headers={
+                    "Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
+                    "Content-Type": "application/json",
+                },
+                data=json.dumps({"log": log_entry}),
+                timeout=10,
+            )
+            if response.status_code != 200:
+                print(f"Failed to send log entry: {response.content}")
+        except Exception as e:
+            print(f"Error sending log entry: {e}")
+
 
 log.basicConfig(
     level=log.DEBUG,
@@ -62,7 +87,13 @@ def run_job(job_data):
         job_data (dict): Dictionary containing job information including id, API base URL,
                          instructions, target host details, and credentials.
     """
+    http_post_handler = HttpPostHandler(job_data["id"])
+    http_post_handler.setLevel(log.INFO)  # Set desired level for remote logging
+
     try:
+        # Start sending log messages to the server when the job starts.
+        log.getLogger().addHandler(http_post_handler)
+
         log.info("Running job: %s", job_data["id"])
         runner = Runner(
             job_id=job_data["id"],
@@ -88,7 +119,7 @@ def run_job(job_data):
         log.info("Job %s completed", job_data["id"])
     except Exception as e:
         log.error("Error running job: %s", e)
-        sys.exit(1)
+        log.getLogger().removeHandler(http_post_handler)
 
 
 def request_job():
@@ -626,18 +657,25 @@ def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
 
 
 def main():
-    job_data = None
-    while job_data is None:
-        try:
-            job_data = request_job()
-            if job_data is None:
-                log.info("Waiting for a job...")
+    while True:  # Infinite loop to keep the script running
+        job_data = None
+        while job_data is None:
+            try:
+                job_data = request_job()
+                if job_data is None:
+                    log.info("Waiting for a job...")
+                    time.sleep(3)
+            except Exception as e:
+                log.error("Error requesting job: %s", str(e))
+                log.info("Retrying to fetch job...")
                 time.sleep(3)
+
+        # Run the job and handle any exceptions to ensure the loop continues
+        try:
+            run_job(job_data)
         except Exception as e:
-            log.error("Error requesting job: %s", str(e))
-            log.info("Retrying to fetch job...")
-            time.sleep(3)
-    run_job(job_data)
+            log.error("Job failed with error: %s", str(e))
+            log.info("Continuing to wait for new jobs...")
 
 
 if __name__ == "__main__":
