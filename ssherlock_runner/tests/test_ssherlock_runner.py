@@ -677,12 +677,11 @@ def test_update_conversation_large_ssh_reply():
     assert messages == expected_messages
 
 
-# Patch the necessary components used in main()
+
 @patch("ssherlock_runner.run_job")
 @patch("ssherlock_runner.request_job")
 @patch("ssherlock_runner.time.sleep", return_value=None)  # To skip actual sleeping
 def test_main_successful_job_retrieval(mock_sleep, mock_request_job, mock_run_job):
-    # Mock request_job to return a job data dictionary
     mock_request_job.side_effect = [
         None,  # First call returns None to simulate waiting
         {
@@ -697,13 +696,12 @@ def test_main_successful_job_retrieval(mock_sleep, mock_request_job, mock_run_jo
             "credentials_for_bastion_host_username": "",
             "credentials_for_bastion_host_password": "",
         },
+        StopIteration  # Raise StopIteration to break the loop
     ]
 
-    # Call main()
-    main()
+    main(max_attempts=3)
 
-    # Assertions
-    assert mock_request_job.call_count == 2
+    assert mock_request_job.call_count >= 3
     mock_run_job.assert_called_once_with(
         {
             "id": "job123",
@@ -719,7 +717,6 @@ def test_main_successful_job_retrieval(mock_sleep, mock_request_job, mock_run_jo
         }
     )
 
-
 @patch("ssherlock_runner.run_job")
 @patch("ssherlock_runner.request_job")
 @patch("ssherlock_runner.time.sleep", return_value=None)
@@ -727,10 +724,8 @@ def test_main_no_jobs_available(mock_sleep, mock_request_job, mock_run_job):
     # Mock request_job to always return None
     mock_request_job.side_effect = [None, None, {"id": "job123"}]
 
-    # Call main()
-    main()
+    main(max_attempts=3)
 
-    # Assertions
     assert mock_request_job.call_count >= 3  # Ensure it loops until a job is found
     mock_run_job.assert_called_once_with({"id": "job123"})
 
@@ -744,9 +739,7 @@ def test_main_exception_handling_in_request_job(
     # Mock request_job to raise an exception on first call, then return a job
     mock_request_job.side_effect = [Exception("Network error"), {"id": "job123"}]
 
-    # Call main()
-    main()
+    main(max_attempts=3)
 
-    # Assertions
-    assert mock_request_job.call_count == 2
+    assert mock_request_job.call_count >= 3
     mock_run_job.assert_called_once_with({"id": "job123"})

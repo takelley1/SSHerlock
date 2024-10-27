@@ -656,26 +656,65 @@ def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
     messages.append({"role": "user", "content": ssh_reply})
 
 
-def main():
-    while True:  # Infinite loop to keep the script running
-        job_data = None
-        while job_data is None:
-            try:
-                job_data = request_job()
-                if job_data is None:
-                    log.info("Waiting for a job...")
-                    time.sleep(3)
-            except Exception as e:
-                log.error("Error requesting job: %s", str(e))
-                log.info("Retrying to fetch job...")
-                time.sleep(3)
+def fetch_job_data(attempt, max_attempts):
+    """
+    Fetch job data by requesting jobs until one is available or attempts are exhausted.
 
-        # Run the job and handle any exceptions to ensure the loop continues
+    Args:
+        attempt (int): Current attempt count.
+        max_attempts (int or None): Maximum number of attempts allowed.
+
+    Returns:
+        dict or None: Job data if available, otherwise None.
+    """
+    while True:
+        if max_attempts is not None and attempt >= max_attempts:
+            log.info("Maximum attempts reached. Ceasing operation.")
+            return None
+
         try:
-            run_job(job_data)
+            job_data = request_job()
+            if job_data:
+                return job_data
+            log.info("Waiting for a job...%s", attempt + 1)
+            time.sleep(3)
         except Exception as e:
-            log.error("Job failed with error: %s", str(e))
-            log.info("Continuing to wait for new jobs...")
+            log.error("Error requesting job: %s", str(e))
+            log.info("Retrying to fetch job...")
+            time.sleep(3)
+
+        attempt += 1
+
+
+def execute_job(job_data):
+    """
+    Execute the given job and handle any exceptions.
+
+    Args:
+        job_data (dict): The job data to be processed.
+    """
+    try:
+        run_job(job_data)
+    except Exception as e:
+        log.error("Job failed with error: %s", str(e))
+        log.info("Continuing to wait for new jobs...")
+
+
+def main(max_attempts=None):
+    """
+    Main loop to continually request a job to run and run any job it receives.
+
+    Args:
+        max_attempts (int, optional): Maximum attempts to wait for a job. Defaults to None.
+    """
+    attempt = 0
+
+    while True:
+        job_data = fetch_job_data(attempt, max_attempts)
+        if job_data is None:
+            return
+
+        execute_job(job_data)
 
 
 if __name__ == "__main__":
