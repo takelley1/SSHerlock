@@ -14,11 +14,17 @@
         {% for header in column_headers %}
         <th scope="col">{{ header }}</th>
         {% endfor %}
+
+        {% if object_name != "Job" %}
         <th scope="col">Edit</th>
         <th scope="col">Delete</th>
-        {% if object_name == "Job" %}
-          <th scope="col">Retry</th>
         {% endif %}
+
+        {% if object_name == "Job" %}
+        <th scope="col">Retry</th>
+        <th scope="col">View</th>
+        {% endif %}
+
       </tr>
     </thead>
     <tbody>
@@ -27,15 +33,17 @@
           {% for field in object_fields %}
           <td>{{ item|get_attr:field }}</td>
           {% endfor %}
+
           {# Jobs can't be edited or deleted, so don't show the edit button for them #}
-          {#% if object_name != "Job" %#}
+          {% if object_name != "Job" %}
             <td><a href="{% url 'edit_object' object_name.split|join:'_'|lower item.id %}" class="button">edit</a></td>
             <td><a href="{% url 'delete_object' object_name.split|join:'_'|lower item.id %}" class="button">delete</a></td>
-          {#% endif %#}
+          {% endif %}
 
           {# Jobs get "retry" and "cancel" buttons. #}
           {% if object_name == "Job" %}
             <td><a href="{% url 'retry_job' item.id %}" class="button">retry</a></td>
+            <td><a href="{% url 'view_job' item.id %}" class="button">view</a></td>
           {% endif %}
 
         </tr>

@@ -1,0 +1,28 @@
+{% extends "ssherlock_server/home.html" %}
+{% block title %}View Job{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between;">
+    <!-- Job Log Section -->
+    <div style="flex: 1; margin-right: 20px;">
+        <h2>Job Log</h2>
+        <div id="job-log">
+            <!-- Example log entries -->
+            <p>Log entry 1: Job started...</p>
+            <p>Log entry 2: Processing data...</p>
+            <p>Log entry 3: Job completed successfully.</p>
+            <!-- Add more log entries dynamically as needed -->
+        </div>
+    </div>
+
+    <!-- Controls Section -->
+    <div style="flex: 0 0 200px; text-align: center;">
+        <h2>Controls</h2>
+        <form method="post" action="{% url 'cancel_job' job_id=job.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Cancel</button>
+        </form>
+        <!-- Add more controls if necessary -->
+    </div>
+</div>
+{% endblock %}

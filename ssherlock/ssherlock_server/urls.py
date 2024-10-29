@@ -14,9 +14,7 @@ urlpatterns = [
     path(
         "delete/<str:model_type>/<uuid:uuid>", views.delete_object, name="delete_object"
     ),
-    path(
-        "retry/job/<uuid:uuid>", views.retry_job, name="retry_job"
-    ),
+    path("retry/job/<uuid:job_id>", views.retry_job, name="retry_job"),
     path("bastion_host_list", views.bastion_host_list, name="bastion_host_list"),
     path("credential_list", views.credential_list, name="credential_list"),
     path("job_list", views.job_list, name="job_list"),
@@ -24,12 +22,12 @@ urlpatterns = [
     path("target_host_list", views.target_host_list, name="target_host_list"),
     path("request_job", views.request_job, name="request_job"),
     path(
-        "update_job_status/<uuid:job_id>", views.update_job_status, name="update_job_status"
+        "update_job_status/<uuid:job_id>",
+        views.update_job_status,
+        name="update_job_status",
     ),
-    path(
-        "get_job_status/<uuid:job_id>", views.get_job_status, name="get_job_status"
-    ),
-    path(
-        "log_job_data/<uuid:job_id>", views.log_job_data, name="log_job_data"
-    ),
+    path("get_job_status/<uuid:job_id>", views.get_job_status, name="get_job_status"),
+    path("log_job_data/<uuid:job_id>", views.log_job_data, name="log_job_data"),
+    path("view_job/<uuid:job_id>", views.view_job, name="view_job"),
+    path("cancel_job/<uuid:job_id>", views.cancel_job, name="cancel_job"),
 ]

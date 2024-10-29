@@ -4,7 +4,7 @@
 
 import json
 import os
-from django.http import Http404, JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, redirect, render
@@ -66,7 +66,13 @@ def delete_object(request, model_type, uuid):
     model, _ = model_form_tuple
     instance = get_object_or_404(model, pk=uuid)
     instance.delete()
-    return redirect(f"/{model_type}_list")
+    # Reload the page that this function was called from to reflect the change.
+    referer_url = request.META.get('HTTP_REFERER')
+    if referer_url:
+        return redirect(referer_url)
+    else:
+        # Fallback URL if HTTP_REFERER is not set
+        return redirect(f"/{model_type}_list")
 
 
 def retry_job(request, job_id):
@@ -82,6 +88,8 @@ def retry_job(request, job_id):
     else:
         # Fallback URL if HTTP_REFERER is not set
         return redirect('/job_list')
+
+
 def cancel_job(request, job_id):
     """Cancel a given job by changing its status to 'Canceled.'"""
     job = get_object_or_404(Job, pk=job_id)
@@ -117,6 +125,15 @@ def create_job(request):
         "object_name": "Job",
     }
     return render(request, "ssherlock_server/objects/add_object.html", context)
+
+
+def view_job(request, job_id):
+    """View details for a given job, including the job log"""
+    job = get_object_or_404(Job, pk=job_id)
+    context = {
+        "job": job,
+    }
+    return render(request, "ssherlock_server/objects/view_job.html", context)
 
 
 def home(request):

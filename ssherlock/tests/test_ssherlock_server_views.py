@@ -902,6 +902,8 @@ class TestRetryJob(TestCase):
     def test_retry_job_correct_response(self):
         response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
         self.assertEqual(response.status_code, 302)
+
+
 class TestCancelJob(TestCase):
 
     def setUp(self):
@@ -1079,3 +1081,50 @@ class TestLogJobData(TestCase):
             os.remove(self.log_file_path)
         if os.path.exists(self.log_dir):
             os.removedirs(self.log_dir)
+
+
+class TestViewJob(TestCase):
+    """Tests for the view_job function."""
+
+    def setUp(self):
+        # Set up initial data.
+        self.user = User.objects.create(email="testuser@example.com")
+        self.llm_api = LlmApi.objects.create(
+            base_url="http://api.example.com", api_key="apikey123", user=self.user
+        )
+        self.bastion_host = BastionHost.objects.create(
+            hostname="bastion.example.com", user=self.user, port=22
+        )
+        self.credential = Credential.objects.create(
+            credential_name="admin",
+            user=self.user,
+            username="admin",
+            password="password",
+        )
+        self.target_host = TargetHost.objects.create(
+            hostname="target.example.com", user=self.user, port=22
+        )
+
+        self.job = Job.objects.create(
+            status="Running",
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 1 instructions",
+            user=self.user,
+        )
+        self.job.target_hosts.add(self.target_host)
+
+    def test_view_existing_job(self):
+        """Helper function to test the job view."""
+        response = self.client.get(reverse("view_job", args=[str(self.job.id)]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "ssherlock_server/objects/view_job.html")
+
+    def test_view_nonexistent_job(self):
+        """Test viewing a nonexistent job returns 404."""
+        non_existent_job_id = uuid.uuid4()
+        response = self.client.get(reverse("view_job", args=[str(non_existent_job_id)]))
+        self.assertEqual(response.status_code, 404)
