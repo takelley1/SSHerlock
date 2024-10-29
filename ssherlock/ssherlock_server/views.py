@@ -69,13 +69,19 @@ def delete_object(request, model_type, uuid):
     return redirect(f"/{model_type}_list")
 
 
-def retry_job(request, uuid):
+def retry_job(request, job_id):
     """Changes a given job's status to 'Pending.'"""
-    job = get_object_or_404(Job, pk=uuid)
-    if job.status == "Failed":
+    job = get_object_or_404(Job, pk=job_id)
+    if job.status in ["Failed", "Canceled"]:
         job.status = "Pending"
-    job.save()
-    return redirect("/job_list")
+        job.save()
+    # Reload the page that this function was called from to reflect the change.
+    referer_url = request.META.get('HTTP_REFERER')
+    if referer_url:
+        return redirect(referer_url)
+    else:
+        # Fallback URL if HTTP_REFERER is not set
+        return redirect('/job_list')
 def cancel_job(request, job_id):
     """Cancel a given job by changing its status to 'Canceled.'"""
     job = get_object_or_404(Job, pk=job_id)

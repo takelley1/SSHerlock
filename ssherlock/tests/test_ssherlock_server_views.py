@@ -883,46 +883,25 @@ class TestRetryJob(TestCase):
         self.completed_job.target_hosts.add(self.target_host)
 
     def test_retry_failed_job_changes_status_to_pending(self):
-        # Ensure the job's current status is 'Failed'
         self.assertEqual(self.failed_job.status, "Failed")
-
-        # Call the retry_job view
-        response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
-
-        # Refresh the job from the database
+        self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
         self.failed_job.refresh_from_db()
-
-        # Check if the job status has changed to 'Pending'
         self.assertEqual(self.failed_job.status, "Pending")
-        # Check if the response redirects to the job list
-        self.assertRedirects(response, "/job_list")
 
     def test_retry_non_failed_job_does_not_change_status(self):
-        # Ensure the job's current status is 'Completed'
         self.assertEqual(self.completed_job.status, "Completed")
-
-        # Call the retry_job view
-        response = self.client.get(reverse("retry_job", args=[self.completed_job.pk]))
-
-        # Refresh the job from the database
+        self.client.get(reverse("retry_job", args=[self.completed_job.pk]))
         self.completed_job.refresh_from_db()
-
-        # Check if the job status has not changed
         self.assertEqual(self.completed_job.status, "Completed")
-        # Check if the response redirects to the job list
-        self.assertRedirects(response, "/job_list")
 
     def test_retry_job_non_existent_job(self):
-        # Attempt to retry a job with an invalid UUID
         invalid_uuid = "00000000-0000-0000-0000-000000000000"
         response = self.client.get(reverse("retry_job", args=[invalid_uuid]))
-
-        # Check if the response is 404
         self.assertEqual(response.status_code, 404)
 
     def test_retry_job_correct_response(self):
-        # Call the retry_job view for a failed job
         response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
+        self.assertEqual(response.status_code, 302)
 class TestCancelJob(TestCase):
 
     def setUp(self):
