@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#sh!/usr/bin/env bash
 # Run tests for all of the ssherlock code.
 set -euo pipefail
 
@@ -15,5 +15,5 @@ echo "####    RUNNING TESTS FOR DJANGO APP    ####"
 echo "############################################"
 cd ssherlock/tests || exit 1
 coverage erase
-coverage run --branch --source=../ssherlock_server ../manage.py test --shuffle --force-color $*
+coverage run --branch --source=../ssherlock_server ../manage.py test --force-color $*
 coverage report --skip-covered --show-missing
