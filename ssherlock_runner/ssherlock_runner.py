@@ -1,4 +1,4 @@
-"""Main runner."""
+"""Main worker that runs jobs created by the SSHerlock server."""
 
 # pylint: disable=import-error
 import json
@@ -20,10 +20,12 @@ class HttpPostHandler(log.Handler):
     """Custom logging handler to send logs to the SSHerlock server via HTTP POST."""
 
     def __init__(self, job_id):
+        """Initialize the HttpPostHandler with a job ID."""
         super().__init__()
         self.job_id = job_id
 
     def emit(self, record):
+        """Emit a log record to the SSHerlock server."""
         log_entry = self.format(record)
         try:
             response = requests.post(
@@ -85,7 +87,7 @@ def run_job(job_data):
 
     Args:
         job_data (dict): Dictionary containing job information including id, API base URL,
-                         instructions, target host details, and credentials.
+                            instructions, target host details, and credentials.
     """
     http_post_handler = HttpPostHandler(job_data["id"])
     http_post_handler.setLevel(log.INFO)  # Set desired level for remote logging
@@ -229,7 +231,9 @@ class Runner:  # pylint: disable=too-many-arguments
         self.wait_for_llm_to_become_available()
 
     def query_llm(self, prompt) -> str:
-        """Send a prompt to an LLM API and return its reply. LLM API must be OpenAI-compatible.
+        """Send a prompt to an LLM API and return its reply.
+
+        LLM API must be OpenAI-compatible.
 
         Args:
             base_url (string): The base URL of the LLM API, like "https://codeium.example.com/v1".
@@ -307,8 +311,7 @@ class Runner:  # pylint: disable=too-many-arguments
             return False
 
     def wait_for_llm_to_become_available(self) -> None:
-        """
-        Wait in a loop until the LLM API can be reached successfully.
+        """Wait until the LLM API can be reached successfully.
 
         Raises:
             Raises a RuntimeError if waiting times out.
@@ -324,8 +327,7 @@ class Runner:  # pylint: disable=too-many-arguments
         raise RuntimeError("Timed out waiting for LLM server to become available!")
 
     def summarize_string(self, string: str) -> str:
-        """
-        Summarize the given string with the LLM API.
+        """Summarize the given string with the LLM API.
 
         This is done so longer strings can better fit into the LLM's context window during long
         conversations.
@@ -351,8 +353,7 @@ class Runner:  # pylint: disable=too-many-arguments
         return llm_summarization
 
     def context_size_warning_check(self, messages, threshold=0.85) -> bool:
-        """
-        Print a warning if we're about to exceed the context size of the model.
+        """Print a warning if we're about to exceed the context size of the model.
 
         Args:
             messages (list of dicts): Counts tokens in the "content" key of each dictionary in the
@@ -385,8 +386,7 @@ class Runner:  # pylint: disable=too-many-arguments
         return False
 
     def run_ssh_cmd(self, connection: fabric.Connection, command: str) -> str:
-        """
-        Run a command over an existing SSH connection and return its output.
+        """Run a command over an existing SSH connection and return its output.
 
         Args:
             ssh (fabric.Connection): The open SSH connection to use for command execution.
@@ -422,8 +422,7 @@ class Runner:  # pylint: disable=too-many-arguments
             raise
 
     def is_job_canceled(self) -> bool:
-        """
-        Call the SSHerlock server API to get the current status of the job.
+        """Call the SSHerlock server API to get the current status of the job.
 
         Returns:
             bool: True if the job is canceled, False otherwise.
@@ -444,8 +443,7 @@ class Runner:  # pylint: disable=too-many-arguments
             return False
 
     def initialize_messages(self) -> list:
-        """
-        Initialize the messages list with the system and user prompts.
+        """Initialize the messages list with the system and user prompts.
 
         Args:
             system_prompt (str): The system's prompt.
@@ -460,8 +458,7 @@ class Runner:  # pylint: disable=too-many-arguments
         ]
 
     def setup_ssh_connection_params(self) -> dict:
-        """
-        Prepare SSH connection parameters based on the configuration.
+        """Prepare SSH connection parameters based on the configuration.
 
         Args:
             config (Config): Configuration object containing SSH credentials.
@@ -474,8 +471,7 @@ class Runner:  # pylint: disable=too-many-arguments
         return {"password": self.credentials_for_target_hosts_password}
 
     def process_interaction_loop(self, messages: list, connect_args: dict) -> None:
-        """
-        Process the interaction loop with the LLM and SSH server.
+        """Process the interaction loop with the LLM and SSH server.
 
         Args:
             messages (list): The list of messages in the conversation.
@@ -527,8 +523,7 @@ class Runner:  # pylint: disable=too-many-arguments
                 self.context_size_warning_check(messages)
 
     def handle_ssh_command(self, ssh: fabric.Connection, llm_reply: str) -> str:
-        """
-        Send the LLM reply to the server via SSH and get the server's response.
+        """Send the LLM reply to the server via SSH and get the server's response.
 
         Args:
             ssh (fabric.Connection): The active SSH connection.
@@ -563,8 +558,7 @@ class Runner:  # pylint: disable=too-many-arguments
 
 
 def strip_eot_from_string(string: str) -> str:
-    """
-    Strip the <|eot_id|> from the end of the LLM response for more human-readable output.
+    """Strip the <|eot_id|> from the end of the LLM response for more human-readable output.
 
     Args:
         string (str): The string you wish to strip the EOT from.
@@ -579,8 +573,7 @@ def strip_eot_from_string(string: str) -> str:
 
 
 def is_string_too_long(string: str, threshold: int = 1000) -> bool:
-    """
-    Determine if the given string is longer than a certain threshold.
+    """Determine if the given string is longer than a certain threshold.
 
     This helps us determine if LLM output needs to be summarized to reduce context size.
 
@@ -598,8 +591,7 @@ def is_string_too_long(string: str, threshold: int = 1000) -> bool:
 
 
 def count_tokens(messages) -> int:
-    """
-    Count the number of LLM tokens in the provided dictionary of context.
+    """Count the number of LLM tokens in the provided dictionary of context.
 
     Uses the list of dictionaries inside the messages list and counts the tokens in the
     "content" key.
@@ -628,8 +620,7 @@ def count_tokens(messages) -> int:
 
 
 def is_llm_done(llm_reply: str) -> bool:
-    """
-    Check if the LLM has finished with its objective.
+    """Check if the LLM has finished with its objective.
 
     Args:
         llm_reply (str): The reply from the LLM to analyze to determine if it's finished with its
@@ -644,8 +635,7 @@ def is_llm_done(llm_reply: str) -> bool:
 
 
 def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
-    """
-    Update the conversation messages with the LLM's reply and the server's response.
+    """Update the conversation messages with the LLM's reply and the server's response.
 
     Args:
         messages (list): The list of messages in the conversation.
@@ -657,8 +647,7 @@ def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
 
 
 def fetch_job_data(attempt, max_attempts):
-    """
-    Fetch job data by requesting jobs until one is available or attempts are exhausted.
+    """Fetch job data by requesting jobs until one is available or attempts are exhausted.
 
     Args:
         attempt (int): Current attempt count.
@@ -687,8 +676,7 @@ def fetch_job_data(attempt, max_attempts):
 
 
 def execute_job(job_data):
-    """
-    Execute the given job and handle any exceptions.
+    """Execute the given job and handle any exceptions.
 
     Args:
         job_data (dict): The job data to be processed.
@@ -701,8 +689,7 @@ def execute_job(job_data):
 
 
 def main(max_attempts=None):
-    """
-    Main loop to continually request a job to run and run any job it receives.
+    """Main loop to continually request a job to run and run any job it receives.
 
     Args:
         max_attempts (int, optional): Maximum attempts to wait for a job. Defaults to None.
