@@ -309,11 +309,16 @@ def log_job_data(request, job_id):
         # This is to prevent letting directories fill up with tons of files.
         job_id = str(job_id)
         log_dir = os.path.join(
-            settings.BASE_DIR.parent, "ssherlock_runner_job_logs", job_id[:2], job_id[2:4])
+            settings.BASE_DIR.parent,
+            "ssherlock_runner_job_logs",
+            job_id[0:2],
+            job_id[2:4],
+            job_id[4:6],
+        )
 
         os.makedirs(log_dir, exist_ok=True)
 
-        log_file_path = os.path.join(log_dir, f"{job_id[4:]}.log")
+        log_file_path = os.path.join(log_dir, f"{job_id[6:]}.log")
 
         # Write the log data to the file
         with open(log_file_path, "a", encoding="utf-8", buffering=1) as log_file:

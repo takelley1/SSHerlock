@@ -988,10 +988,11 @@ class TestLogJobData(TestCase):
         self.log_dir = os.path.join(
             settings.BASE_DIR.parent,
             "ssherlock_runner_job_logs",
-            self.job_id[:2],
+            self.job_id[0:2],
             self.job_id[2:4],
+            self.job_id[4:6],
         )
-        self.log_file_path = os.path.join(self.log_dir, f"{self.job_id[4:]}.log")
+        self.log_file_path = os.path.join(self.log_dir, f"{self.job_id[6:]}.log")
 
     @patch("ssherlock_server.utils.check_private_key")
     def test_valid_log_entry(self, mock_check_private_key):
