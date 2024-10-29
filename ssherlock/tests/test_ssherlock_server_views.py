@@ -843,7 +843,6 @@ class TestGetJobStatus(TestCase):
 class TestRetryJob(TestCase):
 
     def setUp(self):
-        # Set up initial data.
         self.user = User.objects.create(email="testuser@example.com")
         self.llm_api = LlmApi.objects.create(
             base_url="http://api.example.com", api_key="apikey123", user=self.user
@@ -861,7 +860,6 @@ class TestRetryJob(TestCase):
             hostname="target.example.com", user=self.user, port=22
         )
 
-        # Create a job with 'Failed' status
         self.failed_job = Job.objects.create(
             status="Failed",
             llm_api=self.llm_api,
@@ -873,7 +871,6 @@ class TestRetryJob(TestCase):
         )
         self.failed_job.target_hosts.add(self.target_host)
 
-        # Create a job with 'Completed' status
         self.completed_job = Job.objects.create(
             status="Completed",
             llm_api=self.llm_api,
@@ -926,10 +923,75 @@ class TestRetryJob(TestCase):
     def test_retry_job_correct_response(self):
         # Call the retry_job view for a failed job
         response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
+class TestCancelJob(TestCase):
 
-        # Check if the response is a redirect (HTTP 302)
+    def setUp(self):
+        self.user = User.objects.create(email="testuser@example.com")
+        self.llm_api = LlmApi.objects.create(
+            base_url="http://api.example.com", api_key="apikey123", user=self.user
+        )
+        self.bastion_host = BastionHost.objects.create(
+            hostname="bastion.example.com", user=self.user, port=22
+        )
+        self.credential = Credential.objects.create(
+            credential_name="admin",
+            user=self.user,
+            username="admin",
+            password="password",
+        )
+        self.target_host = TargetHost.objects.create(
+            hostname="target.example.com", user=self.user, port=22
+        )
+
+        self.running_job = Job.objects.create(
+            status="Running",
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 1 instructions",
+            user=self.user,
+        )
+        self.running_job.target_hosts.add(self.target_host)
+
+        self.completed_job = Job.objects.create(
+            status="Completed",
+            llm_api=self.llm_api,
+            bastion_host=self.bastion_host,
+            credentials_for_bastion_host=self.credential,
+            credentials_for_target_hosts=self.credential,
+            instructions="Job 2 instructions",
+            user=self.user,
+        )
+        self.completed_job.target_hosts.add(self.target_host)
+
+    def test_cancel_running_job_changes_status_to_canceled(self):
+        self.assertEqual(self.running_job.status, "Running")
+        response = self.client.get(
+            reverse("cancel_job", args=[self.running_job.pk]), HTTP_REFERER="/job_list"
+        )
+        self.running_job.refresh_from_db()
+        self.assertEqual(self.running_job.status, "Canceled")
         self.assertEqual(response.status_code, 302)
-        # Check if the redirection URL is correct
+
+    def test_cancel_completed_job_does_not_change_status(self):
+        self.assertEqual(self.completed_job.status, "Completed")
+        response = self.client.get(
+            reverse("cancel_job", args=[self.completed_job.pk]),
+            HTTP_REFERER="/job_list",
+        )
+        self.completed_job.refresh_from_db()
+        self.assertEqual(self.completed_job.status, "Completed")
+        self.assertEqual(response.status_code, 302)
+
+    def test_cancel_non_existent_job(self):
+        invalid_uuid = "00000000-0000-0000-0000-000000000000"
+        response = self.client.get(reverse("cancel_job", args=[invalid_uuid]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_cancel_job_no_http_referer(self):
+        response = self.client.get(reverse("cancel_job", args=[self.running_job.pk]))
+        self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, "/job_list")
 
 

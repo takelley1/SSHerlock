@@ -76,6 +76,19 @@ def retry_job(request, uuid):
         job.status = "Pending"
     job.save()
     return redirect("/job_list")
+def cancel_job(request, job_id):
+    """Cancel a given job by changing its status to 'Canceled.'"""
+    job = get_object_or_404(Job, pk=job_id)
+    if job.status not in ["Completed", "Canceled"]:
+        job.status = "Canceled"
+        job.save()
+    # Reload the page that this function was called from to reflect the change.
+    referer_url = request.META.get('HTTP_REFERER')
+    if referer_url:
+        return redirect(referer_url)
+    else:
+        # Fallback URL if HTTP_REFERER is not set
+        return redirect('/job_list')
 
 
 def create_job(request):
