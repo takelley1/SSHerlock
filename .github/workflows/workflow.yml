@@ -27,7 +27,7 @@ jobs:
       - name: Look for misspellings with codespell
         run: |
           # Skip venv, Ansible Jinja files.
-          codespell -S "./venv/*,*ansible*.j2"
+          codespell --skip "./venv/*,*ansible*.j2" --ignore-words-list "assertIn,ure"
 
   yamllint:
     runs-on: ubuntu-latest

@@ -13,7 +13,7 @@ fi
 echo "############################################"
 echo "####    RUNNING CODESPELL               ####"
 echo "############################################"
-codespell -S "./venv/*,*ansible*.j2"
+codespell --skip "./venv/*,*ansible*.j2" --ignore-words-list "assertIn,ure"
 
 echo "############################################"
 echo "####    RUNNING YAMLLINT                ####"
