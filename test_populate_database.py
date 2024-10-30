@@ -1,6 +1,6 @@
-# Populate the current working database with a bunch of test objects.
+""".Populate the current working database with a bunch of test objects."""
 
-# pylint: disable=wrong-import-position,too-many-locals,missing-function-docstring
+# pylint: disable=wrong-import-position, too-many-locals, missing-function-docstring, no-member
 
 import sys
 import os

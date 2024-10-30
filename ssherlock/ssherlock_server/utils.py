@@ -4,9 +4,7 @@ from django.http import JsonResponse
 
 
 def check_private_key(request):
-    """
-    Check if the correct private key is provided in the request headers.
-    """
+    """Check if the correct private key is provided in the request headers."""
     authorization_header = request.headers.get("Authorization")
     if not authorization_header:
         return JsonResponse({"message": "Authorization header not provided."}, status=400)

@@ -1,6 +1,6 @@
 """All Django views for the SSHerlock server application."""
 
-# pylint: disable=import-error, missing-class-docstring, missing-function-docstring, invalid-str-returned, no-member, invalid-name, unused-argument
+# pylint: disable=import-error, invalid-str-returned, no-member
 
 import json
 import os
@@ -70,13 +70,12 @@ def delete_object(request, model_type, uuid):
     referer_url = request.META.get('HTTP_REFERER')
     if referer_url:
         return redirect(referer_url)
-    else:
-        # Fallback URL if HTTP_REFERER is not set
-        return redirect(f"/{model_type}_list")
+    # Fallback URL if HTTP_REFERER is not set.
+    return redirect(f"/{model_type}_list")
 
 
 def retry_job(request, job_id):
-    """Changes a given job's status to 'Pending.'"""
+    """Changes a given job's status to Pending."""
     job = get_object_or_404(Job, pk=job_id)
     if job.status in ["Failed", "Canceled"]:
         job.status = "Pending"
@@ -85,13 +84,12 @@ def retry_job(request, job_id):
     referer_url = request.META.get('HTTP_REFERER')
     if referer_url:
         return redirect(referer_url)
-    else:
-        # Fallback URL if HTTP_REFERER is not set
-        return redirect('/job_list')
+    # Fallback URL if HTTP_REFERER is not set.
+    return redirect('/job_list')
 
 
 def cancel_job(request, job_id):
-    """Cancel a given job by changing its status to 'Canceled.'"""
+    """Cancel a given job by changing its status to Canceled."""
     job = get_object_or_404(Job, pk=job_id)
     if job.status not in ["Completed", "Canceled"]:
         job.status = "Canceled"
@@ -100,9 +98,8 @@ def cancel_job(request, job_id):
     referer_url = request.META.get('HTTP_REFERER')
     if referer_url:
         return redirect(referer_url)
-    else:
-        # Fallback URL if HTTP_REFERER is not set
-        return redirect('/job_list')
+    # Fallback URL if HTTP_REFERER is not set.
+    return redirect('/job_list')
 
 
 def create_job(request):
@@ -128,7 +125,7 @@ def create_job(request):
 
 
 def view_job(request, job_id):
-    """View details for a given job, including the job log"""
+    """View details for a given job, including the job log."""
     job = get_object_or_404(Job, pk=job_id)
     context = {
         "job": job,
@@ -256,7 +253,7 @@ def update_job_status(request, job_id):
         if not new_status:
             return JsonResponse({"message": "Status not provided."}, status=400)
 
-        VALID_STATUSES = [
+        valid_statuses = [
             "Canceled",
             "Completed",
             "Context Exceeded",
@@ -264,7 +261,7 @@ def update_job_status(request, job_id):
             "Pending",
             "Running",
         ]
-        if new_status not in VALID_STATUSES:
+        if new_status not in valid_statuses:
             return JsonResponse(
                 {"message": f"Invalid status: {new_status}"}, status=400
             )

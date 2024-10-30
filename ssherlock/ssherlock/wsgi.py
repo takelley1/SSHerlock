@@ -1,5 +1,4 @@
-"""
-WSGI config for ssherlock project.
+"""WSGI config for ssherlock project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

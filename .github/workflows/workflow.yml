@@ -2,7 +2,7 @@
 
 name: Workflow
 
-on:
+on:  # yamllint disable-line
   - push
 
 env:

@@ -1,5 +1,4 @@
-"""
-ASGI config for ssherlock project.
+"""ASGI config for ssherlock project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 

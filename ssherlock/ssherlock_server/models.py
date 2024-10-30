@@ -1,6 +1,6 @@
 """All Django models for the SSHerlock server application."""
 
-# pylint: disable=import-error, missing-class-docstring, invalid-str-returned
+# pylint: disable=import-error, missing-class-docstring, invalid-str-returned, no-member
 
 import uuid
 
@@ -95,8 +95,7 @@ class TargetHost(models.Model):
 
 
 class Job(models.Model):
-    """
-    Defines a job in which the LLM runs against a target server.
+    """Defines a job in which the LLM runs against a target server.
 
     The LLM must complete a set of instructions before the job is complete.
     """

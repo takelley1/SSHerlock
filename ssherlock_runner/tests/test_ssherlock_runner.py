@@ -1,15 +1,16 @@
 """Test the functions in the runner."""
 
-# pylint: disable=import-error, wrong-import-position, redefined-outer-name
+# pylint: disable=import-error, redefined-outer-name, wrong-import-position
 
 import sys
-import requests
+import json
+
 from unittest.mock import MagicMock
 from unittest.mock import patch
 from unittest import TestCase
-import json
 
 import openai
+import requests
 import pytest
 
 sys.path.insert(1, "../")
@@ -344,7 +345,7 @@ def test_update_job_status_exception():
     """Ensure proper logging on exception during job status update."""
     with patch(
         "requests.post", side_effect=Exception("Connection error")
-    ) as mock_post, patch("ssherlock_runner.log.error") as mock_log_error:
+    ) as _, patch("ssherlock_runner.log.error") as mock_log_error:
 
         update_job_status("job123", "Failed")
 
@@ -368,11 +369,11 @@ def test_run_job():
         "credentials_for_bastion_host_password": "bastion_pass",
     }
 
-    with patch("ssherlock_runner.update_job_status") as mock_update_status, patch(
+    with patch("ssherlock_runner.update_job_status") as _, patch(
         "ssherlock_runner.Runner"
-    ) as MockRunner:
+    ) as mock_runner:
 
-        mock_runner_instance = MockRunner.return_value
+        mock_runner_instance = mock_runner.return_value
         run_job(job_data)
         mock_runner_instance.run.assert_called_once()
 
@@ -393,14 +394,14 @@ def test_request_job_failure():
     """Ensure get_next_job handles network errors gracefully."""
     with patch(
         "requests.get", side_effect=requests.RequestException("Network error")
-    ) as mock_get, patch("ssherlock_runner.log.error") as mock_log_error:
+    ) as _, patch("ssherlock_runner.log.error") as mock_log_error:
 
         result = request_job()
         assert result is None
 
         # Verify that an error was logged with the correct format.
         mock_log_error.assert_called_once()
-        args, kwargs = mock_log_error.call_args
+        args, _ = mock_log_error.call_args
         assert args[0] == "Error fetching job: %s"
         assert str(args[1]) == "Network error"
 
@@ -525,7 +526,24 @@ def test_is_job_canceled_failure(mock_log_error, mock_requests_get, job):
 def test_process_interaction_with_exception(
     mock_update_job_status, mock_query_llm, mock_fabric_connection, job
 ):
-    # Setup mock to raise an exception during SSH command execution
+    """
+    Test the process_interaction_loop method to ensure it handles exceptions during SSH command execution.
+
+    Mocks:
+        - query_llm: Simulates LLM responses.
+        - fabric.Connection: Mocks the SSH connection behavior to raise an exception.
+        - update_job_status: Verifies that job status updates are called appropriately.
+
+    Args:
+        mock_update_job_status (MagicMock): Mock for updating job status.
+        mock_query_llm (MagicMock): Mock for querying the LLM.
+        mock_fabric_connection (MagicMock): Mock for fabric.Connection.
+        job: The job instance being tested.
+
+    Asserts:
+        - Ensures the exception is raised and caught as expected.
+        - Verifies the job status is updated to "Failed".
+    """
     mock_query_llm.side_effect = ["command1"]
 
     # Mock SSH connection behavior with an exception
@@ -553,6 +571,24 @@ def test_process_interaction_with_exception(
 def test_process_interaction_job_canceled(
     mock_update_job_status, mock_query_llm, mock_fabric_connection, job
 ):
+    """
+    Test the process_interaction_loop method to verify it handles job cancellation correctly.
+
+    Mocks:
+        - query_llm: Simulates LLM responses.
+        - fabric.Connection: Mocks the SSH connection behavior.
+        - update_job_status: Verifies that job status updates are called appropriately.
+
+    Args:
+        mock_update_job_status (MagicMock): Mock for updating job status.
+        mock_query_llm (MagicMock): Mock for querying the LLM.
+        mock_fabric_connection (MagicMock): Mock for fabric.Connection.
+        job: The job instance being tested.
+
+    Asserts:
+        - Confirms the job is marked as canceled.
+        - Verifies the job status is updated to "Canceled".
+    """
     # Setup mock responses
     mock_query_llm.side_effect = ["command1", "command2"]
 
@@ -571,7 +607,6 @@ def test_process_interaction_job_canceled(
     # Run the process_interaction_loop
     job.process_interaction_loop(messages, connect_args)
 
-    # Assertions
     assert job.is_job_canceled.called
     mock_update_job_status.assert_any_call(job.job_id, "Canceled")
 
@@ -582,6 +617,25 @@ def test_process_interaction_job_canceled(
 def test_run_function(
     mock_update_job_status, mock_query_llm, mock_fabric_connection, job
 ):
+    """
+    Test the run method of the Runner class to ensure it executes the interaction loop properly.
+
+    Mocks:
+        - query_llm: Simulates LLM responses.
+        - fabric.Connection: Mocks the SSH connection behavior.
+        - update_job_status: Verifies that job status updates are called appropriately.
+
+    Args:
+        mock_update_job_status (MagicMock): Mock for updating job status.
+        mock_query_llm (MagicMock): Mock for querying the LLM.
+        mock_fabric_connection (MagicMock): Mock for fabric.Connection.
+        job: The job instance being tested.
+
+    Asserts:
+        - Checks that the job status transitions from "Running" to "Completed".
+        - Verifies the correct number of LLM queries are made.
+        - Ensures SSH commands are executed.
+    """
     # Setup mocks
     mock_query_llm.side_effect = ["command1", "DONE"]
 
@@ -593,7 +647,6 @@ def test_run_function(
     # Run the runner's run method
     job.run()
 
-    # Assertions
     mock_update_job_status.assert_any_call(job.job_id, "Running")
     mock_update_job_status.assert_any_call(job.job_id, "Completed")
     assert mock_query_llm.call_count == 2
@@ -601,6 +654,14 @@ def test_run_function(
 
 
 def test_update_conversation_normal():
+    """
+    Test the update_conversation function to ensure it updates conversation messages correctly.
+
+    Verifies normal behavior when both LLM and SSH replies are provided.
+
+    Asserts:
+        - Checks that the conversation messages are updated with new entries.
+    """
     # Initial conversation messages
     messages = [
         {"role": "system", "content": "You're a helpful AI assistant."},
@@ -628,6 +689,14 @@ def test_update_conversation_normal():
 
 
 def test_update_conversation_empty_replies():
+    """
+    Test the update_conversation function to ensure it handles empty replies correctly.
+
+    Verifies behavior when both LLM and SSH replies are empty.
+
+    Asserts:
+        - Checks that the conversation messages are updated with empty entries.
+    """
     # Initial conversation messages
     messages = [
         {"role": "system", "content": "You're a helpful AI assistant."},
@@ -653,6 +722,14 @@ def test_update_conversation_empty_replies():
 
 
 def test_update_conversation_large_ssh_reply():
+    """
+    Test the update_conversation function to ensure it handles large SSH replies correctly.
+
+    Verifies behavior when SSH reply contains substantial information.
+
+    Asserts:
+        - Checks that the conversation messages are updated with large SSH reply entries.
+    """
     # Initial conversation messages
     messages = [
         {"role": "system", "content": "You're a helpful AI assistant."},
@@ -677,13 +754,26 @@ def test_update_conversation_large_ssh_reply():
     assert messages == expected_messages
 
 
-
 @patch("ssherlock_runner.run_job")
 @patch("ssherlock_runner.request_job")
 @patch("ssherlock_runner.time.sleep", return_value=None)  # To skip actual sleeping
-def test_main_successful_job_retrieval(mock_sleep, mock_request_job, mock_run_job):
+def test_main_successful_job_retrieval(_, mock_request_job, mock_run_job):
+    """
+    Test the main function to ensure successful job retrieval and processing.
+
+    Mocks:
+        - request_job: Simulates job retrieval with initial None response and subsequent valid job.
+        - run_job: Verifies that the retrieved job is processed.
+        - time.sleep
+    : Simulates time delay without actual sleeping.
+
+    Asserts:
+        - Checks that the job retrieval is attempted multiple times.
+        - Verifies that the job is run once it is successfully retrieved.
+    """
+    # First call returns None to simulate waiting
     mock_request_job.side_effect = [
-        None,  # First call returns None to simulate waiting
+        None,
         {
             "id": "job123",
             "llm_api_baseurl": "http://api.example.com",
@@ -696,7 +786,7 @@ def test_main_successful_job_retrieval(mock_sleep, mock_request_job, mock_run_jo
             "credentials_for_bastion_host_username": "",
             "credentials_for_bastion_host_password": "",
         },
-        StopIteration  # Raise StopIteration to break the loop
+        StopIteration,
     ]
 
     main(max_attempts=3)
@@ -717,10 +807,23 @@ def test_main_successful_job_retrieval(mock_sleep, mock_request_job, mock_run_jo
         }
     )
 
+
 @patch("ssherlock_runner.run_job")
 @patch("ssherlock_runner.request_job")
 @patch("ssherlock_runner.time.sleep", return_value=None)
-def test_main_no_jobs_available(mock_sleep, mock_request_job, mock_run_job):
+def test_main_no_jobs_available(_, mock_request_job, mock_run_job):
+    """
+    Test the main function to ensure it handles scenarios where no jobs are initially available.
+
+    Mocks:
+        - request_job: Always returns None initially, then a valid job.
+        - run_job: Verifies that the job is processed once available.
+        - time.sleep: Simulates time delay without actual sleeping.
+
+    Asserts:
+        - Ensures the function loops until a job is found.
+        - Verifies that the job is run once it is successfully retrieved.
+    """
     # Mock request_job to always return None
     mock_request_job.side_effect = [None, None, {"id": "job123"}]
 
@@ -734,8 +837,20 @@ def test_main_no_jobs_available(mock_sleep, mock_request_job, mock_run_job):
 @patch("ssherlock_runner.request_job")
 @patch("ssherlock_runner.time.sleep", return_value=None)
 def test_main_exception_handling_in_request_job(
-    mock_sleep, mock_request_job, mock_run_job
+    _, mock_request_job, mock_run_job
 ):
+    """
+    Test the main function to ensure it handles exceptions during job requests gracefully.
+
+    Mocks:
+        - request_job: Raises an exception on the first call, then returns a valid job.
+        - run_job: Verifies that the job is processed once available.
+        - time.sleep: Simulates time delay without actual sleeping.
+
+    Asserts:
+        - Confirms the function retries after encountering an exception.
+        - Verifies that the job is run once it is successfully retrieved.
+    """
     # Mock request_job to raise an exception on first call, then return a job
     mock_request_job.side_effect = [Exception("Network error"), {"id": "job123"}]
 
