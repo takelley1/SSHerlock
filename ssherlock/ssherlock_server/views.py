@@ -4,7 +4,9 @@
 
 import json
 import os
-from django.http import Http404, JsonResponse, HttpResponse
+import time
+
+from django.http import Http404, JsonResponse, HttpResponse, StreamingHttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, redirect, render
@@ -67,7 +69,7 @@ def delete_object(request, model_type, uuid):
     instance = get_object_or_404(model, pk=uuid)
     instance.delete()
     # Reload the page that this function was called from to reflect the change.
-    referer_url = request.META.get('HTTP_REFERER')
+    referer_url = request.META.get("HTTP_REFERER")
     if referer_url:
         return redirect(referer_url)
     # Fallback URL if HTTP_REFERER is not set.
@@ -81,11 +83,11 @@ def retry_job(request, job_id):
         job.status = "Pending"
         job.save()
     # Reload the page that this function was called from to reflect the change.
-    referer_url = request.META.get('HTTP_REFERER')
+    referer_url = request.META.get("HTTP_REFERER")
     if referer_url:
         return redirect(referer_url)
     # Fallback URL if HTTP_REFERER is not set.
-    return redirect('/job_list')
+    return redirect("/job_list")
 
 
 def cancel_job(request, job_id):
@@ -95,11 +97,11 @@ def cancel_job(request, job_id):
         job.status = "Canceled"
         job.save()
     # Reload the page that this function was called from to reflect the change.
-    referer_url = request.META.get('HTTP_REFERER')
+    referer_url = request.META.get("HTTP_REFERER")
     if referer_url:
         return redirect(referer_url)
     # Fallback URL if HTTP_REFERER is not set.
-    return redirect('/job_list')
+    return redirect("/job_list")
 
 
 def create_job(request):
@@ -131,6 +133,35 @@ def view_job(request, job_id):
         "job": job,
     }
     return render(request, "ssherlock_server/objects/view_job.html", context)
+
+
+def stream_job_log(_, job_id):
+    """Stream job log data to the client. This stream is rendered on the view_job view."""
+    job_id = str(job_id)
+    log_dir = os.path.join(
+        settings.BASE_DIR.parent,
+        "ssherlock_runner_job_logs",
+        job_id[0:2],
+        job_id[2:4],
+        job_id[4:6],
+    )
+    log_file_path = os.path.join(log_dir, f"{job_id[6:]}.log")
+
+    def event_stream():
+        try:
+            with open(log_file_path, "r", encoding="utf-8") as log_file:
+                # Move to the end of the file
+                log_file.seek(0, os.SEEK_END)
+                while True:
+                    line = log_file.readline()
+                    if line:
+                        yield f"data: {line}\n\n"
+                    else:
+                        time.sleep(1)
+        except FileNotFoundError:
+            yield f"event: error\ndata: Log file not found for job ID {job_id}.\n\n"
+
+    return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 
 
 def home(request):

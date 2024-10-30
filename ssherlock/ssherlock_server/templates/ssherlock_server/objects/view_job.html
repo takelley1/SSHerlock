@@ -7,22 +7,55 @@
     <div style="flex: 1; margin-right: 20px;">
         <h2>Job Log</h2>
         <div id="job-log">
-            <!-- Example log entries -->
-            <p>Log entry 1: Job started...</p>
-            <p>Log entry 2: Processing data...</p>
-            <p>Log entry 3: Job completed successfully.</p>
-            <!-- Add more log entries dynamically as needed -->
+            <!-- Log entries will be appended here by JavaScript -->
         </div>
     </div>
 
     <!-- Controls Section -->
     <div style="flex: 0 0 200px; text-align: center;">
         <h2>Controls</h2>
+        <p>Status: {{ job.status }}</p>
+        <p>Created at: {{ job.created_at }}</p>
+        <p>Started at: {{ job.started_at }}</p>
+        <p>Completed at: {{ job.completed_at }}</p>
+        <p>Stopped at: {{ job.stopped_at }}</p>
+        <p>Duration: {{ job.duration }}</p>
+        <p>LLM API: {{ job.llm_api }}</p>
+        <p>Bastion host: {{ job.bastion_host }}</p>
+        <p>Credentials for bastion host: {{ job.credentials_for_bastion_host }}</p>
+        <p>Target host: {{ job.target_hosts_str }}</p>
+        <p>Credentials for target host: {{ job.credentials_for_target_hosts }}</p>
+        <p>Instructions: {{ job.instructions }}</p>
+
         <form method="post" action="{% url 'cancel_job' job_id=job.id %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger">Cancel</button>
         </form>
-        <!-- Add more controls if necessary -->
     </div>
 </div>
+
+<script>
+    const eventSource = new EventSource("{% url 'stream_job_log' job_id=job.id %}");
+    const jobLogDiv = document.getElementById("job-log");
+
+    eventSource.onmessage = function(event) {
+        const newLogEntry = document.createElement("p");
+        newLogEntry.textContent = event.data;
+        jobLogDiv.appendChild(newLogEntry);
+        jobLogDiv.scrollTop = jobLogDiv.scrollHeight; // Auto-scroll to the bottom
+    };
+
+    eventSource.addEventListener('error', function(event) {
+        const errorMessage = document.createElement("p");
+        errorMessage.style.color = "red";
+        errorMessage.textContent = event.data;
+        jobLogDiv.appendChild(errorMessage);
+        eventSource.close(); // Stop listening after error
+    });
+
+    eventSource.onerror = function() {
+        console.error("Error occurred in SSE connection.");
+        eventSource.close();
+    };
+</script>
 {% endblock %}

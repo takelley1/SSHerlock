@@ -5,7 +5,7 @@
 import uuid
 import json
 import os
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 from django.utils import timezone
 from django.conf import settings
 from django.test import TestCase, Client
@@ -1128,3 +1128,41 @@ class TestViewJob(TestCase):
         non_existent_job_id = uuid.uuid4()
         response = self.client.get(reverse("view_job", args=[str(non_existent_job_id)]))
         self.assertEqual(response.status_code, 404)
+
+
+class TestStreamJobLog(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.job_id = "0d7420d5-f24b-4b8e-8e50-bb0a20575b54"
+
+    @patch("builtins.open", new_callable=mock_open, read_data="Log entry 1\nLog entry 2\n")
+    def test_stream_job_log_success(self, _):
+        """Test streaming of job log when file exists."""
+        response = self.client.get(reverse('stream_job_log', args=[self.job_id]), stream=True)
+
+        # Collect a finite number of lines from the stream
+        content = []
+        for chunk in response.streaming_content:
+            content.append(chunk.decode('utf-8'))
+            if len(content) >= 2:  # Limit to two lines for the test
+                break
+
+        combined_content = "".join(content)
+        self.assertIn("data: Log entry 1", combined_content)
+        self.assertIn("data: Log entry 2", combined_content)
+
+    @patch("builtins.open", side_effect=FileNotFoundError)
+    def test_stream_job_log_file_not_found(self, _):
+        """Test streaming of job log when file does not exist."""
+        response = self.client.get(reverse('stream_job_log', args=[self.job_id]), stream=True)
+
+        # Collect a finite number of lines from the stream
+        content = []
+        for chunk in response.streaming_content:
+            content.append(chunk.decode('utf-8'))
+            if "event: error" in chunk.decode('utf-8'):
+                break
+
+        combined_content = "".join(content)
+        self.assertIn("event: error", combined_content)
+        self.assertIn("data: Log file not found", combined_content)
