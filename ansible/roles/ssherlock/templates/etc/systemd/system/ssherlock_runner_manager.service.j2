@@ -9,6 +9,7 @@ ExecStart={{ app_path }}/venv_production/bin/python3 {{ app_path }}/SSHerlock/ss
 WorkingDirectory={{ app_path }}/SSHerlock/ssherlock_runner
 Restart=always
 User=ssherlock
+# Ensure Python output is not buffered, making logs immediately visible
 Environment=PYTHONUNBUFFERED=1
 
 # Number of seconds to wait to restart after crashing.
