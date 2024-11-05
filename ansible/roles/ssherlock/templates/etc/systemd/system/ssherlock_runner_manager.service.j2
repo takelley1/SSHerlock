@@ -1,0 +1,39 @@
+# vim: ft=systemd
+[Unit]
+Description=SSHerlock Runner Manager Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={{ app_path }}/venv_production/bin/python3 {{ app_path }}/SSHerlock/ssherlock_runner/ssherlock_runner_manager.py
+WorkingDirectory={{ app_path }}/SSHerlock/ssherlock_runner
+Restart=always
+User=ssherlock
+Environment=PYTHONUNBUFFERED=1
+
+# Number of seconds to wait to restart after crashing.
+RestartSec=1
+
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+
+# CPU
+# Don't occupy more than X% of the total CPU time.
+CPUAccounting=yes
+CPUQuota=50%
+
+# RAM
+MemoryAccounting=yes
+# Heavily throttle RAM after X% usage.
+MemoryHigh=75%
+
+# IP
+IPAccounting=yes
+
+# IO
+IOAccounting=yes
+
+# Threads
+TasksAccounting=yes
+
+[Install]
+WantedBy=multi-user.target
