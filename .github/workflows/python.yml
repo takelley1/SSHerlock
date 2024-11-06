@@ -1,9 +1,13 @@
 ---
 
-name: Workflow
+name: Lint and test Python
 
 on:  # yamllint disable-line
-  - push
+  push:
+    paths:
+      - 'ssherlock/**'
+      - 'ssherlock_runner/**'
+      - '**.py'
 
 env:
   PYTHON_VERSION: "3.12.5"
@@ -101,7 +105,6 @@ jobs:
         run: |
           pydocstyle --config=./conf/.pydocstyle $(git ls-files)
 
-
   test_app:
     runs-on: ubuntu-latest
     steps:
@@ -137,19 +140,3 @@ jobs:
       - name: Run Tests
         run: |
           bash ./test_ssherlock_runner.sh
-
-  # deploy:
-  #   runs-on: ubuntu-latest
-  #   needs:
-  #     - test_runner
-  #     - test_app
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - name: Install Dependencies
-  #       run: |
-  #         apt-get install -y ansible
-
-  #     - name: Run Deployment
-  #       run: |
-  #         deploy_ssherlock.sh

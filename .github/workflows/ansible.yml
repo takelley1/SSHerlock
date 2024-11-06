@@ -1,0 +1,33 @@
+---
+
+name: Lint and test Ansible
+
+on:
+  push:
+    paths:
+      - 'ansible/**'
+
+jobs:
+
+  ansible_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ansible-lint
+        uses: ansible/ansible-lint@main
+        with:
+          args: ""
+          setup_python: "true"
+          working_directory: "./ansible/"
+          requirements_file: ""
+
+  molecule:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run molecule
+        uses: MonolithProjects/action-molecule@v1.5.0
+        with:
+          molecule_command: converge

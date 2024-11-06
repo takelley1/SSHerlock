@@ -1,0 +1,22 @@
+---
+
+name: Deploy application
+
+# Only trigger deployments manually.
+on:  # yamllint disable-line
+  workflow_dispatch:
+
+jobs:
+
+  deploy_to_production:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          apt-get install -y ansible
+
+      - name: Run Deployment
+        run: |
+          deploy_ssherlock.sh
