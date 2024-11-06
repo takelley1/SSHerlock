@@ -1,0 +1,10 @@
+---
+
+# Path to the main Django application.
+app_path: /opt/ssherlock
+
+# Path to the Python virtual environment for the main Django application.
+venv_path: "{{ app_path }}/venv_production"
+
+# The number of ssherlock runner processes to create.
+number_of_ssherlock_runners: 3

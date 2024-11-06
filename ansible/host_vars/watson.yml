@@ -12,3 +12,6 @@ packages_present_ubuntu_server_additional:
   - ansible
 
 host_color: 35
+
+# Mounst filesystems with the 'noatime' option.
+common_mount_noatime: false

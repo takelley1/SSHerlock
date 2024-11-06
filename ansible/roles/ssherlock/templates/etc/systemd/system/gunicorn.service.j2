@@ -1,0 +1,13 @@
+# vim: ft=systemd
+[Unit]
+Description=Gunicorn daemon for SSHerlock
+After=network.target
+
+[Service]
+ExecStart={{ venv_path }}/bin/gunicorn --workers 3 --bind unix:{{ app_path }}/ssherlock.sock ssherlock.wsgi:application
+WorkingDirectory=/path/to/your/app
+User=ssherlock
+Group=ssherlock
+
+[Install]
+WantedBy=multi-user.target

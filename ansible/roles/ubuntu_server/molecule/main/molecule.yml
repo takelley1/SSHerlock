@@ -6,18 +6,18 @@ driver:
   provider:
     name: virtualbox
 platforms:
-  - name: arch-host
-    box: archlinux/archlinux
-    memory: 1024
-    cpus: 1
-  - name: centos-host
-    box: centos/7
-    memory: 1024
-    cpus: 1
-  - name: freebsd-host
-    box: generic/freebsd12
-    memory: 1024
-    cpus: 1
+  # - name: arch-host
+  #   box: archlinux/archlinux
+  #   memory: 1024
+  #   cpus: 1
+  # - name: centos-host
+  #   box: centos/7
+  #   memory: 1024
+  #   cpus: 1
+  # - name: freebsd-host
+  #   box: generic/freebsd12
+  #   memory: 1024
+  #   cpus: 1
   - name: ubuntu-host
     box: ubuntu/groovy64
     memory: 1024
@@ -29,13 +29,13 @@ provisioner:
     ansible_ssh_common_args: -o StrictHostKeyChecking=no
   inventory:
     host_vars:
-      arch-host:
-        hostname: arch-host
-      centos-host:
-        hostname: centos-host
-        common_include_rhel_tasks: true
-      freebsd-host:
-        hostname: freebsd-host
+      # arch-host:
+      #   hostname: arch-host
+      # centos-host:
+      #   hostname: centos-host
+      #   common_include_rhel_tasks: true
+      # freebsd-host:
+      #   hostname: freebsd-host
       ubuntu-host:
         hostname: ubuntu-host
         common_include_debian_tasks: true

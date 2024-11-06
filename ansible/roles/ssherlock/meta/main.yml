@@ -1,8 +1,8 @@
 ---
 
 galaxy_info:
-  role_name: ubuntu_server
-  description: Common installation and configuration tasks for unix
+  role_name: ssherlock
+  description: Install and configure SSHerlock server and runner
   namespace: takelley1
 
 collections:

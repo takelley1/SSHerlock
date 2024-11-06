@@ -1,16 +1,19 @@
 # vim: ft=systemd
 [Unit]
-Description=SSHerlock Runner Manager Service
+Description=SSHerlock runner process %i
 After=network.target
+PartOf=ssherlock_runners.target
 
 [Service]
 Type=simple
-ExecStart={{ app_path }}/venv_production/bin/python3 {{ app_path }}/SSHerlock/ssherlock_runner/ssherlock_runner_manager.py
+ExecStart={{ venv_path }}/bin/python3 {{ app_path }}/SSHerlock/ssherlock_runner/ssherlock_runner.py
 WorkingDirectory={{ app_path }}/SSHerlock/ssherlock_runner
 Restart=always
 User=ssherlock
-# Ensure Python output is not buffered, making logs immediately visible
-Environment=PYTHONUNBUFFERED=1
+Group=ssherlock
+# Ensure Python output is not buffered, making logs immediately visible.
+# Keep track of the runner number to allow multiple runners to start.
+Environment="PYTHONUNBUFFERED=1 RUNNER_NUMBER=%i"
 
 # Number of seconds to wait to restart after crashing.
 RestartSec=1

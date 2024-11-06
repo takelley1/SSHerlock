@@ -1,9 +1,28 @@
 ---
 
-- name: HANDLERS | SSHerlock Runner Manager restarted
-  ansible.builtin.systemd:
-    name: ssherlock_runner_manager.service
+- name: HANDLERS | SSHerlock runners restarted
+  systemd:
+    name: ssherlock_runners.target
     state: restarted
     enabled: true
     masked: false
-  listen: restart-ssherlock-runner-manager
+    daemon_reload: true
+  listen: restart-ssherlock-runners
+
+- name: HANDLERS | SSHerlock Server restarted (gunicorn)
+  systemd:
+    name: gunicorn.service
+    state: restarted
+    enabled: true
+    masked: false
+    daemon_reload: true
+  listen: restart-ssherlock-server
+
+- name: HANDLERS | SSHerlock Server restarted (nginx)
+  systemd:
+    name: nginx.service
+    state: restarted
+    enabled: true
+    masked: false
+    daemon_reload: true
+  listen: restart-ssherlock-server
