@@ -165,3 +165,4 @@ ALEPreviewWindow
 .vscode/settings.json
 .DS_Store
 .aider*
+.gitconfig
