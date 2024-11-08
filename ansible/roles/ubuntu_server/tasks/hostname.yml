@@ -3,6 +3,7 @@
 - name: HOST | Edit hosts.conf
   ansible.builtin.copy:
     dest: /etc/hosts
+    mode: "0644"
     content: |
       # Static table lookup for hostnames.
       # See hosts(5) for details.

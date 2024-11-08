@@ -11,7 +11,7 @@
 
 - name: HANDLERS | SSHerlock Server restarted (gunicorn)
   systemd:
-    name: gunicorn.service
+    name: gunicorn.socket
     state: restarted
     enabled: true
     masked: false

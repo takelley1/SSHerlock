@@ -2,16 +2,16 @@
 
 - name: MAIN | Create SSHerlock group
   ansible.builtin.group:
-    name: ssherlock
+    name: {{ ssherlock_user }}
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server
 
 - name: MAIN | Create SSHerlock user
   ansible.builtin.user:
-    name: ssherlock
+    name: {{ ssherlock_user }}
     comment: Django SSHerlock service account
-    group: ssherlock
+    group: {{ ssherlock_user }}
     create_home: false
     system: true
   notify:
@@ -20,8 +20,8 @@
 
 - name: MAIN | Install Python dependencies
   ansible.builtin.pip:
-    requirements: "{{ app_path }}/requirements.txt"
-    virtualenv: "{{ venv_path }}"
+    requirements: "{{ ssherlock_app_path }}/requirements.txt"
+    virtualenv: "{{ ssherlock_venv_path }}"
     virtualenv_python: python3
   notify:
     - restart-ssherlock-runners
@@ -42,9 +42,9 @@
 - name: MAIN | Copy SSHerlock code to target server
   ansible.builtin.copy:
     src: ssherlock
-    dest: {{ app_path }}
-    owner: ssherlock
-    group: ssherlock
+    dest: {{ ssherlock_app_path }}
+    owner: {{ ssherlock_user }}
+    group: {{ ssherlock_user }}
     mode: "0644"
     backup: true
   register: ssherlock_code
@@ -54,26 +54,23 @@
 
 - name: MAIN | Create symlink to application directory
   ansible.builtin.file:
-    src: {{ app_path }}
+    src: {{ ssherlock_app_path }}
     dest: /ssherlock
     state: link
 
 - name: MAIN | Deploy templates
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
+    src: "{{ item }}.j2"
+    dest: "/{{ item }}"
     mode: "0640"
     owner: root
     group: root
   loop:
-    - src: etc/systemd/system/gunicorn.service.j2
-      dest: /etc/systemd/system/gunicorn.service
-
-    - src: etc/systemd/system/ssherlock_runner.service.j2
-      dest: /etc/systemd/system/ssherlock_runner@.service
-
-    - src: etc/systemd/system/ssherlock_runners.target.j2
-      dest: /etc/systemd/system/ssherlock_runners.target
+    - etc/nginx/nginx.conf
+    - etc/systemd/system/gunicorn.service
+    - etc/systemd/system/gunicorn.socket
+    - etc/systemd/system/ssherlock_runner.service
+    - etc/systemd/system/ssherlock_runners.target
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server
@@ -81,9 +78,9 @@
 - name: MAIN | Run database migrations
   ansible.builtin.shell:
     cmd: |
-      "{{ app_path }}/venv/bin/python ssherlock/ssherlock_server/manage.py makemigrations ssherlock_server"
-      "{{ app_path }}/venv/bin/python ssherlock/ssherlock_server/manage.py migrate"
-    chdir: "{{ app_path }}"
+      "{{ ssherlock_app_path }}/venv/bin/python ssherlock/ssherlock_server/manage.py makemigrations ssherlock_server"
+      "{{ ssherlock_app_path }}/venv/bin/python ssherlock/ssherlock_server/manage.py migrate"
+    chdir: "{{ ssherlock_app_path }}"
   when: ssherlock_code.changed
   notify:
     - restart-ssherlock-runners

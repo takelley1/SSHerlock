@@ -73,7 +73,7 @@
       when: result.changed
 
     - name: MISC | GRUB | Regenerate grub config
-      shell: grub-mkconfig --output={{ find.files[0].path }}
+      ansible.builtin.shell: grub-mkconfig --output={{ find.files[0].path }}
       when: result.changed
 
 - name: MISC | Configure fstab

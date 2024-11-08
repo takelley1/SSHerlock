@@ -1,13 +1,43 @@
 # vim: ft=systemd
 [Unit]
 Description=Gunicorn daemon for SSHerlock
+Requires=gunicorn.socket
 After=network.target
 
 [Service]
-ExecStart={{ venv_path }}/bin/gunicorn --workers 3 --bind unix:{{ app_path }}/ssherlock.sock ssherlock.wsgi:application
-WorkingDirectory=/path/to/your/app
-User=ssherlock
-Group=ssherlock
+# gunicorn can let systemd know when it is ready
+Type=notify
+NotifyAccess=main
+# the specific user that our service will run as
+User={{ ssherlock_user }}
+Group={{ ssherlock_user }}
+# this user can be transiently created by systemd
+# DynamicUser=true
+RuntimeDirectory=gunicorn
+WorkingDirectory={{ ssherlock_app_path }}
+ExecStart=/usr/bin/gunicorn ssherlock_server.wsgi
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+# if your app does not need administrative capabilities, let systemd know
+# ProtectSystem=strict
+
+# CPU
+# Don't occupy more than X% of the total CPU time.
+CPUAccounting=yes
+CPUQuota=75%
+
+# RAM
+MemoryAccounting=yes
+# Heavily throttle RAM after X% usage.
+MemoryHigh=75%
+# IP
+IPAccounting=yes
+# IO
+IOAccounting=yes
+# Threads
+TasksAccounting=yes
 
 [Install]
 WantedBy=multi-user.target

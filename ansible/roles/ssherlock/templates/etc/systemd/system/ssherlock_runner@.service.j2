@@ -6,11 +6,11 @@ PartOf=ssherlock_runners.target
 
 [Service]
 Type=simple
-ExecStart={{ venv_path }}/bin/python3 {{ app_path }}/SSHerlock/ssherlock_runner/ssherlock_runner.py
-WorkingDirectory={{ app_path }}/SSHerlock/ssherlock_runner
+ExecStart={{ ssherlock_venv_path }}/bin/python3 {{ ssherlock_app_path }}/SSHerlock/ssherlock_runner/ssherlock_runner.py
+WorkingDirectory={{ ssherlock_app_path }}/SSHerlock/ssherlock_runner
 Restart=always
-User=ssherlock
-Group=ssherlock
+User={{ ssherlock_user }}
+Group={{ ssherlock_user }}
 # Ensure Python output is not buffered, making logs immediately visible.
 # Keep track of the runner number to allow multiple runners to start.
 Environment="PYTHONUNBUFFERED=1 RUNNER_NUMBER=%i"
@@ -29,13 +29,10 @@ CPUQuota=50%
 MemoryAccounting=yes
 # Heavily throttle RAM after X% usage.
 MemoryHigh=75%
-
 # IP
 IPAccounting=yes
-
 # IO
 IOAccounting=yes
-
 # Threads
 TasksAccounting=yes
 

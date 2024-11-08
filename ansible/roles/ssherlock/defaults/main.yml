@@ -1,10 +1,18 @@
 ---
 
 # Path to the main Django application.
-app_path: /opt/ssherlock
+ssherlock_app_path: /opt/ssherlock/ssherlock
 
 # Path to the Python virtual environment for the main Django application.
-venv_path: "{{ app_path }}/venv_production"
+ssherlock_venv_path: "{{ app_path }}/venv_production"
+
+# The user that ssherlock-related processes will run as.
+# The group will have the same name as the user.
+ssherlock_user: ssherlock
 
 # The number of ssherlock runner processes to create.
-number_of_ssherlock_runners: 3
+ssherlock_number_of_ssherlock_runners: 3
+
+ssherlock_nginx_worker_connections: 1024
+ssherlock_nginx_server_name: ssherlock.com
+ssherlock_nginx_static_files_path: "{{ ssherlock_app_path }}/ssherlock_server/static"
