@@ -1,5 +1,6 @@
-django
-django-htmlmin
-fabric
-openai
-tiktoken
+django-htmlmin==0.11.0
+django==5.1
+fabric==3.2.2
+gunicorn==23.0.0
+openai==1.47.0
+tiktoken==0.7.0
