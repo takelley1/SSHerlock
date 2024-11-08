@@ -1,6 +1,7 @@
 """Main worker that runs jobs created by the SSHerlock server."""
 
 # pylint: disable=import-error
+import os
 import json
 import logging as log
 import time
@@ -47,6 +48,15 @@ log.basicConfig(
     level=log.DEBUG,
     format="%(asctime)s %(levelname)s %(filename)s:%(funcName)s - %(message)s",
 )
+
+
+def get_runner_number():
+    """Get the value of the RUNNER_NUMBER environment variable."""
+    runner_number = os.getenv("RUNNER_NUMBER")
+    if runner_number is not None:
+        log.info("RUNNER_NUMBER: %s", runner_number)
+    else:
+        raise EnvironmentError("RUNNER_NUMBER environment variable is not set.")
 
 
 def update_job_status(job_id, status):
@@ -646,12 +656,15 @@ def update_conversation(messages: list, llm_reply: str, ssh_reply: str) -> None:
     messages.append({"role": "user", "content": ssh_reply})
 
 
-def fetch_job_data(attempt, max_attempts):
+def fetch_job_data(attempt, max_attempts, runner_number=get_runner_number()):
     """Fetch job data by requesting jobs until one is available or attempts are exhausted.
 
     Args:
         attempt (int): Current attempt count.
         max_attempts (int or None): Maximum number of attempts allowed.
+        runner_number (int): The number of the current runner process. This is set by
+                             environment variables in the systemd script and is used
+                             to keep track of multiple runners.
 
     Returns:
         dict or None: Job data if available, otherwise None.
@@ -665,10 +678,14 @@ def fetch_job_data(attempt, max_attempts):
             job_data = request_job()
             if job_data:
                 return job_data
-            log.info("Waiting for a job...%s", attempt + 1)
+            log.info(
+                "Runner: %s, Waiting for a job...%s", str(runner_number), attempt + 1
+            )
             time.sleep(3)
         except Exception as e:
-            log.error("Error requesting job: %s", str(e))
+            log.error(
+                "Runner: %s, Error requesting job: %s", str(runner_number), str(e)
+            )
             log.info("Retrying to fetch job...")
             time.sleep(3)
 
@@ -696,6 +713,7 @@ def main(max_attempts=None):
     """
     attempt = 0
 
+    log.info("Starting runner: %s", str(get_runner_number()))
     while True:
         job_data = fetch_job_data(attempt, max_attempts)
         if job_data is None:
