@@ -19,15 +19,27 @@ jobs:
         with:
           args: ""
           setup_python: "true"
-          working_directory: "./ansible/"
+          working_directory: "${GITHUB_REPOSITORY}/ansible/"
           requirements_file: ""
 
-  molecule:
+  molecule_ubuntu_server_role:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Run molecule
-        uses: MonolithProjects/action-molecule@v1.5.0
+        uses: gofrolist/molecule-action@v2
         with:
           molecule_command: converge
+          molecule_working_dir: "${GITHUB_REPOSITORY}/ansible/roles/ubuntu_server"
+
+  molecule_ssherlock_role:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run molecule
+        uses: gofrolist/molecule-action@v2
+        with:
+          molecule_command: converge
+          molecule_working_dir: "${GITHUB_REPOSITORY}/ansible/roles/ssherlock"
