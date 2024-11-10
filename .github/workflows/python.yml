@@ -8,6 +8,7 @@ on:  # yamllint disable-line
       - 'ssherlock/**'
       - 'ssherlock_runner/**'
       - '**.py'
+      - '.github/**'
 
 env:
   PYTHON_VERSION: "3.12.5"

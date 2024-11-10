@@ -2,10 +2,11 @@
 
 name: Lint and test Ansible
 
-on:
+on:  # yamllint disable-line
   push:
     paths:
       - 'ansible/**'
+      - '.github/**'
 
 jobs:
 
@@ -19,7 +20,7 @@ jobs:
         with:
           args: ""
           setup_python: "true"
-          working_directory: "${GITHUB_REPOSITORY}/ansible/"
+          working_directory: ./ansible/
           requirements_file: ""
 
   molecule_ubuntu_server_role:
@@ -31,7 +32,7 @@ jobs:
         uses: gofrolist/molecule-action@v2
         with:
           molecule_command: converge
-          molecule_working_dir: "${GITHUB_REPOSITORY}/ansible/roles/ubuntu_server"
+          molecule_working_dir: ./ansible/roles/ubuntu_server
 
   molecule_ssherlock_role:
     runs-on: ubuntu-latest
@@ -42,4 +43,4 @@ jobs:
         uses: gofrolist/molecule-action@v2
         with:
           molecule_command: converge
-          molecule_working_dir: "${GITHUB_REPOSITORY}/ansible/roles/ssherlock"
+          molecule_working_dir: ./ansible/roles/ssherlock
