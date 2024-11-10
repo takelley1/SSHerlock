@@ -53,8 +53,9 @@ log.basicConfig(
 def get_runner_number():
     """Get the value of the RUNNER_NUMBER environment variable."""
     runner_number = os.getenv("RUNNER_NUMBER")
-    if runner_number is not None:
+    if runner_number:
         log.info("RUNNER_NUMBER: %s", runner_number)
+        return str(runner_number)
     else:
         raise EnvironmentError("RUNNER_NUMBER environment variable is not set.")
 

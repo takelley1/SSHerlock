@@ -4,6 +4,7 @@
 
 import sys
 import json
+import os
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -13,18 +14,20 @@ import openai
 import requests
 import pytest
 
+os.environ["RUNNER_NUMBER"] = "1"
 sys.path.insert(1, "../")
 from ssherlock_runner import (
     Runner,
-    strip_eot_from_string,
-    is_string_too_long,
     count_tokens,
+    get_runner_number,
     is_llm_done,
-    update_job_status,
-    run_job,
-    request_job,
-    update_conversation,
+    is_string_too_long,
     main,
+    request_job,
+    run_job,
+    strip_eot_from_string,
+    update_conversation,
+    update_job_status,
 )
 
 
@@ -343,9 +346,9 @@ def test_update_job_status_failure():
 
 def test_update_job_status_exception():
     """Ensure proper logging on exception during job status update."""
-    with patch(
-        "requests.post", side_effect=Exception("Connection error")
-    ) as _, patch("ssherlock_runner.log.error") as mock_log_error:
+    with patch("requests.post", side_effect=Exception("Connection error")) as _, patch(
+        "ssherlock_runner.log.error"
+    ) as mock_log_error:
 
         update_job_status("job123", "Failed")
 
@@ -754,6 +757,32 @@ def test_update_conversation_large_ssh_reply():
     assert messages == expected_messages
 
 
+@patch("ssherlock_runner.os.getenv")
+def test_get_runner_number_success(mock_getenv):
+    """Test get_runner_number when RUNNER_NUMBER is set."""
+    mock_getenv.return_value = "5"
+    assert get_runner_number() == "5"
+    mock_getenv.assert_called_once_with("RUNNER_NUMBER")
+
+
+@patch("ssherlock_runner.os.getenv")
+def test_get_runner_number_not_set(mock_getenv):
+    """Test get_runner_number when RUNNER_NUMBER is not set."""
+    mock_getenv.return_value = None
+    with pytest.raises(EnvironmentError, match="RUNNER_NUMBER environment variable is not set."):
+        get_runner_number()
+    mock_getenv.assert_called_once_with("RUNNER_NUMBER")
+
+
+@patch("ssherlock_runner.os.getenv")
+@patch("ssherlock_runner.log.info")
+def test_get_runner_number_logging(mock_log_info, mock_getenv):
+    """Test that get_runner_number logs the runner number."""
+    mock_getenv.return_value = "3"
+    get_runner_number()
+    mock_log_info.assert_called_once_with("RUNNER_NUMBER: %s", "3")
+
+
 @patch("ssherlock_runner.run_job")
 @patch("ssherlock_runner.request_job")
 @patch("ssherlock_runner.time.sleep", return_value=None)  # To skip actual sleeping
@@ -836,9 +865,7 @@ def test_main_no_jobs_available(_, mock_request_job, mock_run_job):
 @patch("ssherlock_runner.run_job")
 @patch("ssherlock_runner.request_job")
 @patch("ssherlock_runner.time.sleep", return_value=None)
-def test_main_exception_handling_in_request_job(
-    _, mock_request_job, mock_run_job
-):
+def test_main_exception_handling_in_request_job(_, mock_request_job, mock_run_job):
     """
     Test the main function to ensure it handles exceptions during job requests gracefully.
 
