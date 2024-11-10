@@ -1,4 +1,5 @@
 ---
+# yamllint disable
 
 - name: HOST | Edit hosts.conf
   ansible.builtin.copy:

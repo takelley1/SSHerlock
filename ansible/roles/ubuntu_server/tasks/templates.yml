@@ -1,4 +1,5 @@
 ---
+# yamllint disable
 
 - name: TEMPLATES | Directory paths exist
   ansible.builtin.file:

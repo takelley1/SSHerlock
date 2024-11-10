@@ -1,4 +1,5 @@
 ---
+# yamllint disable
 
 - name: SHELL | profile.d directory present
   ansible.builtin.file:

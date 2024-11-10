@@ -5,5 +5,4 @@
 *.key
 *.pem
 *.srl
-**/molecule/default
 public

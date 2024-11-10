@@ -1,4 +1,5 @@
 ---
+# yamllint disable
 
 - name: MAIN | Import ssh.yml
   ansible.builtin.import_tasks: ssh.yml

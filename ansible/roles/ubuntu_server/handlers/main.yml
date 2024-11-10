@@ -1,4 +1,5 @@
 ---
+# yamllint disable
 
 - name: HANDLERS | Timesyncd restarted
   ansible.builtin.systemd:

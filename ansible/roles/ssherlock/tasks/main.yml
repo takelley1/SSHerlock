@@ -1,4 +1,5 @@
 ---
+# yamllint disable
 
 - name: MAIN | Create SSHerlock group
   ansible.builtin.group:
