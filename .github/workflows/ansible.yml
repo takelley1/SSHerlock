@@ -1,6 +1,6 @@
 ---
 
-name: Lint and test Ansible
+name: Ansible
 
 on:  # yamllint disable-line
   push:

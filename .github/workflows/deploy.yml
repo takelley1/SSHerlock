@@ -1,6 +1,6 @@
 ---
 
-name: Deploy application
+name: Deploy SSherlock
 
 # Only trigger deployments manually.
 on:  # yamllint disable-line

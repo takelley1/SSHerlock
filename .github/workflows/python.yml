@@ -1,6 +1,6 @@
 ---
 
-name: Lint and test Python
+name: Python
 
 on:  # yamllint disable-line
   push:
