@@ -1,0 +1,39 @@
+---
+
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: ubuntu2404
+    image: jrei/systemd-ubuntu:24.04
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    pull: true
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      ubuntu-host:
+        hostname: ubuntu-host
+        common_include_debian_tasks: true
+    group_vars:
+      all:
+        interactive_account:
+          username: alice
+          comment: Alice
+          home_dir: /home/alice
+          pubkeys:
+            - "{{ lookup('file', '../../keys/id_rsa.pub') }}"
+        service_account:
+          username: ansible
+          comment: Service account
+          home_dir: /var/lib/ansible
+          pubkeys:
+            - "{{ lookup('file', '../../keys/id_rsa.pub') }}"
+verifier:
+  name: ansible
