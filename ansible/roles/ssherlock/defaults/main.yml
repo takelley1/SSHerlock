@@ -4,7 +4,7 @@
 ssherlock_app_path: /opt/ssherlock/ssherlock
 
 # Path to the Python virtual environment for the main Django application.
-ssherlock_venv_path: "{{ app_path }}/venv_production"
+ssherlock_venv_path: "{{ ssherlock_app_path }}/venv_production"
 
 # The user that ssherlock-related processes will run as.
 # The group will have the same name as the user.
