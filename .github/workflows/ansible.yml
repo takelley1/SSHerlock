@@ -23,24 +23,28 @@ jobs:
           working_directory: ./ansible/
           requirements_file: ""
 
-  molecule_ubuntu_server_role:
+  molecule_ubuntu_server:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: "${{ github.repository }}"
 
       - name: Run molecule
         uses: gofrolist/molecule-action@v2
         with:
           molecule_command: converge
-          molecule_working_dir: ./ansible/roles/ubuntu_server
+          molecule_working_dir: "${{ github.repository }}/ansible/roles/ssherlock"
 
-  molecule_ssherlock_role:
+  molecule_ssherlock:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: "${{ github.repository }}"
 
       - name: Run molecule
         uses: gofrolist/molecule-action@v2
         with:
           molecule_command: converge
-          molecule_working_dir: ./ansible/roles/ssherlock
+          molecule_working_dir: "${{ github.repository }}/ansible/roles/ssherlock"

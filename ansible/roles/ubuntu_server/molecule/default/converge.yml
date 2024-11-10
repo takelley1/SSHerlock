@@ -4,6 +4,6 @@
   become: true
   become_method: su
   tasks:
-    - name: Include ansible-role-unix-common
+    - name: Include role
       ansible.builtin.include_role:
-        name: ansible-role-unix-common
+        name: ubuntu_server

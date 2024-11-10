@@ -7,12 +7,8 @@ driver:
 platforms:
   - name: ubuntu2404
     image: jrei/systemd-ubuntu:24.04
-    command: ""
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     pre_build_image: true
-    pull: true
     systemd: always
 
 provisioner:
@@ -27,6 +23,7 @@ provisioner:
         common_include_debian_tasks: true
     group_vars:
       all:
+        ansible_user: root
         interactive_account:
           username: alice
           comment: Alice

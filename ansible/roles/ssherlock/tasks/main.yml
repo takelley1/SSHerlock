@@ -3,16 +3,16 @@
 
 - name: MAIN | Create SSHerlock group
   ansible.builtin.group:
-    name: {{ ssherlock_user }}
+    name: "{{ ssherlock_user }}"
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server
 
 - name: MAIN | Create SSHerlock user
   ansible.builtin.user:
-    name: {{ ssherlock_user }}
+    name: "{{ ssherlock_user }}"
     comment: Django SSHerlock service account
-    group: {{ ssherlock_user }}
+    group: "{{ ssherlock_user }}"
     create_home: false
     system: true
   notify:
@@ -43,9 +43,9 @@
 - name: MAIN | Copy SSHerlock code to target server
   ansible.builtin.copy:
     src: ssherlock
-    dest: {{ ssherlock_app_path }}
-    owner: {{ ssherlock_user }}
-    group: {{ ssherlock_user }}
+    dest: "{{ ssherlock_app_path }}"
+    owner: "{{ ssherlock_user }}"
+    group: "{{ ssherlock_user }}"
     mode: "0644"
     backup: true
   register: ssherlock_code
@@ -55,14 +55,14 @@
 
 - name: MAIN | Create symlink to application directory
   ansible.builtin.file:
-    src: {{ ssherlock_app_path }}
+    src: "{{ ssherlock_app_path }}"
     dest: /ssherlock
     state: link
 
 - name: MAIN | Deploy templates
   ansible.builtin.template:
     src: "{{ item }}.j2"
-    dest: "/{{ item }}"
+    dest: /{{ item }}
     mode: "0640"
     owner: root
     group: root
