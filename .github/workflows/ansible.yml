@@ -30,6 +30,11 @@ jobs:
         with:
           path: "${{ github.repository }}"
 
+      - name: Install Galaxy dependencies
+        run: |
+          ansible-galaxy collection install community.general
+          ansible-galaxy collection install ansible.posix
+
       - name: Run molecule
         uses: gofrolist/molecule-action@v2
         with:

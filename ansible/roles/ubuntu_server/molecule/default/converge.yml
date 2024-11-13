@@ -4,6 +4,11 @@
   become: true
   become_method: su
   tasks:
+
+    - name: Install dependencies
+      ansible.builtin.pip:
+        name: packaging
+
     - name: Include role
       ansible.builtin.include_role:
         name: ubuntu_server
