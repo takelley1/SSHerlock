@@ -11,6 +11,7 @@ on:  # yamllint disable-line
 jobs:
 
   ansible_lint:
+    name: Lint Ansible
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +25,7 @@ jobs:
           requirements_file: ""
 
   molecule_ubuntu_server:
+    name: Molecule (Ubuntu Server role)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +39,7 @@ jobs:
           molecule_working_dir: "${{ github.repository }}/ansible/roles/ubuntu_server"
 
   molecule_ssherlock:
+    name: Molecule (SSHerlock role)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
