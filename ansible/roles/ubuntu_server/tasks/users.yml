@@ -1,0 +1,79 @@
+---
+
+# Ubuntu doesn't have a "wheel" group.
+- name: USERS | Determine sudo group name
+  shell: awk -F":" '/wheel|sudo/ {print $1}' /etc/group | head -1
+  changed_when: false
+  register: sudo_group_name
+
+- name: USERS | Interactive account exists
+  block:
+    - name: USERS | Interactive account group exists
+      ansible.builtin.group:
+        name: "{{ interactive_account.username }}"
+
+    - name: USERS | Interactive account exists
+      ansible.builtin.user:
+        name: "{{ interactive_account.username }}"
+        comment: "{{ interactive_account.comment }}"
+        group: "{{ interactive_account.username }}"
+        groups: "{{ sudo_group_name.stdout }}"
+        home: "{{ interactive_account.home_dir }}"
+        shell: "{{ interactive_account.shell | default(omit) }}"
+  when: interactive_account is defined
+
+- name: USERS | Service account exists
+  block:
+    - name: USERS | Service account group exists
+      ansible.builtin.group:
+        name: "{{ service_account.username }}"
+
+    - name: USERS | Service account user exists
+      ansible.builtin.user:
+        name: "{{ service_account.username }}"
+        comment: "{{ service_account.comment }}"
+        group: "{{ service_account.username }}"
+        groups: "{{ sudo_group_name.stdout }}"
+        home: "{{ service_account.home_dir }}"
+        shell: "{{ service_account.shell | default(omit) }}"
+
+- name: USERS | Check for sudo
+  shell: hash sudo
+  failed_when: false
+  changed_when: false
+  register: sudoexists
+
+- name: USERS | Sudoers configured
+  block:
+    - name: USERS | Set Linux sudoers facts
+      ansible.builtin.set_fact:
+        sudoers_path: /etc/sudoers
+        root_group: root
+      when: ansible_facts.system == "Linux"
+
+- name: MAIN | Set facts
+  block:
+    - name: USERS | Sudoers configured
+      ansible.builtin.lineinfile:
+        path: "{{ sudoers_path }}"
+        line: "{{ item.line }}"
+        regexp: "{{ item.regexp }}"
+        insertbefore: "{{ item.insertbefore | default(omit) }}"
+        owner: root
+        group: "{{ root_group }}"
+        mode: "0440"
+        validate: visudo -c -f %s
+      loop:
+        - line: "%{{ sudo_group_name.stdout }} ALL=(ALL) ALL"
+          regexp: ^\s*%{{ sudo_group_name.stdout }}\s*ALL=(ALL)\s*ALL\s*
+          insertbefore: BOF  # This must come before "ansible ALL= NOPASSWD: ALL", so just put it at the beginning.
+
+        - line: Defaults env_keep += "http_proxy HTTP_PROXY https_proxy HTTPS_PROXY no_proxy NO_PROXY npm_config_proxy"
+          regexp: ^\s*Defaults\s*env_keep\s*\+=\s*\"http_proxy\s*HTTP_PROXY\s*https_proxy\s*HTTPS_PROXY\s*no_proxy\s*NO_PROXY\s*npm_config_proxy\"\s*
+
+        - line: Defaults env_keep += "EDITOR VISUAL SUDO_EDITOR TERM PAGER BROWSER SHELL"
+          regexp: ^\s*Defaults\s*env_keep\s*\+=\s*\"EDITOR\s*VISUAL\s*SUDO_EDITOR\s*TERM\s*PAGER\s*BROWSER\s*SHELL\"\s*
+
+        - line: "ansible ALL= NOPASSWD: ALL"
+          regexp: ^\s*ansible\s*ALL=\s*NOPASSWD:\s*ALL\s*
+  when: sudoexists.rc == 0
