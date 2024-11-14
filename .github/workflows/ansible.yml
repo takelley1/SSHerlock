@@ -44,7 +44,7 @@ jobs:
           path: "${{ github.repository }}"
 
       - name: Copy main SSHerlock directory into the Ansible role
-        run: cp -rav "${{ github.repository }}/ssherlock" "ansible/roles/ssherlock/files/"
+        run: cp -rav "${{ github.repository }}/ssherlock" "${{ github.repository }}/ansible/roles/ssherlock/files/"
 
       - name: Run molecule
         uses: gofrolist/molecule-action@v2

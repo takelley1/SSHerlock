@@ -8,6 +8,10 @@
     - name: Bootstrap Python
       shell: apt update && apt install -y python3-full python3-packaging python3-virtualenv
 
+    - name: Install required packages
+      ansible.builtin.apt:
+        name: sudo
+
     - name: Include role
       ansible.builtin.include_role:
         name: ubuntu_server
