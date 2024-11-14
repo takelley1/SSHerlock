@@ -1,7 +1,7 @@
 ---
 
 # Path to the main Django application.
-ssherlock_app_path: /opt/ssherlock/ssherlock
+ssherlock_app_path: /opt/ssherlock
 
 # Path to the Python virtual environment for the main Django application.
 ssherlock_venv_path: "{{ ssherlock_app_path }}/venv_production"

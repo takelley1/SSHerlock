@@ -12,10 +12,11 @@ platforms:
   - name: ubuntu2404
     image: jrei/systemd-ubuntu:24.04
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    command: /usr/sbin/init
     privileged: true
     pre_build_image: true
-    systemd: always
 
 provisioner:
   name: ansible

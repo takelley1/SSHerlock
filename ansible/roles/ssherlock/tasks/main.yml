@@ -21,7 +21,7 @@
 
 - name: MAIN | Copy SSHerlock code to target server
   ansible.builtin.copy:
-    src: ssherlock
+    src: ssherlock/
     dest: "{{ ssherlock_app_path }}"
     owner: "{{ ssherlock_user }}"
     group: "{{ ssherlock_user }}"
@@ -31,6 +31,22 @@
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server
+
+- name: MAIN | DEBUG
+  shell: ls -al /opt/ssherlock
+  register: shell_out
+
+- name: DEBUG
+  debug:
+    var: shell_out
+
+- name: MAIN | DEBUG-2
+  shell: ls -al /opt/ssherlock/ssherlock
+  register: shell_out_2
+
+- name: DEBUG-2
+  debug:
+    var: shell_out_2
 
 - name: MAIN | Install Python dependencies
   ansible.builtin.pip:
