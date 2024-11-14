@@ -166,3 +166,4 @@ ALEPreviewWindow
 .DS_Store
 .aider*
 .gitconfig
+ansible/keys/private.key
