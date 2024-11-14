@@ -2,14 +2,14 @@
 
 # ansible-playbook pb-configure-host.yml -v -kK -e "user=akelley"
 
-- hosts: watson
+- name: Configure Ubuntu Server
+  hosts: watson
   gather_facts: true
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   remote_user: "{{ user | default('ansible') }}"
   vars:
     ansible_user: "{{ user | default('ansible') }}"
   roles:
-
     - role: ubuntu_server
       tags: ubuntu_server_role

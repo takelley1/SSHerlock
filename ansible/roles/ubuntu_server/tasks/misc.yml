@@ -75,7 +75,7 @@
       when: result.changed
 
     - name: MISC | GRUB | Regenerate grub config
-      ansible.builtin.shell: grub-mkconfig --output={{ find.files[0].path }}
+      ansible.builtin.command: grub-mkconfig --output={{ find.files[0].path }}
       when: result.changed
 
 - name: MISC | Configure fstab
@@ -101,7 +101,7 @@
 - name: MISC | Configure cron
   block:
     - name: MISC | CRON | Check for cron
-      ansible.builtin.shell: hash cron 2>/dev/null
+      ansible.builtin.command: hash cron
       changed_when: false
       failed_when: false
       register: cron_exists

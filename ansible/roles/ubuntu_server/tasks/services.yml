@@ -21,6 +21,7 @@
       when: services_disabled_ubuntu_server is defined
 
 - name: SERVICES | Manage UFW
+  when: enable_ufw
   block:
     - name: SERVICES | UFW running
       ansible.builtin.systemd:
@@ -43,9 +44,9 @@
     - name: SERVICES | UFW set to default reject
       community.general.ufw:
         default: "{{ ufw_default_rule }}"
-  when: enable_ufw
 
 - name: SERVICES | Timesyncd enabled
+  when: enable_timesyncd
   block:
     - name: SERVICES | Timesyncd config file directory path exists
       ansible.builtin.file:
@@ -70,7 +71,6 @@
         state: started
         enabled: true
         masked: false
-  when: enable_timesyncd
 
 # For some reason Ubuntu Server may have automatic suspend enabled
 #   by default.

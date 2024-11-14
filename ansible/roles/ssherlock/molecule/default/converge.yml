@@ -2,11 +2,12 @@
 - name: Converge
   hosts: all
   become: true
-  become_method: su
+  become_method: ansible.builtin.su
   tasks:
 
     - name: Bootstrap Python
-      shell: apt update && apt install -y python3-full python3-packaging python3-virtualenv
+      ansible.builtin.shell: apt update && apt install -y python3-full python3-packaging python3-virtualenv
+      changed_when: false
 
     - name: Include role
       ansible.builtin.include_role:

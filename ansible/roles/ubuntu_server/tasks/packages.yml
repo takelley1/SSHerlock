@@ -53,6 +53,7 @@
       when: packages_absent_ubuntu_server_additional is defined
 
 - name: PACKAGES | Manage pip
+  when: install_pip
   block:
     - name: PACKAGES | Pip present
       ansible.builtin.package:
@@ -74,4 +75,3 @@
         name: "{{ pip_present_ubuntu_server }}"
         state: present
       when: pip_present_ubuntu_server is defined
-  when: install_pip

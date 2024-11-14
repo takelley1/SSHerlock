@@ -2,7 +2,7 @@
 # yamllint disable
 
 - name: HANDLERS | SSHerlock runners restarted
-  systemd:
+  ansible.builtin.systemd:
     name: ssherlock_runners.target
     state: restarted
     enabled: true
@@ -11,7 +11,7 @@
   listen: restart-ssherlock-runners
 
 - name: HANDLERS | SSHerlock Server restarted (gunicorn)
-  systemd:
+  ansible.builtin.systemd:
     name: gunicorn.socket
     state: restarted
     enabled: true
@@ -20,10 +20,18 @@
   listen: restart-ssherlock-server
 
 - name: HANDLERS | SSHerlock Server restarted (nginx)
-  systemd:
+  ansible.builtin.systemd:
     name: nginx.service
     state: restarted
     enabled: true
     masked: false
     daemon_reload: true
   listen: restart-ssherlock-server
+
+- name: HANDLERS | SSHerlock database migrated
+  ansible.builtin.shell:
+    cmd: |
+      "{{ ssherlock_venv_path }}/bin/python manage.py makemigrations ssherlock_server"
+      "{{ ssherlock_venv_path }}/bin/python manage.py migrate"
+    chdir: "{{ ssherlock_app_path }}"
+  listen: migrate-ssherlock-database

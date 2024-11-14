@@ -30,8 +30,8 @@
   loop:
     - ssherlock/
     - requirements.txt
-  register: ssherlock_code
   notify:
+    - migrate-ssherlock-database
     - restart-ssherlock-runners
     - restart-ssherlock-server
 
@@ -74,25 +74,6 @@
     - etc/systemd/system/gunicorn.socket
     - etc/systemd/system/ssherlock_runner@.service
     - etc/systemd/system/ssherlock_runners.target
-  notify:
-    - restart-ssherlock-runners
-    - restart-ssherlock-server
-
-- name: MAIN | debug ls
-  shell: ls -al {{ ssherlock_app_path }}
-  register: result
-
-- name: debug
-  debug:
-    var: result
-
-- name: MAIN | Run database migrations
-  ansible.builtin.shell:
-    cmd: |
-      "{{ ssherlock_venv_path }}/bin/python manage.py makemigrations ssherlock_server"
-      "{{ ssherlock_venv_path }}/bin/python manage.py migrate"
-    chdir: "{{ ssherlock_app_path }}"
-  when: ssherlock_code.changed
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server

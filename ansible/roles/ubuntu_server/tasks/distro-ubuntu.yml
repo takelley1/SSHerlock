@@ -4,13 +4,14 @@
 # Ubuntu specific configs.
 
 - name: UBUNTU | Snaps, snapd removed
+  when: common_remove_snapd
   block:
     # This command must include methods to determine if the task has changed
     #   anything, otherwise the snaps_installed var will be empty and the
     #   next task will fail.
     - name: UBUNTU | Get snaps
       ansible.builtin.shell: |
-        if hash snap 2>/dev/null; then
+        set -o pipefail; if hash snap 2>/dev/null; then
         snap list | awk '!/^Name|^snapd/ {print $1}'
         if [ -n "$(snap list | awk '!/^Name/')" ]; then
         printf "%s\n" "RESULT-changed" >&2
@@ -56,9 +57,9 @@
         - /var/lib/snapd
         - /var/cache/snapd
         - /var/snap
-  when: common_remove_snapd
 
 - name: UBUNTU | Create minimal system
+  when: common_ubuntu_minimal_system
   block:
     - name: UBUNTU | MINIMAL | Prevent dpkg from installing unnecessary files
       ansible.builtin.template:
@@ -73,4 +74,3 @@
       register: result
       failed_when: false
       changed_when: "'RESULT-changed' in result.stdout"
-  when: common_ubuntu_minimal_system

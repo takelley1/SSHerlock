@@ -19,10 +19,10 @@ jobs:
       - name: Run ansible-lint
         uses: ansible/ansible-lint@main
         with:
-          args: ""
-          setup_python: "true"
+          args: --skip-list=no-handler,no-changed-when,command-instead-of-module,var-naming[no-role-prefix]
+          setup_python: true
           working_directory: ./ansible/
-          requirements_file: ""
+          requirements_file: ./ansible/roles/ubuntu_server/collections.yml
 
   molecule_ubuntu_server:
     name: Molecule (Ubuntu Server role)

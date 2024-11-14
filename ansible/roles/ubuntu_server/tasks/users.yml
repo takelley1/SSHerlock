@@ -2,11 +2,12 @@
 
 # Ubuntu doesn't have a "wheel" group.
 - name: USERS | Determine sudo group name
-  shell: awk -F":" '/wheel|sudo/ {print $1}' /etc/group | head -1
+  ansible.builtin.shell: set -o pipefail; awk -F":" '/wheel|sudo/ {print $1}' /etc/group | head -1
   changed_when: false
   register: sudo_group_name
 
 - name: USERS | Interactive account exists
+  when: interactive_account is defined
   block:
     - name: USERS | Interactive account group exists
       ansible.builtin.group:
@@ -20,7 +21,6 @@
         groups: "{{ sudo_group_name.stdout }}"
         home: "{{ interactive_account.home_dir }}"
         shell: "{{ interactive_account.shell | default(omit) }}"
-  when: interactive_account is defined
 
 - name: USERS | Service account exists
   block:
@@ -38,7 +38,7 @@
         shell: "{{ service_account.shell | default(omit) }}"
 
 - name: USERS | Check for sudo
-  shell: hash sudo
+  ansible.builtin.command: hash sudo
   failed_when: false
   changed_when: false
   register: sudoexists
@@ -52,6 +52,7 @@
       when: ansible_facts.system == "Linux"
 
 - name: MAIN | Set facts
+  when: sudoexists.rc == 0
   block:
     - name: USERS | Sudoers configured
       ansible.builtin.lineinfile:
@@ -76,4 +77,3 @@
 
         - line: "ansible ALL= NOPASSWD: ALL"
           regexp: ^\s*ansible\s*ALL=\s*NOPASSWD:\s*ALL\s*
-  when: sudoexists.rc == 0

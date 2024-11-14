@@ -2,6 +2,7 @@
 # yamllint disable
 
 - name: SSH | SSH configured for interactive user
+  when: interactive_account is defined
   block:
     - name: SSH | User SSH directory exists
       ansible.builtin.file:
@@ -27,7 +28,6 @@
         mode: "0400"
       when: interactive_account.private_keys is defined
       loop: "{{ interactive_account.private_keys }}"
-  when: interactive_account is defined
 
 - name: SSH | SSHD package present
   ansible.builtin.apt:
@@ -39,6 +39,7 @@
     state: directory
     owner: root
     group: root
+    mode: "0755"
 
 - name: SSH | SSHD enabled
   ansible.builtin.service:

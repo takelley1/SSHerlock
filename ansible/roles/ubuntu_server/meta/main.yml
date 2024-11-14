@@ -4,3 +4,6 @@ galaxy_info:
   role_name: ubuntu_server
   description: Common installation and configuration tasks for unix
   namespace: takelley1
+  author: Austin Kelley
+  license: none
+  min_ansible_version: "2.9"

@@ -3,12 +3,13 @@
 - name: Verify
   hosts: all
   become: true
-  become_method: su
+  become_method: ansible.builtin.su
   gather_facts: true
   tasks:
 
     - name: MOLECULE | VERIFY | Test home page
       ansible.builtin.shell: >
+        set -o pipefail;
         curl
         -L
         --silent
