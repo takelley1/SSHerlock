@@ -50,4 +50,5 @@
 
 - name: MAIN | Import services.yml
   ansible.builtin.import_tasks: services.yml
+  when: not ubuntu_server_running_in_molecule
   tags: ubuntu_server_service

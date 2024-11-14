@@ -19,34 +19,21 @@
     - restart-ssherlock-runners
     - restart-ssherlock-server
 
-- name: MAIN | Copy SSHerlock code to target server
+- name: MAIN | Copy SSHerlock to target server
   ansible.builtin.copy:
-    src: ssherlock/
+    src: "{{ item }}"
     dest: "{{ ssherlock_app_path }}"
     owner: "{{ ssherlock_user }}"
     group: "{{ ssherlock_user }}"
     mode: "0644"
     backup: true
+  loop:
+    - ssherlock/
+    - requirements.txt
   register: ssherlock_code
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server
-
-- name: MAIN | DEBUG
-  shell: ls -al /opt/ssherlock
-  register: shell_out
-
-- name: DEBUG
-  debug:
-    var: shell_out
-
-- name: MAIN | DEBUG-2
-  shell: ls -al /opt/ssherlock/ssherlock
-  register: shell_out_2
-
-- name: DEBUG-2
-  debug:
-    var: shell_out_2
 
 - name: MAIN | Install Python dependencies
   ansible.builtin.pip:
@@ -59,8 +46,7 @@
 
 - name: MAIN | Install Apt dependencies
   ansible.builtin.apt:
-    name:
-      - nginx==1.8.0
+    name: nginx=1.24.0-2ubuntu7.1
     autoclean: true
     autoremove: true
     clean: true
@@ -86,17 +72,25 @@
     - etc/nginx/nginx.conf
     - etc/systemd/system/gunicorn.service
     - etc/systemd/system/gunicorn.socket
-    - etc/systemd/system/ssherlock_runner.service
+    - etc/systemd/system/ssherlock_runner@.service
     - etc/systemd/system/ssherlock_runners.target
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server
 
+- name: MAIN | debug ls
+  shell: ls -al {{ ssherlock_app_path }}
+  register: result
+
+- name: debug
+  debug:
+    var: result
+
 - name: MAIN | Run database migrations
   ansible.builtin.shell:
     cmd: |
-      "{{ ssherlock_app_path }}/venv/bin/python ssherlock/ssherlock_server/manage.py makemigrations ssherlock_server"
-      "{{ ssherlock_app_path }}/venv/bin/python ssherlock/ssherlock_server/manage.py migrate"
+      "{{ ssherlock_venv_path }}/bin/python manage.py makemigrations ssherlock_server"
+      "{{ ssherlock_venv_path }}/bin/python manage.py migrate"
     chdir: "{{ ssherlock_app_path }}"
   when: ssherlock_code.changed
   notify:

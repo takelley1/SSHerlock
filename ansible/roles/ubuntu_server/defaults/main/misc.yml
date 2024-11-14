@@ -15,3 +15,5 @@ common_active_consoles: 2
 common_mount_noatime: false
 
 host_color: 33
+
+ubuntu_server_running_in_molecule: false

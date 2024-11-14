@@ -30,6 +30,8 @@ python "./ssherlock_server/manage.py" check --deploy
 
 # Copy application directory into a place Ansible can find it.
 cp -rav "ssherlock" "ansible/roles/ssherlock/files/"
+# Copy other miscellaneous files that are necessary.
+cp -rav "requirements.txt" "ansible/roles/ssherlock/files/"
 
 # Run Ansible to finally deploy the server.
 cd ansible || exit 1

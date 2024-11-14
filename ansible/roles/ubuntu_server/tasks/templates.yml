@@ -39,6 +39,5 @@
       dest: /root/.config/ranger/scope.sh
     - src: home/vimrc
       dest: /root/.vimrc
-    - src: etc/systemd/system/resolved.conf.d/override.conf
     - src: etc/updatedb.conf
     - src: etc/sysctl.d/00-sysctl-disable-ipv6.conf

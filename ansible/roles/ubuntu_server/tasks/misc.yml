@@ -56,6 +56,7 @@
         - /sbin/agetty
 
 - name: MISC | Set grub timeout
+  when: not ubuntu_server_running_in_molecule
   block:
     - name: MISC | GRUB | Edit /etc/default/grub
       ansible.builtin.lineinfile:

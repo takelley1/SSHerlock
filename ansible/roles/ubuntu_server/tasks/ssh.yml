@@ -29,11 +29,23 @@
       loop: "{{ interactive_account.private_keys }}"
   when: interactive_account is defined
 
+- name: SSH | SSHD package present
+  ansible.builtin.apt:
+    name: openssh-server
+
+- name: SSH | Create /run/sshd directory if missing
+  ansible.builtin.file:
+    path: /run/sshd
+    state: directory
+    owner: root
+    group: root
+
 - name: SSH | SSHD enabled
   ansible.builtin.service:
     name: sshd
     state: started
     enabled: true
+  when: not ubuntu_server_running_in_molecule
 
 - name: SSH | SSHD config deployed
   ansible.builtin.template:

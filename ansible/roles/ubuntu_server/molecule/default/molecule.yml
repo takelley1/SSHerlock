@@ -29,6 +29,7 @@ provisioner:
         hostname: ubuntu-host
     group_vars:
       all:
+        ubuntu_server_running_in_molecule: true
         ansible_user: root
         interactive_account:
           username: alice
