@@ -3,7 +3,6 @@
 use_proxy: false
 pip_package_name: python3-pip
 
-common_include_debian_tasks: true
 common_disable_suspend: true
 common_mount_noatime: true
 

@@ -4,7 +4,3 @@ galaxy_info:
   role_name: ubuntu_server
   description: Common installation and configuration tasks for unix
   namespace: takelley1
-
-collections:
-  - ansible.posix
-  - community.general

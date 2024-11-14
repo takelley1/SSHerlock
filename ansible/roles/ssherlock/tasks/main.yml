@@ -19,6 +19,19 @@
     - restart-ssherlock-runners
     - restart-ssherlock-server
 
+- name: MAIN | Copy SSHerlock code to target server
+  ansible.builtin.copy:
+    src: ssherlock
+    dest: "{{ ssherlock_app_path }}"
+    owner: "{{ ssherlock_user }}"
+    group: "{{ ssherlock_user }}"
+    mode: "0644"
+    backup: true
+  register: ssherlock_code
+  notify:
+    - restart-ssherlock-runners
+    - restart-ssherlock-server
+
 - name: MAIN | Install Python dependencies
   ansible.builtin.pip:
     requirements: "{{ ssherlock_app_path }}/requirements.txt"
@@ -36,19 +49,6 @@
     autoremove: true
     clean: true
     update_cache: true
-  notify:
-    - restart-ssherlock-runners
-    - restart-ssherlock-server
-
-- name: MAIN | Copy SSHerlock code to target server
-  ansible.builtin.copy:
-    src: ssherlock
-    dest: "{{ ssherlock_app_path }}"
-    owner: "{{ ssherlock_user }}"
-    group: "{{ ssherlock_user }}"
-    mode: "0644"
-    backup: true
-  register: ssherlock_code
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server

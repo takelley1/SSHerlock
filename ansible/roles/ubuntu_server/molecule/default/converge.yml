@@ -5,9 +5,8 @@
   become_method: su
   tasks:
 
-    - name: Install dependencies
-      ansible.builtin.pip:
-        name: packaging
+    - name: Bootstrap Python
+      shell: apt update && apt install -y python3-full python3-packaging python3-virtualenv
 
     - name: Include role
       ansible.builtin.include_role:

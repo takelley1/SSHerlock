@@ -2,6 +2,10 @@
 
 dependency:
   name: galaxy
+  options:
+    ignore-certs: True
+    ignore-errors: True
+    requirements-file: collections.yml
 driver:
   name: docker
 platforms:
@@ -20,7 +24,6 @@ provisioner:
     host_vars:
       ubuntu-host:
         hostname: ubuntu-host
-        common_include_debian_tasks: true
     group_vars:
       all:
         ansible_user: root
@@ -29,12 +32,12 @@ provisioner:
           comment: Alice
           home_dir: /home/alice
           pubkeys:
-            - "{{ lookup('file', '../../keys/id_rsa.pub') }}"
+            - "{{ lookup('file', '../../keys/public.key') }}"
         service_account:
           username: ansible
           comment: Service account
           home_dir: /var/lib/ansible
           pubkeys:
-            - "{{ lookup('file', '../../keys/id_rsa.pub') }}"
+            - "{{ lookup('file', '../../keys/public.key') }}"
 verifier:
   name: ansible
