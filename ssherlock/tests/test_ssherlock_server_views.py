@@ -55,13 +55,13 @@ class TestHandleObject(TestCase):
         """Verify GET requests work to add objects."""
         response = self.client.get(reverse("add_object", args=[model_name]))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "ssherlock_server/objects/add_object.html")
+        self.assertTemplateUsed(response, "objects/add_object.html")
 
     def _GET_edit_object(self, model_name, iid):
         """Verify GET requests work to edit objects."""
         response = self.client.get(reverse("edit_object", args=[model_name, str(iid)]))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "ssherlock_server/objects/edit_object.html")
+        self.assertTemplateUsed(response, "objects/edit_object.html")
 
     def _POST_add_object(self, model_name, new_object_str, data, expected_url):
         """Verify POSTS requests work to add objects."""
@@ -322,7 +322,7 @@ class TestListViews(TestCase):
         """Helper function to test list views."""
         response = self.client.get(reverse(view_name))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "ssherlock_server/objects/object_list.html")
+        self.assertTemplateUsed(response, "objects/object_list.html")
         self.assertQuerySetEqual(
             response.context["output"],
             [repr(obj) for obj in expected_objects],
@@ -373,7 +373,7 @@ class TestHomeView(TestCase):
         """Test home view."""
         response = self.client.get(reverse("home"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "ssherlock_server/home.html")
+        self.assertTemplateUsed(response, "home.html")
 
 
 class TestLandingView(TestCase):
@@ -383,7 +383,7 @@ class TestLandingView(TestCase):
         """Test landing page view."""
         response = self.client.get(reverse("landing"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "ssherlock_server/landing.html")
+        self.assertTemplateUsed(response, "landing.html")
 
 
 class TestCreateJobView(TestCase):
@@ -475,7 +475,7 @@ class TestCreateJobView(TestCase):
         }
         response = self.client.post(reverse("create_job"), data)
         self.assertEqual(response.status_code, 200)  # Form should return with errors
-        self.assertTemplateUsed(response, "ssherlock_server/objects/add_object.html")
+        self.assertTemplateUsed(response, "objects/add_object.html")
 
         # Verify no job is created
         jobs = Job.objects.all()
@@ -485,7 +485,7 @@ class TestCreateJobView(TestCase):
         """Test accessing the create job view with a GET request."""
         response = self.client.get(reverse("create_job"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "ssherlock_server/objects/add_object.html")
+        self.assertTemplateUsed(response, "objects/add_object.html")
 
 
 class TestRequestJob(TestCase):
@@ -1121,7 +1121,7 @@ class TestViewJob(TestCase):
         response = self.client.get(reverse("view_job", args=[str(self.job.id)]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "ssherlock_server/objects/view_job.html")
+        self.assertTemplateUsed(response, "objects/view_job.html")
 
     def test_view_nonexistent_job(self):
         """Test viewing a nonexistent job returns 404."""

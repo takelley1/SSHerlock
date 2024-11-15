@@ -11,8 +11,9 @@ sys.path.insert(1, "./ssherlock")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ssherlock.settings")
 django.setup()
 
+from django.contrib.auth.models import User
+
 from ssherlock_server.models import (
-    User,
     BastionHost,
     Credential,
     Job,
@@ -22,13 +23,13 @@ from ssherlock_server.models import (
 
 
 def populate_database():
-    user1, _ = User.objects.get_or_create(email="user1@example.com")
-    user2, _ = User.objects.get_or_create(email="user2@example.com")
-    user3, _ = User.objects.get_or_create(email="user3@example.com")
-    user4, _ = User.objects.get_or_create(email="user4@example.com")
-    user5, _ = User.objects.get_or_create(email="user5@example.com")
-    user6, _ = User.objects.get_or_create(email="user6@example.com")
-    user7, _ = User.objects.get_or_create(email="user7@example.com")
+    user1 = User.objects.create_user("usera", "user1@example.com", "password")
+    user2 = User.objects.create_user("userb", "user2@example.com", "password")
+    user3 = User.objects.create_user("userc", "user3@example.com", "password")
+    user4 = User.objects.create_user("userd", "user4@example.com", "password")
+    user5 = User.objects.create_user("usere", "user5@example.com", "password")
+    user6 = User.objects.create_user("userf", "user6@example.com", "password")
+    user7 = User.objects.create_user("userg", "user7@example.com", "password")
 
     bastion1, _ = BastionHost.objects.get_or_create(
         hostname="bastion1.example.com", port=21, user=user1

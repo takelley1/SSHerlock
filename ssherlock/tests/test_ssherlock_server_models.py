@@ -17,13 +17,12 @@ from ssherlock_server.models import (
 
 class TestUser(TestCase):
     def setUp(self):
-        self.user1 = User.objects.create(email="user1@example.com")
-        self.user2 = User.objects.create(email="user2@example.com")
+        self.user1 = User.objects.create(username="user1@example.com")
+        self.user2 = User.objects.create(username="user2@example.com")
 
     def test_creation(self):
-        user = User.objects.get(email="user1@example.com")
-        self.assertEqual(user.email, "user1@example.com")
-        self.assertIsInstance(user.id, uuid.UUID)
+        user = User.objects.get(username="user1@example.com")
+        self.assertEqual(user.username, "user1@example.com")
 
     def test_str_method(self):
         self.assertEqual(str(self.user1), "user1@example.com")
