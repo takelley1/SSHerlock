@@ -2,7 +2,7 @@
 
 # Ubuntu doesn't have a "wheel" group.
 - name: USERS | Determine sudo group name
-  ansible.builtin.shell: set -o pipefail; awk -F":" '/wheel|sudo/ {print $1}' /etc/group | head -1
+  ansible.builtin.shell: awk -F":" '/wheel|sudo/ {print $1}' /etc/group | head -1
   changed_when: false
   register: sudo_group_name
 
