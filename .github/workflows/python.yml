@@ -8,7 +8,7 @@ on:  # yamllint disable-line
       - 'ssherlock/**'
       - 'ssherlock_runner/**'
       - '**.py'
-      - '.github/**'
+      - '.github/workflows/python.yml'
 
 env:
   PYTHON_VERSION: "3.12.5"
@@ -32,7 +32,7 @@ jobs:
       - name: Look for misspellings with codespell
         run: |
           # Skip venv, Ansible Jinja files.
-          codespell --skip "./venv/*,*ansible*.j2" --ignore-words-list "assertIn,ure"
+          codespell --skip "./venv/*,*ansible*.j2" --ignore-words-list "assertIn,ure,usera,usere"
 
   yamllint:
     runs-on: ubuntu-latest

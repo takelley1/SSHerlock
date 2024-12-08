@@ -6,7 +6,7 @@ on:  # yamllint disable-line
   push:
     paths:
       - 'ansible/**'
-      - '.github/**'
+      - '.github/workflows/ansible.yml'
 
 jobs:
 
