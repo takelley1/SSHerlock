@@ -800,11 +800,16 @@ class TestRequestJob(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["message"], "No pending jobs found.")
 
-    def test_internal_server_error(self):
-        # Simulate an exception by mocking the Job.objects.filter method.
-        with self.assertRaises(Exception):
-            response = self.client.get(reverse("request_job"))
-            self.assertEqual(response.status_code, 500)
+    @patch(
+        "ssherlock_server.views.Job.objects.filter",
+        side_effect=Exception("Test exception"),
+    )
+    def test_request_job_exception_handling(self, _):
+        """Test that an exception in request_job returns a 500 status code."""
+        headers = {"HTTP_AUTHORIZATION": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"}
+        response = self.client.get(reverse("request_job"), **headers)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json()["message"], "Test exception")
 
 
 class TestUpdateJobStatus(TestCase):
@@ -987,6 +992,24 @@ class TestUpdateJobStatus(TestCase):
         self.assertIsNotNone(self.job2.completed_at)
         self.assertTrue(
             timezone.now() - self.job2.completed_at < timezone.timedelta(seconds=1)
+        )
+
+    def test_update_job_status_to_failed_also_adds_stopped_at_time(self):
+        """Test updating job status to Failed also adds stopped_at time."""
+        response = self.client.post(
+            self.url2,
+            data=json.dumps({"status": "Failed"}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
+        )
+
+        self.job2.refresh_from_db()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.job2.status, "Failed")
+        self.assertIsNotNone(self.job2.stopped_at)
+        self.assertTrue(
+            timezone.now() - self.job2.stopped_at < timezone.timedelta(seconds=1)
         )
 
 
@@ -1325,21 +1348,22 @@ class TestLogJobData(TestCase):
             response.content, {"message": "Authorization header not provided."}
         )
 
-    @patch("ssherlock_server.views.log_job_data")
     @patch("ssherlock_server.utils.check_private_key")
-    def test_exception_handling(self, mock_check_private_key, mock_log_job_data):
+    def test_exception_handling(self, mock_check_private_key):
         """Test exception handling in log job data."""
         mock_check_private_key.return_value = None
-        mock_log_job_data.side_effect = Exception("Test exception")
 
-        response = self.client.post(
-            self.url,
-            data=json.dumps(self.valid_log_content),
-            content_type="application/json",
-            HTTP_AUTHORIZATION=self.valid_token,
-        )
-        self.assertEqual(response.status_code, 500)
-        self.assertJSONEqual(response.content, {"message": "Test exception"})
+        with patch(
+            "ssherlock_server.views.open", side_effect=Exception("Test exception")
+        ):
+            response = self.client.post(
+                self.url,
+                data=json.dumps(self.valid_log_content),
+                content_type="application/json",
+                HTTP_AUTHORIZATION=self.valid_token,
+            )
+            self.assertEqual(response.status_code, 500)
+            self.assertJSONEqual(response.content, {"message": "Test exception"})
 
     def tearDown(self):
         # Clean up by removing the created log file and directories
