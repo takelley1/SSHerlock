@@ -1490,3 +1490,69 @@ class TestStreamJobLog(TestCase):
         combined_content = "".join(content)
         self.assertIn("event: error", combined_content)
         self.assertIn("data: Log file not found", combined_content)
+
+
+class TestSignupView(TestCase):
+    """Tests for the signup view."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_signup_page_renders_correctly(self):
+        """Test that the signup page renders correctly."""
+        response = self.client.get(reverse("signup"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "signup.html")
+
+    def test_signup_successful(self):
+        """Test that a user can sign up successfully."""
+        response = self.client.post(
+            reverse("signup"),
+            data={
+                "username": "newuser",
+                "email": "newuser@example.com",
+                "password1": "complexpassword123",
+                "password2": "complexpassword123",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("home"))
+        self.assertTrue(User.objects.filter(username="newuser").exists())
+
+    def test_signup_password_mismatch(self):
+        """Test that signup fails if passwords do not match."""
+        response = self.client.post(
+            reverse("signup"),
+            data={
+                "username": "newuser",
+                "email": "newuser@example.com",
+                "password1": "complexpassword123",
+                "password2": "differentpassword123",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context.get('form')
+        self.assertIsNotNone(form)
+        self.assertTrue(form.errors)
+        self.assertIn("password2", form.errors)
+        self.assertEqual(form.errors["password2"], ["The two password fields didn’t match."])
+        self.assertFalse(User.objects.filter(username="newuser").exists())
+
+    def test_signup_existing_username(self):
+        """Test that signup fails if the username already exists."""
+        User.objects.create_user("existinguser", "existinguser@example.com", "password")
+        response = self.client.post(
+            reverse("signup"),
+            data={
+                "username": "existinguser",
+                "email": "newuser@example.com",
+                "password1": "complexpassword123",
+                "password2": "complexpassword123",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context.get('form')
+        self.assertIsNotNone(form)
+        self.assertTrue(form.errors)
+        self.assertIn("username", form.errors)
+        self.assertEqual(form.errors["username"], ["A user with that username already exists."])

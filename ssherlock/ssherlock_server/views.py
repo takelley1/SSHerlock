@@ -12,6 +12,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
 from django.utils import timezone
 from .forms import BastionHostForm, CredentialForm, JobForm, LlmApiForm, TargetHostForm
 from .models import BastionHost, Credential, Job, LlmApi, TargetHost
@@ -166,6 +168,19 @@ def stream_job_log(_, job_id):
             yield f"event: error\ndata: Log file not found for job ID {job_id}.\n\n"
 
     return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+
+
+def signup(request):
+    """Render the signup page and handle user registration."""
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("home")
+    else:
+        form = UserCreationForm()
+    return render(request, "signup.html", {"form": form})
 
 
 @login_required
