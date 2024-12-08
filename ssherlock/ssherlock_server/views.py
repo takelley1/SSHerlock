@@ -10,9 +10,7 @@ from django.http import Http404, JsonResponse, HttpResponse, StreamingHttpRespon
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
 from django.conf import settings
 from django.utils import timezone
 from .forms import BastionHostForm, CredentialForm, JobForm, LlmApiForm, TargetHostForm
@@ -35,7 +33,7 @@ MODEL_FORM_MAP = {
 }
 
 
-# @login_required
+@login_required
 def handle_object(request, model_type, uuid=None):
     """Handle creating or editing any object except jobs."""
     model_form_tuple = MODEL_FORM_MAP.get(model_type)
@@ -55,15 +53,11 @@ def handle_object(request, model_type, uuid=None):
         "object_name": model_type.capitalize(),
         "uuid": uuid,
     }
-    template_name = (
-        "objects/edit_object.html"
-        if uuid
-        else "objects/add_object.html"
-    )
+    template_name = "objects/edit_object.html" if uuid else "objects/add_object.html"
     return render(request, template_name, context)
 
 
-# @login_required
+@login_required
 def delete_object(request, model_type, uuid):
     """Delete the given object."""
     model_form_tuple = MODEL_FORM_MAP.get(model_type)
@@ -81,7 +75,7 @@ def delete_object(request, model_type, uuid):
     return redirect(f"/{model_type}_list")
 
 
-# @login_required
+@login_required
 def retry_job(request, job_id):
     """Changes a given job's status to Pending."""
     job = get_object_or_404(Job, pk=job_id)
@@ -96,7 +90,7 @@ def retry_job(request, job_id):
     return redirect("/job_list")
 
 
-# @login_required
+@login_required
 def cancel_job(request, job_id):
     """Cancel a given job by changing its status to Canceled."""
     job = get_object_or_404(Job, pk=job_id)
@@ -111,7 +105,7 @@ def cancel_job(request, job_id):
     return redirect("/job_list")
 
 
-# @login_required
+@login_required
 def create_job(request):
     """Handle creating jobs. When the create job form is submitted, a new job is created for every target host."""
     form = JobForm(request.POST)
@@ -134,7 +128,7 @@ def create_job(request):
     return render(request, "objects/add_object.html", context)
 
 
-# @login_required
+@login_required
 def view_job(request, job_id):
     """View details for a given job, including the job log."""
     job = get_object_or_404(Job, pk=job_id)
@@ -144,7 +138,7 @@ def view_job(request, job_id):
     return render(request, "objects/view_job.html", context)
 
 
-# @login_required
+@login_required
 def stream_job_log(_, job_id):
     """Stream job log data to the client. This stream is rendered on the view_job view."""
     job_id = str(job_id)
@@ -174,13 +168,13 @@ def stream_job_log(_, job_id):
     return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 
 
-# @login_required
+@login_required
 def home(request):
     """Return the home page after a user has logged in."""
     return render(request, "home.html")
 
 
-# @login_required
+@login_required
 def bastion_host_list(request):
     """List the bastion hosts."""
     return render_object_list(
@@ -192,7 +186,7 @@ def bastion_host_list(request):
     )
 
 
-# @login_required
+@login_required
 def credential_list(request):
     """List the credentials."""
     return render_object_list(
@@ -204,7 +198,7 @@ def credential_list(request):
     )
 
 
-# @login_required
+@login_required
 def llm_api_list(request):
     """List the LLM APIs."""
     return render_object_list(
@@ -216,7 +210,7 @@ def llm_api_list(request):
     )
 
 
-# @login_required
+@login_required
 def job_list(request):
     """List the jobs."""
     return render_object_list(
@@ -244,7 +238,7 @@ def job_list(request):
     )
 
 
-# @login_required
+@login_required
 def target_host_list(request):
     """List the target hosts."""
     return render_object_list(
@@ -256,7 +250,7 @@ def target_host_list(request):
     )
 
 
-# @login_required
+@login_required
 def render_object_list(request, model, column_headers, object_fields, object_name):
     """Helper function to render object lists."""
     output = model.objects.all()

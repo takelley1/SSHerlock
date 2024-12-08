@@ -23,9 +23,14 @@
   </nav>
   <div class="container header-content">
     <div class="header-text">
-      <p class="tagline">EASY TO USE & FREE TO TRY (NO CREDIT CARD REQUIRED)</p>
+      <p class="tagline">EASY TO USE &amp; FREE TO TRY (NO CREDIT CARD REQUIRED)</p>
       <h1>Is Your Data Safe?</h1>
       <h2>View Critical Risks in Under 30 Seconds.</h2>
+      {% if user.is_authenticated %}
+        <p>Welcome back, you are logged in.</p>
+      {% else %}
+        <p>Please log in to access more features.</p>
+      {% endif %}
       <div class="cta">
         <input type="text" placeholder="Enter website or email">
         <button>Scan</button>
@@ -86,7 +91,7 @@
 
 <footer class="footer">
   <div class="container">
-    <p>Industry Specific & Powerful Reports</p>
+    <p>Industry Specific &amp; Powerful Reports</p>
     <button>Start Free Scan</button>
   </div>
 </footer>

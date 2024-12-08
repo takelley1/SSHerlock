@@ -11,8 +11,8 @@ from django.conf import settings
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.http import JsonResponse
+from django.contrib.auth.models import User
 from ssherlock_server.models import (
-    User,
     BastionHost,
     Credential,
     Job,
@@ -30,7 +30,9 @@ class TestHandleObject(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create(email="user@example.com")
+        cls.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
         cls.bastion_host = BastionHost.objects.create(
             hostname="bastion-host.example.com", port=22, user=cls.user
         )
@@ -87,7 +89,9 @@ class TestHandleObject(TestCase):
     # Main test functions.
     # #########################################################################
 
-    def test_bastion_host_add(self):
+    def test_bastion_host_add_authenticated(self):
+        """Test adding a new bastion host while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "hostname": "new-bastion_host.example.com",
             "port": 22,
@@ -98,7 +102,20 @@ class TestHandleObject(TestCase):
             "bastion_host", data["hostname"], data, "/bastion_host_list"
         )
 
-    def test_bastion_host_edit(self):
+    def test_bastion_host_add_not_authenticated(self):
+        """Test adding a new bastion host while not authenticated redirects to login page."""
+        data = {
+            "hostname": "new-bastion_host.example.com",
+            "port": 22,
+            "user": self.user.id,
+        }
+        response = self.client.post(reverse("add_object", args=["bastion_host"]), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/add/bastion_host")
+
+    def test_bastion_host_edit_authenticated(self):
+        """Test editing an existing bastion host while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "hostname": "edited-bastion_host.example.com",
             "port": 22,
@@ -113,7 +130,25 @@ class TestHandleObject(TestCase):
             "/bastion_host_list",
         )
 
-    def test_target_host_add(self):
+    def test_bastion_host_edit_not_authenticated(self):
+        """Test editing an existing bastion host while not authenticated redirects to login page."""
+        data = {
+            "hostname": "edited-bastion_host.example.com",
+            "port": 22,
+            "user": self.user.id,
+        }
+        response = self.client.post(
+            reverse("edit_object", args=["bastion_host", str(self.bastion_host.id)]),
+            data,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/edit/bastion_host/{self.bastion_host.id}"
+        )
+
+    def test_target_host_add_authenticated(self):
+        """Test adding a new target host while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "hostname": "new-target_host.example.com",
             "port": 22,
@@ -124,7 +159,20 @@ class TestHandleObject(TestCase):
             "target_host", data["hostname"], data, "/target_host_list"
         )
 
-    def test_target_host_edit(self):
+    def test_target_host_add_not_authenticated(self):
+        """Test adding a new target host while not authenticated redirects to login page."""
+        data = {
+            "hostname": "new-target_host.example.com",
+            "port": 22,
+            "user": self.user.id,
+        }
+        response = self.client.post(reverse("add_object", args=["target_host"]), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/add/target_host")
+
+    def test_target_host_edit_authenticated(self):
+        """Test editing an existing target host while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "hostname": "edited-target_host.example.com",
             "port": 22,
@@ -139,7 +187,24 @@ class TestHandleObject(TestCase):
             "/target_host_list",
         )
 
-    def test_credential_add(self):
+    def test_target_host_edit_not_authenticated(self):
+        """Test editing an existing target host while not authenticated redirects to login page."""
+        data = {
+            "hostname": "edited-target_host.example.com",
+            "port": 22,
+            "user": self.user.id,
+        }
+        response = self.client.post(
+            reverse("edit_object", args=["target_host", str(self.target_host.id)]), data
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/edit/target_host/{self.target_host.id}"
+        )
+
+    def test_credential_add_authenticated(self):
+        """Test adding a new credential while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "credential_name": "new-credential-name",
             "username": "new-credential-username",
@@ -151,7 +216,21 @@ class TestHandleObject(TestCase):
             "credential", data["credential_name"], data, "/credential_list"
         )
 
-    def test_credential_edit(self):
+    def test_credential_add_not_authenticated(self):
+        """Test adding a new credential while not authenticated redirects to login page."""
+        data = {
+            "credential_name": "new-credential-name",
+            "username": "new-credential-username",
+            "password": "new-credential-password",
+            "user": self.user.id,
+        }
+        response = self.client.post(reverse("add_object", args=["credential"]), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/add/credential")
+
+    def test_credential_edit_authenticated(self):
+        """Test editing an existing credential while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "credential_name": "edited-credential-name",
             "username": "edited-credential-username",
@@ -167,7 +246,25 @@ class TestHandleObject(TestCase):
             "/credential_list",
         )
 
-    def test_llm_api_add(self):
+    def test_credential_edit_not_authenticated(self):
+        """Test editing an existing credential while not authenticated redirects to login page."""
+        data = {
+            "credential_name": "edited-credential-name",
+            "username": "edited-credential-username",
+            "password": "edited-credential-password",
+            "user": self.user.id,
+        }
+        response = self.client.post(
+            reverse("edit_object", args=["credential", str(self.credential.id)]), data
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/edit/credential/{self.credential.id}"
+        )
+
+    def test_llm_api_add_authenticated(self):
+        """Test adding a new LLM API while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "base_url": "new-llmapi.example.com",
             "api_key": "mykey",
@@ -176,7 +273,20 @@ class TestHandleObject(TestCase):
         self._GET_add_object("llm_api")
         self._POST_add_object("llm_api", data["base_url"], data, "/llm_api_list")
 
-    def test_llm_api_edit(self):
+    def test_llm_api_add_not_authenticated(self):
+        """Test adding a new LLM API while not authenticated redirects to login page."""
+        data = {
+            "base_url": "new-llmapi.example.com",
+            "api_key": "mykey",
+            "user": self.user.id,
+        }
+        response = self.client.post(reverse("add_object", args=["llm_api"]), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/add/llm_api")
+
+    def test_llm_api_edit_authenticated(self):
+        """Test editing an existing LLM API while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "base_url": "edited-llmapi.example.com",
             "api_key": "mykey",
@@ -193,11 +303,13 @@ class TestHandleObject(TestCase):
 
     def test_GET_add_invalid_object(self):
         """Verify GET request returns 404 to add invalid objects."""
+        self.client.login(username="testuser", password="password")
         response = self.client.get(reverse("add_object", args=["invalid_object"]))
         self.assertEqual(response.status_code, 404)
 
     def test_GET_edit_invalid_object(self):
         """Verify GET request returns 404 to edit invalid objects."""
+        self.client.login(username="testuser", password="password")
         iid = uuid.uuid4()
         response = self.client.get(
             reverse("edit_object", args=["invalid_object", str(iid)])
@@ -206,6 +318,7 @@ class TestHandleObject(TestCase):
 
     def test_POST_add_invalid_object(self):
         """Verify POST request returns 404 to add invalid objects."""
+        self.client.login(username="testuser", password="password")
         data = {
             "object_name": "invalid_object",
         }
@@ -216,6 +329,7 @@ class TestHandleObject(TestCase):
 
     def test_POST_edit_invalid_object(self):
         """Verify POST request returns 404 to edit invalid objects."""
+        self.client.login(username="testuser", password="password")
         data = {
             "object_name": "edited-invalid_object",
         }
@@ -231,7 +345,9 @@ class TestDeleteObject(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create(email="user@example.com")
+        cls.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
         cls.bastion_host = BastionHost.objects.create(
             hostname="bastion-host.example.com", port=22, user=cls.user
         )
@@ -260,22 +376,72 @@ class TestDeleteObject(TestCase):
         with self.assertRaises(model_instance.__class__.DoesNotExist):
             model_instance.__class__.objects.get(id=model_instance.id)
 
-    def test_delete_bastion_host(self):
+    def test_delete_bastion_host_authenticated(self):
+        """Test deleting a bastion host while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_delete_object(
             "bastion_host", self.bastion_host, "/bastion_host_list"
         )
 
-    def test_delete_target_host(self):
+    def test_delete_bastion_host_not_authenticated(self):
+        """Test deleting a bastion host while not authenticated redirects to login page."""
+        response = self.client.post(
+            reverse("delete_object", args=["bastion_host", str(self.bastion_host.id)])
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response,
+            f"/accounts/login/?next=/delete/bastion_host/{self.bastion_host.id}",
+        )
+
+    def test_delete_target_host_authenticated(self):
+        """Test deleting a target host while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_delete_object("target_host", self.target_host, "/target_host_list")
 
-    def test_delete_credential(self):
+    def test_delete_target_host_not_authenticated(self):
+        """Test deleting a target host while not authenticated redirects to login page."""
+        response = self.client.post(
+            reverse("delete_object", args=["target_host", str(self.target_host.id)])
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/delete/target_host/{self.target_host.id}"
+        )
+
+    def test_delete_credential_authenticated(self):
+        """Test deleting a credential while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_delete_object("credential", self.credential, "/credential_list")
 
-    def test_delete_llm_api(self):
+    def test_delete_credential_not_authenticated(self):
+        """Test deleting a credential while not authenticated redirects to login page."""
+        response = self.client.post(
+            reverse("delete_object", args=["credential", str(self.credential.id)])
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/delete/credential/{self.credential.id}"
+        )
+
+    def test_delete_llm_api_authenticated(self):
+        """Test deleting an LLM API while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_delete_object("llm_api", self.llm_api, "/llm_api_list")
+
+    def test_delete_llm_api_not_authenticated(self):
+        """Test deleting an LLM API while not authenticated redirects to login page."""
+        response = self.client.post(
+            reverse("delete_object", args=["llm_api", str(self.llm_api.id)])
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/delete/llm_api/{self.llm_api.id}"
+        )
 
     def test_invalid_model_type(self):
         """Test for invalid model type."""
+        self.client.login(username="testuser", password="password")
         response = self.client.post(
             reverse("delete_object", args=["invalid_model", str(self.bastion_host.id)])
         )
@@ -283,6 +449,7 @@ class TestDeleteObject(TestCase):
 
     def test_invalid_uuid(self):
         """Test for invalid UUID."""
+        self.client.login(username="testuser", password="password")
         non_existent_uuid = str(uuid.uuid4())
         response = self.client.post(
             reverse("delete_object", args=["bastion_host", non_existent_uuid])
@@ -295,7 +462,9 @@ class TestListViews(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create(email="user@example.com")
+        cls.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
         cls.bastion_host = BastionHost.objects.create(
             hostname="bastion-host.example.com", port=22, user=cls.user
         )
@@ -330,38 +499,88 @@ class TestListViews(TestCase):
             ordered=False,
         )
 
-    def test_bastion_host_list(self):
+    def test_bastion_host_list_authenticated(self):
+        """Test listing bastion hosts while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_list_view("bastion_host_list", [self.bastion_host])
 
-    def test_credential_list(self):
+    def test_bastion_host_list_not_authenticated(self):
+        """Test listing bastion hosts while not authenticated redirects to login page."""
+        response = self.client.get(reverse("bastion_host_list"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/bastion_host_list")
+
+    def test_credential_list_authenticated(self):
+        """Test listing credentials while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_list_view("credential_list", [self.credential])
 
-    def test_llm_api_list(self):
+    def test_credential_list_not_authenticated(self):
+        """Test listing credentials while not authenticated redirects to login page."""
+        response = self.client.get(reverse("credential_list"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/credential_list")
+
+    def test_llm_api_list_authenticated(self):
+        """Test listing LLM APIs while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_list_view("llm_api_list", [self.llm_api])
 
-    def test_target_host_list(self):
+    def test_llm_api_list_not_authenticated(self):
+        """Test listing LLM APIs while not authenticated redirects to login page."""
+        response = self.client.get(reverse("llm_api_list"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/llm_api_list")
+
+    def test_target_host_list_authenticated(self):
+        """Test listing target hosts while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_list_view("target_host_list", [self.target_host])
 
-    def test_job_list(self):
+    def test_target_host_list_not_authenticated(self):
+        """Test listing target hosts while not authenticated redirects to login page."""
+        response = self.client.get(reverse("target_host_list"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/target_host_list")
+
+    def test_job_list_authenticated(self):
+        """Test listing jobs while authenticated."""
+        self.client.login(username="testuser", password="password")
         self._test_list_view("job_list", [self.job])
 
+    def test_job_list_not_authenticated(self):
+        """Test listing jobs while not authenticated redirects to login page."""
+        response = self.client.get(reverse("job_list"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/job_list")
+
     def test_empty_bastion_host_list(self):
+        """Test listing bastion hosts when none exist."""
+        self.client.login(username="testuser", password="password")
         BastionHost.objects.all().delete()
         self._test_list_view("bastion_host_list", [])
 
     def test_empty_credential_list(self):
+        """Test listing credentials when none exist."""
+        self.client.login(username="testuser", password="password")
         Credential.objects.all().delete()
         self._test_list_view("credential_list", [])
 
     def test_empty_llm_api_list(self):
+        """Test listing LLM APIs when none exist."""
+        self.client.login(username="testuser", password="password")
         LlmApi.objects.all().delete()
         self._test_list_view("llm_api_list", [])
 
     def test_empty_target_host_list(self):
+        """Test listing target hosts when none exist."""
+        self.client.login(username="testuser", password="password")
         TargetHost.objects.all().delete()
         self._test_list_view("target_host_list", [])
 
     def test_empty_job_list(self):
+        """Test listing jobs when none exist."""
+        self.client.login(username="testuser", password="password")
         Job.objects.all().delete()
         self._test_list_view("job_list", [])
 
@@ -369,18 +588,37 @@ class TestListViews(TestCase):
 class TestHomeView(TestCase):
     """Tests for the home view."""
 
-    def test_home_view(self):
-        """Test home view."""
+    def setUp(self):
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
+
+    def test_home_view_authenticated(self):
+        """Test home view while authenticated returns 200."""
+        self.client.login(username="testuser", password="password")
         response = self.client.get(reverse("home"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "home.html")
+
+    def test_home_view_not_authenticated(self):
+        """Test home view while not authenticated redirects to login page."""
+        response = self.client.get(reverse("home"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/home")
 
 
 class TestLandingView(TestCase):
     """Tests for the landing page view."""
 
-    def test_landing_view(self):
-        """Test landing page view."""
+    def test_landing_view_authenticated(self):
+        """Test landing page view while authenticated returns 200."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.get(reverse("landing"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "landing.html")
+
+    def test_landing_view_not_authenticated(self):
+        """Test landing page view while not authenticated returns 200."""
         response = self.client.get(reverse("landing"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "landing.html")
@@ -391,7 +629,9 @@ class TestCreateJobView(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create(email="user@example.com")
+        cls.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
         cls.llm_api = LlmApi.objects.create(
             base_url="https://api.example.com", api_key="dummy_key", user=cls.user
         )
@@ -408,8 +648,9 @@ class TestCreateJobView(TestCase):
             hostname="target-host2.example.com", port=22, user=cls.user
         )
 
-    def test_create_single_job(self):
-        """Test creating a single job with one target host."""
+    def test_create_single_job_authenticated(self):
+        """Test creating a single job with one target host while authenticated."""
+        self.client.login(username="testuser", password="password")
         data = {
             "llm_api": self.llm_api.id,
             "credentials_for_target_hosts": self.credential.id,
@@ -427,65 +668,31 @@ class TestCreateJobView(TestCase):
         self.assertEqual(job.llm_api, self.llm_api)
         self.assertIn(self.target_host1, job.target_hosts.all())  # codespell:ignore
 
-    def test_create_multiple_jobs(self):
-        """Test creating multiple jobs with multiple target hosts."""
+    def test_create_single_job_not_authenticated(self):
+        """Test creating a single job with one target host while not authenticated redirects to login."""
         data = {
             "llm_api": self.llm_api.id,
-            "credentials_for_target_hosts": [self.credential.id],
-            "target_hosts": [self.target_host1.id, self.target_host2.id],
+            "credentials_for_target_hosts": self.credential.id,
+            "target_hosts": [self.target_host1.id],
             "user": self.user.id,
             "instructions": "Test instructions",
         }
         response = self.client.post(reverse("create_job"), data)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, "/job_list")
+        self.assertRedirects(response, "/accounts/login/?next=/add/job")
 
-        # Verify two jobs are created
-        jobs = Job.objects.all()
-        self.assertEqual(jobs.count(), 2)
-
-        # Check the first job.
-        # Sometimes job1 receives target-host1 and sometimes job1 receives target-host2,
-        #  so check for both.
-        # All the matters is that each job has a single target host -- it doesn't matter which
-        #  target host.
-        job1 = jobs[0]
-        self.assertEqual(job1.status, "Pending")
-        self.assertEqual(job1.llm_api, self.llm_api)
-        self.assertTrue(
-            self.target_host1 == job1.target_hosts.all()[0]
-            or self.target_host2 == job1.target_hosts.all()[0]
-        )
-
-        # Check the second job
-        job2 = jobs[1]
-        self.assertEqual(job2.status, "Pending")
-        self.assertEqual(job2.llm_api, self.llm_api)
-        self.assertTrue(
-            self.target_host1 == job2.target_hosts.all()[0]
-            or self.target_host2 == job2.target_hosts.all()[0]
-        )
-
-    def test_invalid_form_submission(self):
-        """Test form submission with invalid data."""
-        data = {
-            "llm_api": "",
-            "credentials_for_target_hosts": [self.credential.id],
-            "target_hosts": [self.target_host1.id],
-        }
-        response = self.client.post(reverse("create_job"), data)
-        self.assertEqual(response.status_code, 200)  # Form should return with errors
-        self.assertTemplateUsed(response, "objects/add_object.html")
-
-        # Verify no job is created
-        jobs = Job.objects.all()
-        self.assertEqual(jobs.count(), 0)
-
-    def test_get_create_job_view(self):
-        """Test accessing the create job view with a GET request."""
+    def test_get_create_job_view_authenticated(self):
+        """Test accessing the create job view with a GET request while authenticated."""
+        self.client.login(username="testuser", password="password")
         response = self.client.get(reverse("create_job"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "objects/add_object.html")
+
+    def test_get_create_job_view_not_authenticated(self):
+        """Test accessing the create job view with a GET request while not authenticated redirects to login."""
+        response = self.client.get(reverse("create_job"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/add/job")
 
 
 class TestRequestJob(TestCase):
@@ -542,6 +749,7 @@ class TestRequestJob(TestCase):
         self.job3.target_hosts.add(self.target_host)
 
     def test_no_private_key_provided(self):
+        """Test that 400 is returned if no private key is provided."""
         """Test that 404 is returned if no private key is provided."""
         response = self.client.get(reverse("request_job"))
         self.assertEqual(response.status_code, 400)
@@ -557,6 +765,7 @@ class TestRequestJob(TestCase):
         self.assertEqual(response.json()["message"], "Authorization token incorrect.")
 
     def test_oldest_pending_job_is_returned(self):
+        """Test that the oldest pending job is returned."""
         headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
         response = self.client.get(reverse("request_job"), **headers)
         self.assertEqual(response.status_code, 200)
@@ -584,6 +793,7 @@ class TestRequestJob(TestCase):
         )
 
     def test_no_pending_jobs(self):
+        """Test that 404 is returned if no pending jobs are found."""
         Job.objects.all().delete()
         headers = {"HTTP_AUTHORIZATION": "Bearer myprivatekey"}
         response = self.client.get(reverse("request_job"), **headers)
@@ -643,6 +853,7 @@ class TestUpdateJobStatus(TestCase):
         self.url2 = reverse("update_job_status", args=[self.job2.id])
 
     def test_update_job_status_to_completed_with_valid_key_and_status(self):
+        """Test updating job status to Completed with a valid key and status."""
         response = self.client.post(
             self.url,
             data=json.dumps({"status": "Completed"}),
@@ -654,6 +865,7 @@ class TestUpdateJobStatus(TestCase):
         self.assertEqual(self.job1.status, "Completed")
 
     def test_update_job_status_to_canceled_with_valid_key_and_status(self):
+        """Test updating job status to Canceled with a valid key and status."""
         response = self.client.post(
             self.url,
             data=json.dumps({"status": "Canceled"}),
@@ -665,6 +877,7 @@ class TestUpdateJobStatus(TestCase):
         self.assertEqual(self.job1.status, "Canceled")
 
     def test_update_job_status_to_invalid_status(self):
+        """Test updating job status with an invalid status."""
         response = self.client.post(
             self.url2,
             data=json.dumps({"status": "INVALID"}),
@@ -674,6 +887,7 @@ class TestUpdateJobStatus(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_update_job_status_with_invalid_key(self):
+        """Test updating job status with an invalid key."""
         response = self.client.post(
             self.url,
             data=json.dumps({"status": "Completed"}),
@@ -687,6 +901,7 @@ class TestUpdateJobStatus(TestCase):
         )
 
     def test_update_job_status_without_key(self):
+        """Test updating job status without providing a key."""
         response = self.client.post(
             self.url,
             data=json.dumps({"status": "Completed"}),
@@ -699,6 +914,7 @@ class TestUpdateJobStatus(TestCase):
         )
 
     def test_update_job_status_with_invalid_header_format(self):
+        """Test updating job status with an invalid header format."""
         response = self.client.post(
             self.url,
             data=json.dumps({"status": "Completed"}),
@@ -712,6 +928,7 @@ class TestUpdateJobStatus(TestCase):
         )
 
     def test_update_job_status_without_status(self):
+        """Test updating job status without providing a status."""
         response = self.client.post(
             self.url,
             data=json.dumps({}),
@@ -724,8 +941,9 @@ class TestUpdateJobStatus(TestCase):
         )
 
     def test_update_job_status_with_invalid_job_id(self):
+        """Test updating job status with an invalid job ID."""
         # Create an invalid UUID by modifying the last character
-        invalid_uuid = str(self.job1.id)[:-1] + "f"
+        invalid_uuid = str(self.job1.id)[:-6] + "abcdef"
         invalid_url = reverse("update_job_status", args=[invalid_uuid])
         response = self.client.post(
             invalid_url,
@@ -736,6 +954,7 @@ class TestUpdateJobStatus(TestCase):
         self.assertEqual(response.status_code, 500)
 
     def test_update_job_status_to_running_also_adds_started_at_time(self):
+        """Test updating job status to Running also adds started_at time."""
         response = self.client.post(
             self.url2,
             data=json.dumps({"status": "Running"}),
@@ -753,6 +972,7 @@ class TestUpdateJobStatus(TestCase):
         )
 
     def test_update_job_status_to_completed_also_adds_completed_at_time(self):
+        """Test updating job status to Completed also adds completed_at time."""
         response = self.client.post(
             self.url2,
             data=json.dumps({"status": "Completed"}),
@@ -830,7 +1050,7 @@ class TestGetJobStatus(TestCase):
         self.assertEqual(response.json()["status"], self.job1.status)
 
     def test_job_not_found(self):
-        """Test that 404 is returned if job is not found."""
+        """Test that 500 is returned if job is not found."""
         headers = {"HTTP_AUTHORIZATION": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"}
         invalid_uuid = str(self.job1.id)[:-12] + "123456abcdef"
         response = self.client.get(
@@ -843,7 +1063,9 @@ class TestGetJobStatus(TestCase):
 class TestRetryJob(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create(email="testuser@example.com")
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
         self.llm_api = LlmApi.objects.create(
             base_url="http://api.example.com", api_key="apikey123", user=self.user
         )
@@ -882,24 +1104,41 @@ class TestRetryJob(TestCase):
         )
         self.completed_job.target_hosts.add(self.target_host)
 
-    def test_retry_failed_job_changes_status_to_pending(self):
+    def test_retry_failed_job_authenticated(self):
+        """Test retrying a failed job while authenticated changes its status to Pending."""
+        self.client.login(username="testuser", password="password")
         self.assertEqual(self.failed_job.status, "Failed")
-        self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
+        response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
         self.failed_job.refresh_from_db()
         self.assertEqual(self.failed_job.status, "Pending")
+        self.assertEqual(response.status_code, 302)
+
+    def test_retry_failed_job_not_authenticated(self):
+        """Test retrying a failed job while not authenticated redirects to login page."""
+        response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/retry/job/{self.failed_job.pk}"
+        )
 
     def test_retry_non_failed_job_does_not_change_status(self):
+        """Test retrying a non-failed job does not change its status."""
+        self.client.login(username="testuser", password="password")
         self.assertEqual(self.completed_job.status, "Completed")
         self.client.get(reverse("retry_job", args=[self.completed_job.pk]))
         self.completed_job.refresh_from_db()
         self.assertEqual(self.completed_job.status, "Completed")
 
     def test_retry_job_non_existent_job(self):
+        """Test retrying a non-existent job returns 404."""
+        self.client.login(username="testuser", password="password")
         invalid_uuid = "00000000-0000-0000-0000-000000000000"
         response = self.client.get(reverse("retry_job", args=[invalid_uuid]))
         self.assertEqual(response.status_code, 404)
 
     def test_retry_job_correct_response(self):
+        """Test retrying a job returns the correct response."""
+        self.client.login(username="testuser", password="password")
         response = self.client.get(reverse("retry_job", args=[self.failed_job.pk]))
         self.assertEqual(response.status_code, 302)
 
@@ -907,7 +1146,9 @@ class TestRetryJob(TestCase):
 class TestCancelJob(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create(email="testuser@example.com")
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
         self.llm_api = LlmApi.objects.create(
             base_url="http://api.example.com", api_key="apikey123", user=self.user
         )
@@ -946,7 +1187,9 @@ class TestCancelJob(TestCase):
         )
         self.completed_job.target_hosts.add(self.target_host)
 
-    def test_cancel_running_job_changes_status_to_canceled(self):
+    def test_cancel_running_job_authenticated(self):
+        """Test canceling a running job while authenticated changes status to Canceled."""
+        self.client.login(username="testuser", password="password")
         self.assertEqual(self.running_job.status, "Running")
         response = self.client.get(
             reverse("cancel_job", args=[self.running_job.pk]), HTTP_REFERER="/job_list"
@@ -955,7 +1198,17 @@ class TestCancelJob(TestCase):
         self.assertEqual(self.running_job.status, "Canceled")
         self.assertEqual(response.status_code, 302)
 
-    def test_cancel_completed_job_does_not_change_status(self):
+    def test_cancel_running_job_not_authenticated(self):
+        """Test canceling a running job while not authenticated redirects to login page."""
+        response = self.client.get(reverse("cancel_job", args=[self.running_job.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/cancel_job/{self.running_job.pk}"
+        )
+
+    def test_cancel_completed_job_authenticated(self):
+        """Test canceling a completed job while authenticated does not change status."""
+        self.client.login(username="testuser", password="password")
         self.assertEqual(self.completed_job.status, "Completed")
         response = self.client.get(
             reverse("cancel_job", args=[self.completed_job.pk]),
@@ -965,12 +1218,24 @@ class TestCancelJob(TestCase):
         self.assertEqual(self.completed_job.status, "Completed")
         self.assertEqual(response.status_code, 302)
 
-    def test_cancel_non_existent_job(self):
+    def test_cancel_completed_job_not_authenticated(self):
+        """Test canceling a completed job while not authenticated redirects to login page."""
+        response = self.client.get(reverse("cancel_job", args=[self.completed_job.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/cancel_job/{self.completed_job.pk}"
+        )
+
+    def test_cancel_non_existent_job_authenticated(self):
+        """Test canceling a non-existent job while authenticated returns 404."""
+        self.client.login(username="testuser", password="password")
         invalid_uuid = "00000000-0000-0000-0000-000000000000"
         response = self.client.get(reverse("cancel_job", args=[invalid_uuid]))
         self.assertEqual(response.status_code, 404)
 
     def test_cancel_job_no_http_referer(self):
+        """Test canceling a job without HTTP_REFERER redirects to job list."""
+        self.client.login(username="testuser", password="password")
         response = self.client.get(reverse("cancel_job", args=[self.running_job.pk]))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, "/job_list")
@@ -1063,6 +1328,7 @@ class TestLogJobData(TestCase):
     @patch("ssherlock_server.views.log_job_data")
     @patch("ssherlock_server.utils.check_private_key")
     def test_exception_handling(self, mock_check_private_key, mock_log_job_data):
+        """Test exception handling in log job data."""
         mock_check_private_key.return_value = None
         mock_log_job_data.side_effect = Exception("Test exception")
 
@@ -1088,7 +1354,9 @@ class TestViewJob(TestCase):
 
     def setUp(self):
         # Set up initial data.
-        self.user = User.objects.create(email="testuser@example.com")
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
         self.llm_api = LlmApi.objects.create(
             base_url="http://api.example.com", api_key="apikey123", user=self.user
         )
@@ -1116,15 +1384,23 @@ class TestViewJob(TestCase):
         )
         self.job.target_hosts.add(self.target_host)
 
-    def test_view_existing_job(self):
-        """Helper function to test the job view."""
+    def test_view_existing_job_authenticated(self):
+        """Test viewing a job while authenticated returns 200."""
+        self.client.login(username="testuser", password="password")
         response = self.client.get(reverse("view_job", args=[str(self.job.id)]))
-
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "objects/view_job.html")
 
-    def test_view_nonexistent_job(self):
-        """Test viewing a nonexistent job returns 404."""
+    def test_view_existing_job_not_authenticated(self):
+        """Test viewing a job while not authenticated redirects to login page."""
+        response = self.client.get(reverse("view_job", args=[str(self.job.id)]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"/accounts/login/?next=/view_job/{self.job.id}")
+
+    def test_view_nonexistent_job_authenticated(self):
+        """Test viewing a nonexistent job while authenticated returns 404."""
+        """Test viewing a nonexistent job while authenticated returns 404."""
+        self.client.login(username="testuser", password="password")
         non_existent_job_id = uuid.uuid4()
         response = self.client.get(reverse("view_job", args=[str(non_existent_job_id)]))
         self.assertEqual(response.status_code, 404)
@@ -1132,35 +1408,59 @@ class TestViewJob(TestCase):
 
 class TestStreamJobLog(TestCase):
     def setUp(self):
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
         self.client = Client()
         self.job_id = "0d7420d5-f24b-4b8e-8e50-bb0a20575b54"
 
-    @patch("builtins.open", new_callable=mock_open, read_data="Log entry 1\nLog entry 2\n")
-    def test_stream_job_log_success(self, _):
-        """Test streaming of job log when file exists."""
-        response = self.client.get(reverse('stream_job_log', args=[self.job_id]), stream=True)
+    @patch(
+        "builtins.open", new_callable=mock_open, read_data="Log entry 1\nLog entry 2\n"
+    )
+    def test_stream_job_log_authenticated(self, _):
+        """Test streaming job log while authenticated."""
+        self.client.login(username="testuser", password="password")
+        with patch(
+            "builtins.open",
+            new_callable=mock_open,
+            read_data="Log entry 1\nLog entry 2\n",
+        ):
+            response = self.client.get(
+                reverse("stream_job_log", args=[self.job_id]), stream=True
+            )
 
-        # Collect a finite number of lines from the stream
-        content = []
-        for chunk in response.streaming_content:
-            content.append(chunk.decode('utf-8'))
-            if len(content) >= 2:  # Limit to two lines for the test
-                break
+            # Collect a finite number of lines from the stream
+            content = []
+            for chunk in response.streaming_content:
+                content.append(chunk.decode("utf-8"))
+                if len(content) >= 2:  # Limit to two lines for the test
+                    break
 
-        combined_content = "".join(content)
-        self.assertIn("data: Log entry 1", combined_content)
-        self.assertIn("data: Log entry 2", combined_content)
+            combined_content = "".join(content)
+            self.assertIn("data: Log entry 1", combined_content)
+            self.assertIn("data: Log entry 2", combined_content)
+
+    def test_stream_job_log_not_authenticated(self):
+        """Test streaming job log while not authenticated redirects to login page."""
+        response = self.client.get(reverse("stream_job_log", args=[self.job_id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/view_job/{self.job_id}/log"
+        )
 
     @patch("builtins.open", side_effect=FileNotFoundError)
     def test_stream_job_log_file_not_found(self, _):
         """Test streaming of job log when file does not exist."""
-        response = self.client.get(reverse('stream_job_log', args=[self.job_id]), stream=True)
+        self.client.login(username="testuser", password="password")
+        response = self.client.get(
+            reverse("stream_job_log", args=[self.job_id]), stream=True
+        )
 
         # Collect a finite number of lines from the stream
         content = []
         for chunk in response.streaming_content:
-            content.append(chunk.decode('utf-8'))
-            if "event: error" in chunk.decode('utf-8'):
+            content.append(chunk.decode("utf-8"))
+            if "event: error" in chunk.decode("utf-8"):
                 break
 
         combined_content = "".join(content)

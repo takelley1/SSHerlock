@@ -1,8 +1,8 @@
 """All Django URLs for the SSHerlock server application."""
 
 # pylint: disable=import-error
-from django.urls import path
-from django.urls import include
+from django.urls import path, include
+from django.contrib.auth.views import LogoutView
 
 from . import views
 
@@ -32,5 +32,6 @@ urlpatterns = [
     path("view_job/<uuid:job_id>", views.view_job, name="view_job"),
     path("view_job/<uuid:job_id>/log", views.stream_job_log, name="stream_job_log"),
     path("cancel_job/<uuid:job_id>", views.cancel_job, name="cancel_job"),
+    path("accounts/logout/", LogoutView.as_view(next_page='/'), name="logout"),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
