@@ -4,10 +4,13 @@
 
 {% block content %}
 
-<a href="{% url 'add_object' object_name.split|join:'_'|lower %}" class="button">New {{ object_name }}</a>
+<div class="ml-10 mt-5">
+<a href="{% url 'add_object' object_name.split|join:'_'|lower %}" class="button border-b-4 border-transparent hover:border-b-green-500">New {{ object_name }}</a>
+</div>
 
 {% if output %}
 
+<div class="mx-10">
   <table id="object_list_table">
     <thead>
       <tr>
@@ -51,6 +54,7 @@
     <tbody>
   </table>
 
+</div>
 {% else %}
 
   {% if object_name == "LLM API" %}

@@ -2,19 +2,27 @@
 {% block title %}View Job{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between;">
+<div class="flex">
     <!-- Job Log Section -->
-    <div style="flex: 1; margin-right: 20px;">
-        <h2>Job Log</h2>
+    <div class="flex-1 mt-5 ml-5 mr-5 mb-5 p-5 bg-black rounded-lg h-svh">
         <div id="job-log">
+            <p class="text-white">Job log for job {{ job.id }}</p>
             <!-- Log entries will be appended here by JavaScript -->
         </div>
     </div>
 
-    <!-- Controls Section -->
-    <div style="flex: 0 0 200px; text-align: center;">
-        <h2>Controls</h2>
-        <p>Status: {{ job.status }}</p>
+    <!-- Controls and status section -->
+    <div class="mt-5 mr-5 pt-3 p-5 h-svh border-gray-300 rounded-lg border-4">
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Status:</p>
+            <span>{{ job.status }}</span>
+        </div>
+
+        <form method="post" action="{% url 'cancel_job' job_id=job.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Cancel job</button>
+        </form>
+
         <p>Created at: {{ job.created_at }}</p>
         <p>Started at: {{ job.started_at }}</p>
         <p>Completed at: {{ job.completed_at }}</p>
@@ -26,11 +34,6 @@
         <p>Target host: {{ job.target_hosts_str }}</p>
         <p>Credentials for target host: {{ job.credentials_for_target_hosts }}</p>
         <p>Instructions: {{ job.instructions }}</p>
-
-        <form method="post" action="{% url 'cancel_job' job_id=job.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Cancel</button>
-        </form>
     </div>
 </div>
 

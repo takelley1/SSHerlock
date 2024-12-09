@@ -2,22 +2,31 @@
 {% block title %}Home{% endblock %}
 
 {% block navbar %}
-<div id="navbar">
+<div id="navbar" class="mx-5 border-b-4 border-gray-300 p-4 h-14">
   <div class="navbar-content">
-    <ul>
-      <a href="/" class="navbar-button">Landing</a>
+    <ul class="flex space-x-6">
+      <a href="/" class="{% if request.path == '/' %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Landing</a>
       {% if user.is_authenticated %}
-        <a href="{% url 'home' %}" class="navbar-button">Home</a>
-        <a href="{% url 'credential_list' %}" class="navbar-button">Credentials</a>
-        <a href="{% url 'llm_api_list' %}" class="navbar-button">LLM APIs</a>
-        <a href="{% url 'bastion_host_list' %}" class="navbar-button">Bastion Hosts</a>
-        <a href="{% url 'target_host_list' %}" class="navbar-button">Target Hosts</a>
-        <a href="{% url 'job_list' %}" class="navbar-button">Jobs</a>
-        <form method="post" action="{% url 'logout' %}" style="display: inline;">
+        <!-- Record each URL path as a variable so we can use it in the if-expression without hardcoding URLs. -->
+        {% url 'home' as home_url %}
+        {% url 'credential_list' as credential_list_url %}
+        {% url 'llm_api_list' as llm_api_list_url %}
+        {% url 'bastion_host_list' as bastion_host_list_url %}
+        {% url 'target_host_list' as target_host_list_url %}
+        {% url 'job_list' as job_list_url %}
+        <a href="{{ home_url }}" class="navbar-button {% if request.path == home_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Home</a>
+        <a href="{{ credential_list_url }}" class="navbar-button {% if request.path == credential_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Credentials</a>
+        <a href="{{ llm_api_list_url }}" class="navbar-button {% if request.path == llm_api_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">LLM APIs</a>
+        <a href="{{ bastion_host_list_url }}" class="navbar-button {% if request.path == bastion_host_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Bastion Hosts</a>
+        <a href="{{ target_host_list_url }}" class="navbar-button {% if request.path == target_host_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Target Hosts</a>
+        <a href="{{ job_list_url }}" class="navbar-button {% if request.path == job_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Jobs</a>
+        <form method="post" action="{% url 'logout' %}" class="ml-auto border-b-4 border-transparent hover:border-red-500" style="display: inline;">
           {% csrf_token %}
           <button type="submit" class="navbar-button-signout">Sign Out</button>
         </form>
+        </li>
       {% else %}
+        <!-- Don't show the login button on the login page. -->
         {% if request.path != '/accounts/login/' %}
           <a href="{% url 'login' %}" class="navbar-button">Login</a>
         {% endif %}
