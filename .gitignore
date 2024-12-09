@@ -167,3 +167,4 @@ ALEPreviewWindow
 .aider*
 .gitconfig
 ansible/keys/private.key
+node_modules
