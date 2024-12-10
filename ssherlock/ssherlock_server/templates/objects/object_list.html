@@ -4,14 +4,22 @@
 
 {% block content %}
 
-<div class="ml-10 mt-5">
-<a href="{% url 'add_object' object_name.split|join:'_'|lower %}" class="button border-b-4 border-transparent hover:border-b-green-500">New {{ object_name }}</a>
+<div class="m-5 flex justify-between">
+
+  <div class="ml-5 text-2xl">
+  <span>{{ object_name }}s</span>
+  </div>
+
+  <div class="mr-5 mt-1">
+  <a href="{% url 'add_object' object_name.split|join:'_'|lower %}" class="button mt-2 p-1.5 border-2 rounded-lg border-green-500 hover:bg-green-500">Add {{ object_name }}</a>
+  </div>
+
 </div>
 
 {% if output %}
 
 <div class="mx-10">
-  <table id="object_list_table">
+  <table id="object_list_table" class="table-auto w-full divide-y divide-gray-700 bg-gray-800 text-white">
     <thead>
       <tr>
         {% for header in column_headers %}
@@ -27,7 +35,7 @@
     <tbody>
       {% for item in output %}
 
-        <tr onclick="window.location='{% url 'edit_object' object_name.split|join:'_'|lower item.id %}'" style="cursor: pointer;">
+        <tr onclick="window.location='{% url 'edit_object' object_name.split|join:'_'|lower item.id %}'" class="hover:bg-gray-700 cursor-pointer odd:bg-gray-800 even:bg-gray-900">
 
           {% for field in object_fields %}
           <td>

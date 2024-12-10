@@ -15,7 +15,8 @@
     {% endif %}
 {% endif %}
 
-<form method="post" action="{% url 'login' %}">
+<div class="flex justify-center items-center min-h-screen">
+<form method="post" action="{% url 'login' %}" class="p-6 border-2 border-gray-700 rounded-lg bg-gray-800">
 {% csrf_token %}
 <table>
 <tr>

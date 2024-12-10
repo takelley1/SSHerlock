@@ -2,7 +2,8 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="login-container">
+<div class="flex justify-center items-center min-h-screen">
+<div class="login-container p-6 border-2 border-gray-700 rounded-lg bg-gray-800">
   <h2>Login</h2>
   {% if error_message %}
     <p class="error">{{ error_message }}</p>

@@ -12,19 +12,19 @@
     </div>
 
     <!-- Controls and status section -->
-    <div class="mt-5 mr-5 pt-3 p-5 h-svh border-gray-300 rounded-lg border-4">
+    <div class="mt-5 mr-5 pt-3 p-5 h-svh border-gray-500 rounded-lg border-2">
 
         <div class="flex space-x-4">
 
             {% if job.status == "Running" or job.status == "Pending" %}
             <form method="post" action="{% url 'cancel_job' job_id=job.id %}">
                 {% csrf_token %}
-                <button type="submit" class="border-red-500 border-2 mt-2 rounded-lg p-1 hover:bg-red-200">Cancel job</button>
+                <button type="submit" class="border-red-500 border-2 mt-2 rounded-lg p-1.5 hover:bg-red-500">Cancel job</button>
             </form>
             {% endif %}
 
             {% if job.status == "Canceled" or job.status == "Failed" or job.status == "Context exceeded" %}
-            <a class="border-gray-500 border-2 mt-2 rounded-lg p-1 hover:bg-gray-200" href="{% url 'retry_job' job.id %}">Retry job</a>
+            <a class="border-blue-500 border-2 mt-2 rounded-lg p-1.5 hover:bg-blue-500" href="{% url 'retry_job' job.id %}">Retry job</a>
             {% endif %}
 
         </div>
@@ -49,7 +49,7 @@
             <span>{{ job.status }}</span>
         </div>
 
-        <div class="mt-5 mb-5 border-2 border-gray-300"></div>
+        <div class="mt-5 mb-5 border border-gray-500"></div>
 
         {% if job.created_at is not None %}
         <div class="flex items-center">
@@ -86,7 +86,7 @@
         </div>
         {% endif %}
 
-        <div class="mt-5 mb-5 border-2 border-gray-300"></div>
+        <div class="mt-5 mb-5 border border-gray-500"></div>
 
         <div class="flex items-center">
             <p class="font-bold mr-2">LLM API:</p>
@@ -117,7 +117,7 @@
             <span>{{ job.credentials_for_target_hosts }}</span>
         </div>
 
-        <div class="mt-5 mb-5 border-2 border-gray-300"></div>
+        <div class="mt-5 mb-5 border border-gray-500"></div>
 
         <div class="flex items-center">
             <p class="font-bold mr-2">Instructions:</p>
