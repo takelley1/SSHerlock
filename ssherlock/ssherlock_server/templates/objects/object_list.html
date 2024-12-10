@@ -19,20 +19,20 @@
         {% endfor %}
 
         {% if object_name != "Job" %}
-        <th scope="col">Edit</th>
         <th scope="col">Delete</th>
-        {% endif %}
-
-        {% if object_name == "Job" %}
-        <th scope="col">Retry</th>
-        <th scope="col">View</th>
         {% endif %}
 
       </tr>
     </thead>
     <tbody>
       {% for item in output %}
-        <tr>
+
+        {% if object_name == "Job" %}
+        <tr onclick="window.location='{% url 'view_job' item.id %}'" style="cursor: pointer;">
+        {% else %}
+        <tr onclick="window.location='{% url 'edit_object' object_name.split|join:'_'|lower item.id %}'" style="cursor: pointer;">
+        {% endif %}
+
           {% for field in object_fields %}
           <td>
             <div class="flex items-center">
@@ -60,14 +60,7 @@
 
           {# Jobs can't be edited or deleted, so don't show the edit button for them #}
           {% if object_name != "Job" %}
-            <td><a href="{% url 'edit_object' object_name.split|join:'_'|lower item.id %}" class="button">edit</a></td>
             <td><a href="{% url 'delete_object' object_name.split|join:'_'|lower item.id %}" class="button">delete</a></td>
-          {% endif %}
-
-          {# Jobs get "retry" and "cancel" buttons. #}
-          {% if object_name == "Job" %}
-            <td><a href="{% url 'retry_job' item.id %}" class="button">retry</a></td>
-            <td><a href="{% url 'view_job' item.id %}" class="button">view</a></td>
           {% endif %}
 
         </tr>
