@@ -13,27 +13,107 @@
 
     <!-- Controls and status section -->
     <div class="mt-5 mr-5 pt-3 p-5 h-svh border-gray-300 rounded-lg border-4">
+        <form method="post" action="{% url 'cancel_job' job_id=job.id %}">
+            {% csrf_token %}
+            <button type="submit" class="border-red-500 border-2 mt-2 rounded-lg p-1 hover:bg-red-200">Cancel job</button>
+        </form>
+
+        <div class="mt-3"></div>
+
         <div class="flex items-center">
             <p class="font-bold mr-2">Status:</p>
+            {% if job.status == "Canceled" %}
+            <div class="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
+            {% elif job.status == "Completed" %}
+            <div class="w-3 h-3 bg-green-300 rounded-full mr-2"></div>
+            {% elif job.status == "Context exceeded" %}
+            <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+            {% elif job.status == "Failed" %}
+            <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+            {% elif job.status == "Pending" %}
+            <div class="w-3 h-3 bg-yellow-300 rounded-full mr-2"></div>
+            {% elif job.status == "Running" %}
+            <div class="w-3 h-3 bg-blue-300 rounded-full mr-2"></div>
+            {% endif %}
             <span>{{ job.status }}</span>
         </div>
 
-        <form method="post" action="{% url 'cancel_job' job_id=job.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Cancel job</button>
-        </form>
+        <div class="mt-5 mb-5 border-2 border-gray-300"></div>
 
-        <p>Created at: {{ job.created_at }}</p>
-        <p>Started at: {{ job.started_at }}</p>
-        <p>Completed at: {{ job.completed_at }}</p>
-        <p>Stopped at: {{ job.stopped_at }}</p>
-        <p>Duration: {{ job.duration }}</p>
-        <p>LLM API: {{ job.llm_api }}</p>
-        <p>Bastion host: {{ job.bastion_host }}</p>
-        <p>Credentials for bastion host: {{ job.credentials_for_bastion_host }}</p>
-        <p>Target host: {{ job.target_hosts_str }}</p>
-        <p>Credentials for target host: {{ job.credentials_for_target_hosts }}</p>
-        <p>Instructions: {{ job.instructions }}</p>
+        {% if job.created_at is not None %}
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Created:</p>
+            <span>{{ job.created_at }}</span>
+        </div>
+        {% endif %}
+
+        {% if job.started_at is not None %}
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Started:</p>
+            <span>{{ job.started_at }}</span>
+        </div>
+        {% endif %}
+
+        {% if job.completed_at is not None %}
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Completed:</p>
+            <span>{{ job.completed_at }}</span>
+        </div>
+        {% endif %}
+
+        {% if job.stopped_at is not None %}
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Stopped:</p>
+            <span>{{ job.stopped_at }}</span>
+        </div>
+        {% endif %}
+
+        {% if job.duration is not None %}
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Duration:</p>
+            <span>{{ job.duration }}</span>
+        </div>
+        {% endif %}
+
+        <div class="mt-5 mb-5 border-2 border-gray-300"></div>
+
+        <div class="flex items-center">
+            <p class="font-bold mr-2">LLM API:</p>
+            <span>{{ job.llm_api }}</span>
+        </div>
+
+        {% if job.bastion_host is not None %}
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Bastion host:</p>
+            <span>{{ job.bastion_host }}</span>
+        </div>
+        {% endif %}
+
+        {% if job.credentials_for_bastion_host is not None %}
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Bastion host credentials:</p>
+            <span>{{ job.credentials_for_bastion_host }}</span>
+        </div>
+        {% endif %}
+
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Target host:</p>
+            <span>{{ job.target_hosts_str }}</span>
+        </div>
+
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Target host credentials:</p>
+            <span>{{ job.credentials_for_target_hosts }}</span>
+        </div>
+
+        <div class="mt-5 mb-5 border-2 border-gray-300"></div>
+
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Instructions:</p>
+            <span>{{ job.instructions }}</span>
+        </div>
+
+
     </div>
 </div>
 
