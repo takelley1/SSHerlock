@@ -228,30 +228,26 @@ def llm_api_list(request):
 @login_required
 def job_list(request):
     """List the jobs."""
-    return render_object_list(
-        request,
-        Job,
-        [
+    output = Job.objects.all()
+    context = {
+        "output": output,
+        "column_headers": [
             "Creation",
             "Status",
             "LLM API",
-            # Showing the bastion host columns can make the table too wide.
-            # "Bastion Host",
-            # "Bastion Host Credentials",
             "Target Host",
             "Target Host Credentials",
         ],
-        [
+        "object_name": "Job",
+        "object_fields": [
             "created_at",
             "status",
             "llm_api",
-            # "bastion_host",
-            # "credentials_for_bastion_host",
             "target_hosts_str",
             "credentials_for_target_hosts",
         ],
-        "Job",
-    )
+    }
+    return render(request, "objects/job_list.html", context)
 
 
 @login_required
