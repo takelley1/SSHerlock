@@ -47,7 +47,10 @@ def handle_object(request, model_type, uuid=None):
     form = form_class(request.POST or None, instance=instance)
 
     if request.method == "POST" and form.is_valid():
-        form.save()
+        obj = form.save(commit=False)
+        # Use the currently-logged-in user in the user field of the object.
+        obj.user = request.user
+        obj.save()
         return redirect(f"/{model_type}_list")
 
     context = {
@@ -116,7 +119,8 @@ def create_job(request):
         target_hosts = cleaned_data.pop("target_hosts", [])
 
         for host in target_hosts:
-            job = Job(**cleaned_data)
+            # Use the currently-logged-in user in the user field of the object.
+            job = Job(user=request.user, **cleaned_data)
             job.save()
             job.target_hosts.add(host.id)
             job.save()
@@ -228,7 +232,7 @@ def llm_api_list(request):
 @login_required
 def job_list(request):
     """List the jobs."""
-    output = Job.objects.all()
+    output = Job.objects.filter(user=request.user)
     context = {
         "output": output,
         "column_headers": [
@@ -265,7 +269,7 @@ def target_host_list(request):
 @login_required
 def render_object_list(request, model, column_headers, object_fields, object_name):
     """Helper function to render object lists."""
-    output = model.objects.all()
+    output = model.objects.filter(user=request.user)
     context = {
         "output": output,
         "column_headers": column_headers,
