@@ -22,9 +22,7 @@ def check_private_key(request):
 
 
 def get_object_pretty_name(model_type):
-    """
-    Convert a model type string to a pretty name.
-    """
+    """Convert a model type string to a pretty name."""
     if model_type == "llm_api":
         pretty_name = "LLM API"
     else:

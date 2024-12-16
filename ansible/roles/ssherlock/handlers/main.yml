@@ -15,10 +15,10 @@
   listen: restart-ssherlock-server
   block:
 
-
-    ansible.builtin.shell:
-      cmd: tailwindcss -i input.css -o output.css --minify
-      chdir: "{{ ssherlock_app_path }}"
+    - name: HANDLERS | SSHerlock Server | Compile CSS
+      ansible.builtin.shell:
+        cmd: tailwindcss -i input.css -o output.css --minify
+        chdir: "{{ ssherlock_app_path }}"
 
     - name: HANDLERS | SSHerlock database migrated
       ansible.builtin.shell:

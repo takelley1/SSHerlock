@@ -33,9 +33,7 @@ from .utils import check_private_key, get_object_pretty_name
 
 
 def landing(request):
-    """
-    Get the landing page.
-    """
+    """Get the landing page."""
     return render(request, "landing.html")
 
 
@@ -51,9 +49,7 @@ MODEL_FORM_MAP = {
 
 @login_required
 def handle_object(request, model_type, uuid=None):
-    """
-    Handle creating or editing any object except jobs.
-    """
+    """Handle creating or editing any object except jobs."""
     model_form_tuple = MODEL_FORM_MAP.get(model_type)
     if not model_form_tuple:
         raise Http404("Model type not found.")
@@ -299,9 +295,9 @@ def render_object_list(request, model, column_headers, object_fields, object_nam
 @require_http_methods(["GET"])
 @csrf_exempt
 def request_job(request):
-    """
-    Provide a job for runners to process. This is the API endpoint used by
-    runners to retrieve a job.
+    """Provide a job for runners to process.
+
+    This is the API endpoint used by runners to retrieve a job.
     """
     try:
         key_check_response = check_private_key(request)

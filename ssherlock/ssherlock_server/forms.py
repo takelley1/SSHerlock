@@ -18,9 +18,21 @@ class CredentialForm(ModelForm):
         model = Credential
         fields = ["credential_name", "username", "password"]
         widgets = {
-            "credential_name": forms.TextInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
-            "username": forms.TextInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
-            "password": forms.PasswordInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
+            "credential_name": forms.TextInput(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
+            "username": forms.TextInput(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
+            "password": forms.PasswordInput(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
         }
 
 
@@ -29,14 +41,20 @@ class BastionHostForm(ModelForm):
 
     port = forms.IntegerField(
         initial=22,
-        widget=forms.NumberInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"})
+        widget=forms.NumberInput(
+            attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}
+        ),
     )
 
     class Meta:
         model = BastionHost
         fields = ["hostname", "port"]
         widgets = {
-            "hostname": forms.TextInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
+            "hostname": forms.TextInput(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
         }
 
 
@@ -45,14 +63,20 @@ class TargetHostForm(ModelForm):
 
     port = forms.IntegerField(
         initial=22,
-        widget=forms.NumberInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"})
+        widget=forms.NumberInput(
+            attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}
+        ),
     )
 
     class Meta:
         model = TargetHost
         fields = ["hostname", "port"]
         widgets = {
-            "hostname": forms.TextInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
+            "hostname": forms.TextInput(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
         }
 
 
@@ -63,8 +87,16 @@ class LlmApiForm(ModelForm):
         model = LlmApi
         fields = ["base_url", "api_key"]
         widgets = {
-            "base_url": forms.URLInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
-            "api_key": forms.TextInput(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
+            "base_url": forms.URLInput(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
+            "api_key": forms.TextInput(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
         }
 
 
@@ -74,7 +106,9 @@ class JobForm(ModelForm):
     instructions = forms.CharField(
         max_length=128000,
         help_text="Instructions for the job, limited to 128,000 characters.",
-        widget=forms.Textarea(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
+        widget=forms.Textarea(
+            attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}
+        ),
     )
 
     class Meta:
@@ -88,9 +122,29 @@ class JobForm(ModelForm):
             "instructions",
         ]
         widgets = {
-            "llm_api": forms.Select(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
-            "bastion_host": forms.Select(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
-            "credentials_for_bastion_host": forms.Select(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
-            "target_hosts": forms.SelectMultiple(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
-            "credentials_for_target_hosts": forms.Select(attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}),
+            "llm_api": forms.Select(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
+            "bastion_host": forms.Select(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
+            "credentials_for_bastion_host": forms.Select(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
+            "target_hosts": forms.SelectMultiple(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
+            "credentials_for_target_hosts": forms.Select(
+                attrs={
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                }
+            ),
         }

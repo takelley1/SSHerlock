@@ -753,7 +753,6 @@ class TestRequestJob(TestCase):
 
     def test_no_private_key_provided(self):
         """Test that 400 is returned if no private key is provided."""
-        """Test that 404 is returned if no private key is provided."""
         response = self.client.get(reverse("request_job"))
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -1425,7 +1424,6 @@ class TestViewJob(TestCase):
         self.assertRedirects(response, f"/accounts/login/?next=/view_job/{self.job.id}")
 
     def test_view_nonexistent_job_authenticated(self):
-        """Test viewing a nonexistent job while authenticated returns 404."""
         """Test viewing a nonexistent job while authenticated returns 404."""
         self.client.login(username="testuser", password="password")
         non_existent_job_id = uuid.uuid4()
