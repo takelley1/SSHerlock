@@ -6,22 +6,36 @@ import json
 import os
 import time
 
-from django.http import Http404, JsonResponse, HttpResponse, StreamingHttpResponse
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from django.http import (
+    Http404,
+    HttpResponse,
+    JsonResponse,
+    StreamingHttpResponse,
+)
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from .forms import BastionHostForm, CredentialForm, JobForm, LlmApiForm, TargetHostForm
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
+from .forms import (
+    BastionHostForm,
+    CredentialForm,
+    JobForm,
+    LlmApiForm,
+    TargetHostForm,
+)
 from .models import BastionHost, Credential, Job, LlmApi, TargetHost
-from .utils import check_private_key
+from .utils import check_private_key, get_object_pretty_name
 
 
 def landing(request):
-    """Get the landing page."""
+    """
+    Get the landing page.
+    """
     return render(request, "landing.html")
 
 
@@ -37,7 +51,9 @@ MODEL_FORM_MAP = {
 
 @login_required
 def handle_object(request, model_type, uuid=None):
-    """Handle creating or editing any object except jobs."""
+    """
+    Handle creating or editing any object except jobs.
+    """
     model_form_tuple = MODEL_FORM_MAP.get(model_type)
     if not model_form_tuple:
         raise Http404("Model type not found.")
@@ -54,6 +70,7 @@ def handle_object(request, model_type, uuid=None):
         return redirect(f"/{model_type}_list")
 
     context = {
+        "object_name_pretty": get_object_pretty_name(model_type),
         "form": form,
         "object_name": model_type.capitalize(),
         "uuid": uuid,
@@ -282,7 +299,10 @@ def render_object_list(request, model, column_headers, object_fields, object_nam
 @require_http_methods(["GET"])
 @csrf_exempt
 def request_job(request):
-    """Provide a job for runners to process. This is the API endpoint used by runners to retrieve a job."""
+    """
+    Provide a job for runners to process. This is the API endpoint used by
+    runners to retrieve a job.
+    """
     try:
         key_check_response = check_private_key(request)
         if key_check_response:

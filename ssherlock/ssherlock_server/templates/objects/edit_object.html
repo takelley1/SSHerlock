@@ -1,13 +1,21 @@
 {% extends "home.html" %}
+{% load custom_filters %}
 {% block title %}Edit {{ object_name }}{% endblock %}
 
 {% block content %}
-  {% with model_type=object_name|lower %}
-    <form action="{% url 'edit_object' model_type=model_type uuid=uuid %}" method="post">
-      {% csrf_token %}
+<div class="flex justify-center items-start min-h-screen">
+  <div class="m-5 p-5 border-4 border-gray-800 rounded-lg max-w-md">
+    <h2 class="text-2xl mb-4">Edit {{ object_name_pretty }}</h2>
+    {% with model_type=object_name|lower %}
+      <form action="{% url 'edit_object' model_type=model_type uuid=uuid %}" method="post" class="space-y-4">
+        {% csrf_token %}
         {{ form }}
-        <input type="submit" value="Edit"}}>
-        <a href="/{{ object_name|lower }}_list" class="button">Cancel</a>
-    </form>
-  {% endwith %}
+        <div class="flex space-x-4">
+          <a href="/{{ object_name|lower }}_list" class="button mt-2 p-1.5 border-2 rounded-lg border-red-500 hover:bg-red-500">Cancel</a>
+          <input type="submit" value="Edit" class="button mt-2 p-1.5 border-2 rounded-lg border-green-500 hover:bg-green-500">
+        </div>
+      </form>
+    {% endwith %}
+  </div>
+</div>
 {% endblock %}

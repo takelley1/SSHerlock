@@ -27,7 +27,7 @@
         {% endfor %}
 
         {% if object_name != "Job" %}
-        <th scope="col">Delete</th>
+        <th scope="col"></th>
         {% endif %}
 
       </tr>
@@ -40,11 +40,15 @@
           {% for field in object_fields %}
           <td>
             <div class="flex items-center">
-              <span>{{ item|get_attr:field }}</span>
+              {% if field == "password" or field == "api_key" %}
+                <span>******</span>
+              {% else %}
+                <span>{{ item|get_attr:field }}</span>
+              {% endif %}
             </div>
           </td>
           {% endfor %}
-          <td><a href="{% url 'delete_object' object_name.split|join:'_'|lower item.id %}" class="button">delete</a></td>
+          <td><a href="{% url 'delete_object' object_name.split|join:'_'|lower item.id %}" class="border-red-500 border-2 rounded-lg p-1.5 hover:bg-red-500">Delete</a></td>
         </tr>
       {% endfor %}
     <tbody>

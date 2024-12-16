@@ -4,7 +4,7 @@
 {% block content %}
 <div class="flex justify-center items-start min-h-screen">
   <div class="m-5 p-5 border-4 border-gray-800 rounded-lg max-w-md">
-  <h2 class="text-2xl mb-4">Add {{ object_name }}</h2>
+  <h2 class="text-2xl mb-4">Add {{ object_name_pretty }}</h2>
   {% with model_type=object_name|lower %}
     <form action="{% url 'add_object' model_type=model_type %}" method="post" class="space-y-4">
       {% csrf_token %}
