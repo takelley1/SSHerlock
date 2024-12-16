@@ -491,7 +491,10 @@ class TestListViews(TestCase):
         """Helper function to test list views."""
         response = self.client.get(reverse(view_name))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "objects/object_list.html")
+        if view_name == "job_list":
+            self.assertTemplateUsed(response, "objects/job_list.html")
+        else:
+            self.assertTemplateUsed(response, "objects/object_list.html")
         self.assertQuerySetEqual(
             response.context["output"],
             [repr(obj) for obj in expected_objects],

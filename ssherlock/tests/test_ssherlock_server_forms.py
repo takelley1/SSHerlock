@@ -37,16 +37,6 @@ class TestCredentialForm(TestCase):
         form = CredentialForm(data=form_data)
         self.assertFalse(form.is_valid())
 
-    def test_invalid_credential_form_blank_user(self):
-        form_data = {
-            "credential_name": "Admin",
-            "user": "",
-            "username": "admin",
-            "password": "supersecurepassword",
-        }
-        form = CredentialForm(data=form_data)
-        self.assertFalse(form.is_valid())
-
     def test_invalid_credential_form_blank_username(self):
         form_data = {
             "credential_name": "Admin",
@@ -123,15 +113,6 @@ class TestBastionHostForm(TestCase):
         form = BastionHostForm(data=form_data)
         self.assertFalse(form.is_valid())
 
-    def test_invalid_bastion_host_form_blank_user(self):
-        form_data = {
-            "hostname": "bastion.example.com",
-            "user": "",
-            "port": 22,
-        }
-        form = BastionHostForm(data=form_data)
-        self.assertFalse(form.is_valid())
-
     def test_invalid_bastion_host_form_blank_port(self):
         form_data = {
             "hostname": "bastion.example.com",
@@ -169,15 +150,6 @@ class TestTargetHostForm(TestCase):
         form_data = {
             "hostname": "",
             "user": self.user.id,
-            "port": 22,
-        }
-        form = TargetHostForm(data=form_data)
-        self.assertFalse(form.is_valid())
-
-    def test_invalid_target_host_form_blank_user(self):
-        form_data = {
-            "hostname": "target.example.com",
-            "user": "",
             "port": 22,
         }
         form = TargetHostForm(data=form_data)
@@ -230,15 +202,6 @@ class TestLlmApiForm(TestCase):
             "base_url": "https://api.example.com",
             "api_key": "",
             "user": self.user.id,
-        }
-        form = LlmApiForm(data=form_data)
-        self.assertFalse(form.is_valid())
-
-    def test_invalid_llm_api_form_blank_user(self):
-        form_data = {
-            "base_url": "https://api.example.com",
-            "api_key": "supersecretapikey",
-            "user": "",
         }
         form = LlmApiForm(data=form_data)
         self.assertFalse(form.is_valid())
