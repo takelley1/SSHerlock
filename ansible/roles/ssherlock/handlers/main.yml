@@ -10,28 +10,44 @@
     daemon_reload: true
   listen: restart-ssherlock-runners
 
-- name: HANDLERS | SSHerlock Server restarted (gunicorn)
+
+- name: HANDLERS | SSHerlock Server
+  listen: restart-ssherlock-server
+  block:
+
+
+    ansible.builtin.shell:
+      cmd: tailwindcss -i input.css -o output.css --minify
+      chdir: "{{ ssherlock_app_path }}"
+
+    - name: HANDLERS | SSHerlock database migrated
+      ansible.builtin.shell:
+        cmd: |
+          "{{ ssherlock_venv_path }}/bin/python manage.py makemigrations ssherlock_server"
+          "{{ ssherlock_venv_path }}/bin/python manage.py migrate"
+        chdir: "{{ ssherlock_app_path }}"
+
+    - name: HANDLERS | SSHerlock Server | Gunicord restarted
+      ansible.builtin.systemd:
+        name: gunicorn.socket
+        state: restarted
+        enabled: true
+        masked: false
+        daemon_reload: true
+
+    - name: HANDLERS | SSHerlock Server | Nginx restarted
+      ansible.builtin.systemd:
+        name: nginx.service
+        state: restarted
+        enabled: true
+        masked: false
+        daemon_reload: true
+
+- name: HANDLERS | Certbot timer activate
   ansible.builtin.systemd:
-    name: gunicorn.socket
-    state: restarted
+    name: certbot.timer
+    state: started
     enabled: true
     masked: false
     daemon_reload: true
-  listen: restart-ssherlock-server
-
-- name: HANDLERS | SSHerlock Server restarted (nginx)
-  ansible.builtin.systemd:
-    name: nginx.service
-    state: restarted
-    enabled: true
-    masked: false
-    daemon_reload: true
-  listen: restart-ssherlock-server
-
-- name: HANDLERS | SSHerlock database migrated
-  ansible.builtin.shell:
-    cmd: |
-      "{{ ssherlock_venv_path }}/bin/python manage.py makemigrations ssherlock_server"
-      "{{ ssherlock_venv_path }}/bin/python manage.py migrate"
-    chdir: "{{ ssherlock_app_path }}"
-  listen: migrate-ssherlock-database
+  listen: restart-certbot

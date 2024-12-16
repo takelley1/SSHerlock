@@ -31,7 +31,6 @@
     - ssherlock/
     - requirements.txt
   notify:
-    - migrate-ssherlock-database
     - restart-ssherlock-runners
     - restart-ssherlock-server
 
@@ -46,7 +45,11 @@
 
 - name: MAIN | Install Apt dependencies
   ansible.builtin.apt:
-    name: nginx=1.24.0-2ubuntu7.1
+    name:
+      - nginx=1.24.0-2ubuntu7.1
+      - certbot
+      - python3-certbot-nginx
+      - libaugeas0
     autoclean: true
     autoremove: true
     clean: true
@@ -54,6 +57,7 @@
   notify:
     - restart-ssherlock-runners
     - restart-ssherlock-server
+    - restart-certbot
 
 - name: MAIN | Create symlink to application directory
   ansible.builtin.file:
@@ -76,4 +80,12 @@
     - etc/systemd/system/ssherlock_runners.target
   notify:
     - restart-ssherlock-runners
+    - restart-ssherlock-server
+
+- name: MAIN | Install TailwindCSS
+  ansible.builtin.get_url:
+    url: https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
+    dest: /usr/bin/tailwindcss
+    mode: "0755"
+  notify:
     - restart-ssherlock-server
