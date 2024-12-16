@@ -423,3 +423,9 @@ def log_job_data(request, job_id):
 
     except Exception as e:
         return JsonResponse({"message": str(e)}, status=500)
+
+
+@login_required
+def account(request):
+    """Render the account page."""
+    return render(request, "account.html")

@@ -1559,3 +1559,28 @@ class TestSignupView(TestCase):
         self.assertTrue(form.errors)
         self.assertIn("username", form.errors)
         self.assertEqual(form.errors["username"], ["A user with that username already exists."])
+
+
+class TestAccountView(TestCase):
+    """Tests for the account view."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
+        self.client = Client()
+
+    def test_account_view_authenticated(self):
+        """Test account view while authenticated returns 200."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.get(reverse("account"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "account.html")
+        self.assertContains(response, self.user.username)
+        self.assertContains(response, self.user.email)
+
+    def test_account_view_not_authenticated(self):
+        """Test account view while not authenticated redirects to login page."""
+        response = self.client.get(reverse("account"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/account/")

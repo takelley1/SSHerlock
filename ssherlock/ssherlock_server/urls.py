@@ -32,6 +32,7 @@ urlpatterns = [
     path("view_job/<uuid:job_id>", views.view_job, name="view_job"),
     path("view_job/<uuid:job_id>/log", views.stream_job_log, name="stream_job_log"),
     path("cancel_job/<uuid:job_id>", views.cancel_job, name="cancel_job"),
+    path("account/", views.account, name="account"),
     path("accounts/login/", LoginView.as_view(template_name='login.html'), name="login"),
     path("accounts/logout/", LogoutView.as_view(next_page='/'), name="logout"),
     path("signup/", views.signup, name="signup"),

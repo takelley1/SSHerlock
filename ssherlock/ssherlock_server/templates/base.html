@@ -39,5 +39,18 @@
   {% block content %}
   {% endblock %}
 
+<script>
+  // Used to show and hide the Account drop-down menu on the navbar.
+  $(document).ready(function() {
+    $('#accountButton').click(function(event) {
+      event.stopPropagation();
+      $('#accountDropdown').toggleClass('hidden');
+    });
+
+    $(document).click(function() {
+      $('#accountDropdown').addClass('hidden');
+    });
+  });
+</script>
 </body>
 </html>

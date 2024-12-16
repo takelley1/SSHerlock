@@ -20,11 +20,16 @@
         <a href="{{ bastion_host_list_url }}" class="navbar-button {% if request.path == bastion_host_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Bastion Hosts</a>
         <a href="{{ target_host_list_url }}" class="navbar-button {% if request.path == target_host_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Target Hosts</a>
         <a href="{{ job_list_url }}" class="navbar-button {% if request.path == job_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Jobs</a>
-        <form method="post" action="{% url 'logout' %}" class="ml-auto border-b-4 border-transparent hover:border-red-500" style="display: inline;">
-          {% csrf_token %}
-          <button type="submit" class="navbar-button-signout">Sign Out</button>
-        </form>
-        </li>
+        <div class="relative ml-auto">
+          <button class="navbar-button" id="accountButton">Account</button>
+          <div id="accountDropdown" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10 hidden">
+            <a href="{% url 'account' %}" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Settings</a>
+            <form method="post" action="{% url 'logout' %}" class="block">
+              {% csrf_token %}
+              <button type="submit" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700">Sign Out</button>
+            </form>
+          </div>
+        </div>
       {% else %}
         <!-- Don't show the login button on the login page. -->
         {% if request.path != '/accounts/login/' %}
