@@ -7,7 +7,8 @@ import os
 import time
 
 from django.conf import settings
-from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth import login, update_session_auth_hash, password_validation
+from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.http import (
@@ -435,10 +436,15 @@ def reset_password(request):
         confirm_password = request.POST.get("confirm_password")
 
         if new_password and new_password == confirm_password:
-            request.user.set_password(new_password)
-            request.user.save()
-            update_session_auth_hash(request, request.user)  # Keep the user logged in
-            return render(request, "account.html", {"success": "Password successfully changed."})
+            try:
+                # Validate the new password
+                password_validation.validate_password(new_password, request.user)
+                request.user.set_password(new_password)
+                request.user.save()
+                update_session_auth_hash(request, request.user)  # Keep the user logged in
+                return render(request, "account.html", {"success": "Password successfully changed."})
+            except ValidationError as e:
+                error = "\n".join(e.messages)
         elif new_password and new_password != confirm_password:
             error = "Passwords do not match."
         else:

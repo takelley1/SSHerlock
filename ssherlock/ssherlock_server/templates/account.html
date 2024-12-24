@@ -17,7 +17,7 @@
       {% csrf_token %}
       <h3 class="text-xl mb-2 text-white">Reset Password</h3>
       {% if error %}
-        <p class="text-l text-red-500">{{ error }}</p>
+        <p class="text-l text-red-500" style="white-space: pre-line;">{{ error }}</p>
       {% endif %}
       <div class="mb-4">
         <label for="new_password" class="block text-white">New Password:</label>

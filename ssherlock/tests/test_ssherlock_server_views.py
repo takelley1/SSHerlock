@@ -1607,6 +1607,18 @@ class TestAccountView(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("password"))
 
+    def test_reset_password_complexity_failure(self):
+        """Test password reset with a password that does not meet complexity requirements."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.post(reverse("reset_password"), {
+            "new_password": "simple",
+            "confirm_password": "simple"
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This password is too short. It must contain at least 12 characters.")
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("password"))
+
     def test_reset_password_not_authenticated(self):
         """Test password reset while not authenticated redirects to login page."""
         response = self.client.post(reverse("reset_password"), {
