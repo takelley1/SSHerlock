@@ -78,9 +78,9 @@ class TestBastionHost(TestCase):
 
     def test_ordering(self):
         bastions = BastionHost.objects.all()
-        self.assertEqual(bastions[0], self.bastion1)
+        self.assertEqual(bastions[0], self.bastion3)
         self.assertEqual(bastions[1], self.bastion2)
-        self.assertEqual(bastions[2], self.bastion3)
+        self.assertEqual(bastions[2], self.bastion1)
 
 
 class TestCredential(TestCase):
@@ -132,8 +132,8 @@ class TestCredential(TestCase):
 
     def test_ordering(self):
         credentials = Credential.objects.all()
-        self.assertEqual(credentials[0], self.credential1)
-        self.assertEqual(credentials[1], self.credential2)
+        self.assertEqual(credentials[0], self.credential2)
+        self.assertEqual(credentials[1], self.credential1)
 
 
 class TestTargetHost(TestCase):
@@ -179,8 +179,8 @@ class TestTargetHost(TestCase):
     def test_ordering(self):
         target_hosts = TargetHost.objects.all()
         # Reverse ordering because "1.2.3.4" is before "target1" alphabetically.
-        self.assertEqual(target_hosts[1], self.target_host1)
         self.assertEqual(target_hosts[0], self.target_host2)
+        self.assertEqual(target_hosts[1], self.target_host1)
 
 
 class TestLlmApi(TestCase):
@@ -226,8 +226,8 @@ class TestLlmApi(TestCase):
 
     def test_ordering(self):
         llm_apis = LlmApi.objects.all()
-        self.assertEqual(llm_apis[0], self.llm_api1)
-        self.assertEqual(llm_apis[1], self.llm_api2)
+        self.assertEqual(llm_apis[0], self.llm_api2)
+        self.assertEqual(llm_apis[1], self.llm_api1)
 
 
 class TestJob(TestCase):

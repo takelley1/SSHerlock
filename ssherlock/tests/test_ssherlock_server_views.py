@@ -1582,3 +1582,36 @@ class TestAccountView(TestCase):
         response = self.client.get(reverse("account"))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, "/accounts/login/?next=/account/")
+
+    def test_reset_password_success(self):
+        """Test successful password reset."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.post(reverse("reset_password"), {
+            "new_password": "newpassword123",
+            "confirm_password": "newpassword123"
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Password successfully changed.")
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("newpassword123"))
+
+    def test_reset_password_mismatch(self):
+        """Test password reset with mismatched passwords."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.post(reverse("reset_password"), {
+            "new_password": "newpassword123",
+            "confirm_password": "differentpassword"
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Passwords do not match.")
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("password"))
+
+    def test_reset_password_not_authenticated(self):
+        """Test password reset while not authenticated redirects to login page."""
+        response = self.client.post(reverse("reset_password"), {
+            "new_password": "newpassword123",
+            "confirm_password": "newpassword123"
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/reset_password/")
