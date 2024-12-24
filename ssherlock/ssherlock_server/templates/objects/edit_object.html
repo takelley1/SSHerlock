@@ -11,8 +11,8 @@
         {% csrf_token %}
         {{ form }}
         <div class="flex space-x-4">
-          <a href="/{{ object_name|lower }}_list" class="button mt-2 p-1.5 border-2 rounded-lg border-red-500 hover:bg-red-500">Cancel</a>
-          <input type="submit" value="Edit" class="button mt-2 p-1.5 border-2 rounded-lg border-green-500 hover:bg-green-500">
+          <a href="/{{ object_name|lower }}_list" class="bg-gray-500 hover:bg-gray-600 mt-2 p-2 rounded">Cancel</a>
+          <input type="submit" value="Edit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">
         </div>
       </form>
     {% endwith %}

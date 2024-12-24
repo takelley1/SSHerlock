@@ -19,12 +19,12 @@
             {% if job.status == "Running" or job.status == "Pending" %}
             <form method="post" action="{% url 'cancel_job' job_id=job.id %}">
                 {% csrf_token %}
-                <button type="submit" class="border-red-500 border-2 mt-2 rounded-lg p-1.5 hover:bg-red-500">Cancel job</button>
+                <button type="submit" class="bg-red-500 hover:bg-red-600 mt-2 p-2 rounded">Cancel job</button>
             </form>
             {% endif %}
 
             {% if job.status == "Canceled" or job.status == "Failed" or job.status == "Context exceeded" %}
-            <a class="border-blue-500 border-2 mt-2 rounded-lg p-1.5 hover:bg-blue-500" href="{% url 'retry_job' job.id %}">Retry job</a>
+            <a class="bg-blue-500 hover:bg-blue-600 mt-2 p-2 rounded" href="{% url 'retry_job' job.id %}">Retry job</a>
             {% endif %}
 
         </div>
