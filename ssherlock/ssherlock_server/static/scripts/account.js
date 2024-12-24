@@ -35,9 +35,12 @@ function showSuccessPopup(message) {
  * Displays the success message if available.
  */
 document.addEventListener('DOMContentLoaded', function() {
-    if ("{{ success }}") {
+    const successMessage = document.querySelector('.min-h-screen').getAttribute('data-success');
+    const errorMessage = document.querySelector('.min-h-screen').getAttribute('data-error');
+
+    if (successMessage) {
         setTimeout(() => {
-            showSuccessPopup("{{ success }}");
+            showSuccessPopup(successMessage);
         }, 500);
     }
 });
