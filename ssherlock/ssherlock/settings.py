@@ -111,6 +111,9 @@ LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "America/New_York"
 
+# Default datetime format
+DATETIME_FORMAT = "Y-m-d H:i:s"
+
 USE_I18N = True
 
 USE_TZ = True
