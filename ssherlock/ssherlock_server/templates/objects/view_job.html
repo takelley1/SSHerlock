@@ -49,33 +49,38 @@
             <span>{{ job.status }}</span>
         </div>
 
+        <div class="flex items-center">
+            <p class="font-bold mr-2">ID:</p>
+            <span class="text-sm">{{ job.id }}</span>
+        </div>
+
         <div class="mt-5 mb-5 border border-gray-500"></div>
 
         {% if job.created_at is not None %}
         <div class="flex items-center">
             <p class="font-bold mr-2">Created:</p>
-            <span>{{ job.created_at }}</span>
+            <span>{{ job.created_at|date:"Y-m-d H:i:s" }}</span>
         </div>
         {% endif %}
 
         {% if job.started_at is not None %}
         <div class="flex items-center">
             <p class="font-bold mr-2">Started:</p>
-            <span>{{ job.started_at }}</span>
+            <span>{{ job.started_at|date:"Y-m-d H:i:s" }}</span>
         </div>
         {% endif %}
 
         {% if job.completed_at is not None %}
         <div class="flex items-center">
             <p class="font-bold mr-2">Completed:</p>
-            <span>{{ job.completed_at }}</span>
+            <span>{{ job.completed_at|date:"Y-m-d H:i:s" }}</span>
         </div>
         {% endif %}
 
         {% if job.stopped_at is not None %}
         <div class="flex items-center">
             <p class="font-bold mr-2">Stopped:</p>
-            <span>{{ job.stopped_at }}</span>
+            <span>{{ job.stopped_at|date:"Y-m-d H:i:s" }}</span>
         </div>
         {% endif %}
 
@@ -89,9 +94,16 @@
         <div class="mt-5 mb-5 border border-gray-500"></div>
 
         <div class="flex items-center">
-            <p class="font-bold mr-2">LLM API:</p>
-            <span>{{ job.llm_api }}</span>
+            <p class="font-bold mr-2">Target host:</p>
+            <span>{{ job.target_hosts_str }}</span>
         </div>
+
+        <div class="flex items-center">
+            <p class="font-bold mr-2">Target host credentials:</p>
+            <span>{{ job.credentials_for_target_hosts }}</span>
+        </div>
+
+        <div class="mt-5 mb-5 border border-gray-500"></div>
 
         {% if job.bastion_host is not None %}
         <div class="flex items-center">
@@ -107,21 +119,18 @@
         </div>
         {% endif %}
 
-        <div class="flex items-center">
-            <p class="font-bold mr-2">Target host:</p>
-            <span>{{ job.target_hosts_str }}</span>
-        </div>
-
-        <div class="flex items-center">
-            <p class="font-bold mr-2">Target host credentials:</p>
-            <span>{{ job.credentials_for_target_hosts }}</span>
-        </div>
-
         <div class="mt-5 mb-5 border border-gray-500"></div>
 
         <div class="flex items-center">
+            <p class="font-bold mr-2">LLM API:</p>
+            <span>{{ job.llm_api }}</span>
+        </div>
+
+        <div class="items-center">
             <p class="font-bold mr-2">Instructions:</p>
-            <span>{{ job.instructions }}</span>
+            <div class="overflow-x-auto bg-gray-700 p-2 border border-gray-600 rounded w-64">
+                <p class="whitespace-nowrap">{{ job.instructions }}</p>
+            </div>
         </div>
 
 

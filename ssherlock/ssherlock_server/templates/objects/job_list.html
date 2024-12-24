@@ -48,7 +48,11 @@
                     <div class="w-3 h-3 bg-blue-300 rounded-full mr-2 flex-shrink-0"></div>
                   {% endif %}
                 {% endif %}
-              <span>{{ item|get_attr:field }}</span>
+              {% if field == "created_at" %}
+                <span>{{ item|get_attr:field|date:"Y-m-d H:i:s" }}</span>
+              {% else %}
+                <span>{{ item|get_attr:field }}</span>
+              {% endif %}
             </div>
           </td>
           {% endwith %}
@@ -73,7 +77,10 @@
 
 </div>
 {% else %}
-  <p>No Jobs available</p>
+  <div class="flex flex-col items-center mt-10">
+    <p class="text-lg text-gray-400">No jobs available. You can create a new job by clicking the button below.</p>
+    <a href="{% url 'add_object' 'job' %}" class="mt-4 p-2 bg-green-500 text-white rounded hover:bg-green-600">Create New Job</a>
+  </div>
 {% endif %}
 
 <!-- Use DataTable to prettify and format the table. -->

@@ -20,7 +20,7 @@ class BastionHost(models.Model):
     port = models.IntegerField()
 
     class Meta:
-        ordering = ["hostname"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.hostname
@@ -39,7 +39,7 @@ class Credential(models.Model):
     password = models.CharField(max_length=255)
 
     class Meta:
-        ordering = ["credential_name"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.credential_name
@@ -57,7 +57,7 @@ class LlmApi(models.Model):
     api_key = models.CharField(max_length=255)
 
     class Meta:
-        ordering = ["base_url"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.base_url
@@ -75,7 +75,7 @@ class TargetHost(models.Model):
     port = models.IntegerField()
 
     class Meta:
-        ordering = ["hostname"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.hostname
@@ -143,7 +143,7 @@ class Job(models.Model):
         return ", ".join([str(host) for host in self.target_hosts.all()])
 
     class Meta:
-        ordering = ["id"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return str(self.id)
