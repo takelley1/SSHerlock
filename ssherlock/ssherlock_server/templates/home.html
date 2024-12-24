@@ -16,6 +16,7 @@
           {% url 'bastion_host_list' as bastion_host_list_url %}
           {% url 'target_host_list' as target_host_list_url %}
           {% url 'job_list' as job_list_url %}
+          {% url 'account' as account_url %}
           <a href="{{ home_url }}" class="navbar-button {% if request.path == home_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Home</a>
           <a href="{{ credential_list_url }}" class="navbar-button {% if request.path == credential_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Credentials</a>
           <a href="{{ llm_api_list_url }}" class="navbar-button {% if request.path == llm_api_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">LLM APIs</a>
@@ -24,7 +25,7 @@
           <a href="{{ job_list_url }}" class="navbar-button {% if request.path == job_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Jobs</a>
         </div>
         <div class="relative">
-          <button class="navbar-button" id="accountButton">Account</button>
+          <button class="navbar-button {% if request.path == account_url %}border-b-4 border-gray-300 {% endif %}" id="accountButton">Account</button>
           <div id="accountDropdown" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10 hidden">
             <a href="{% url 'account' %}" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Settings</a>
             <form method="post" action="{% url 'logout' %}" class="block">
