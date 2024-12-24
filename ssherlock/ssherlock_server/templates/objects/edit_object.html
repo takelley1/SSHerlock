@@ -11,7 +11,7 @@
       <form action="{% url 'edit_object' model_type=model_type uuid=uuid %}" method="post" class="space-y-4">
         {% csrf_token %}
         {{ form }}
-        <div class="flex space-x-4">
+        <div class="flex justify-end space-x-4">
           <a href="/{{ object_name|lower }}_list" class="bg-gray-500 hover:bg-gray-600 mt-2 p-2 rounded">Cancel</a>
           <input type="submit" value="Edit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">
         </div>
