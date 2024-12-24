@@ -1,11 +1,12 @@
 {% extends "home.html" %}
+{% load static %}
 {% block title %}View Job{% endblock %}
 
 {% block content %}
 <div class="flex">
     <!-- Job Log Section -->
     <div class="flex-1 mt-5 ml-5 mr-5 mb-5 p-5 bg-black rounded-lg h-svh">
-        <div id="job-log">
+        <div id="job-log" data-stream-url="{% url 'stream_job_log' job_id=job.id %}">
             <p class="text-white">Job log for job {{ job.id }}</p>
             <!-- Log entries will be appended here by JavaScript -->
         </div>
@@ -136,29 +137,8 @@
 
     </div>
 </div>
+{% endblock %}
 
-<script>
-    const eventSource = new EventSource("{% url 'stream_job_log' job_id=job.id %}");
-    const jobLogDiv = document.getElementById("job-log");
-
-    eventSource.onmessage = function(event) {
-        const newLogEntry = document.createElement("p");
-        newLogEntry.textContent = event.data;
-        jobLogDiv.appendChild(newLogEntry);
-        jobLogDiv.scrollTop = jobLogDiv.scrollHeight; // Auto-scroll to the bottom
-    };
-
-    eventSource.addEventListener('error', function(event) {
-        const errorMessage = document.createElement("p");
-        errorMessage.style.color = "red";
-        errorMessage.textContent = event.data;
-        jobLogDiv.appendChild(errorMessage);
-        eventSource.close(); // Stop listening after error
-    });
-
-    eventSource.onerror = function() {
-        console.error("Error occurred in SSE connection.");
-        eventSource.close();
-    };
-</script>
+{% block scripts %}
+<script src="{% static 'scripts/view_job.js' %}"></script>
 {% endblock %}

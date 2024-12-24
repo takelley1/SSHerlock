@@ -22,14 +22,7 @@
 
   <link rel="manifest" href="site.webmanifest">
   <meta name="theme-color" content="#fafafa">
-
-  {% comment %} JQuery framework {% endcomment %}
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-  {% comment %} Table manipulation and formatting {% endcomment %}
-  <script src="https://cdn.datatables.net/2.1.5/js/dataTables.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.5/css/dataTables.dataTables.css" />
-
-
 </head>
 
 <body class="bg-gray-900 text-white">
@@ -40,15 +33,11 @@
   {% block content %}
   {% endblock %}
 
-<script>
-  // Used to show and hide the Account drop-down menu on the navbar.
-  $(document).ready(function() {
-    $('#accountButton').on('click', function(event) {
-      event.preventDefault(); // Prevent default action
-      event.stopPropagation();
-      $('#accountDropdown').toggleClass('hidden');
-    });
-  });
-</script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/2.1.5/js/dataTables.js"></script>
+  <script src="{% static 'scripts/navbar.js' %}"></script>
+
+  {% block scripts %}
+  {% endblock %}
 </body>
 </html>
