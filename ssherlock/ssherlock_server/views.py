@@ -23,6 +23,7 @@ from django.http import (
     StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -430,7 +431,24 @@ def log_job_data(request, job_id):
 @login_required
 def account(request):
     """Render the account page."""
-    return render(request, "account.html")
+    return render(request, "account.html", {"success": request.GET.get("success"), "error": request.GET.get("error")})
+
+
+@login_required
+def update_email(request):
+    """Handle email update for the user."""
+    if request.method == "POST":
+        new_email = request.POST.get("new_email")
+        if new_email:
+            try:
+                request.user.email = new_email
+                request.user.save()
+                return redirect(f"{reverse('account')}?success=Email successfully updated.")
+            except Exception as e:
+                email_error = str(e)
+        else:
+            email_error = "Email cannot be empty."
+    return render(request, "account.html", {"email_error": email_error})
 
 
 @login_required
@@ -459,7 +477,7 @@ def reset_password(request):
         elif new_password and new_password != confirm_password:
             error = "Passwords do not match."
         else:
-            error = "Unkown error."
+            error = "Unknown error."
     return render(request, "account.html", {"error": error})
 
 

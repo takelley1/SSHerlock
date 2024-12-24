@@ -35,6 +35,7 @@ urlpatterns = [
     path("account/", views.account, name="account"),
     path("reset_password/", views.reset_password, name="reset_password"),
     path("delete_account/", views.delete_account, name="delete_account"),
+    path("update_email/", views.update_email, name="update_email"),
     path("accounts/login/", LoginView.as_view(template_name='login.html'), name="login"),
     path("accounts/logout/", LogoutView.as_view(next_page='/'), name="logout"),
     path("signup/", views.signup, name="signup"),

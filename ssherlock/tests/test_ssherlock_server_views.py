@@ -1563,6 +1563,47 @@ class TestSignupView(TestCase):
         )
 
 
+class TestUpdateEmail(TestCase):
+    """Tests for the update_email view."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
+        self.client = Client()
+
+    def test_update_email_success(self):
+        """Test updating email successfully."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.post(
+            reverse("update_email"), {"new_email": "newemail@example.com"}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "newemail@example.com")
+
+    def test_update_email_empty(self):
+        """Test updating email with an empty value."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.post(reverse("update_email"), {"new_email": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Email cannot be empty.")
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "testuser@example.com")
+
+    def test_update_email_exception(self):
+        """Test handling exception during email update."""
+        self.client.login(username="testuser", password="password")
+        with patch.object(User, "save", side_effect=Exception("Test exception")):
+            response = self.client.post(
+                reverse("update_email"), {"new_email": "newemail@example.com"}
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Test exception")
+            self.user.refresh_from_db()
+            self.assertEqual(self.user.email, "testuser@example.com")
+
+
 class TestAccountView(TestCase):
     """Tests for the account view."""
 

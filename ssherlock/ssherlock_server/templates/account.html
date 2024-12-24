@@ -6,8 +6,8 @@
 {% if success %}
 {% endif %}
 <div class="flex justify-center items-start min-h-screen" 
-     data-success="{{ success }}" 
-     data-error="{{ error }}">
+     {% if success %}data-success="{{ success }}"{% endif %} 
+     {% if error %}data-error="{{ error }}"{% endif %}>
   <div class="m-5 p-5 border-4 border-gray-800 rounded-lg w-full max-w-xl bg-gray-800">
     <h2 class="text-2xl mb-4 text-white">Account Details</h2>
     <p class="text-white">Username: {{ user.username }}</p>
@@ -15,10 +15,27 @@
 
     <div class="mt-5 mb-5 border border-gray-500"></div>
 
+    <form method="post" action="{% url 'update_email' %}" class="mt-4">
+      {% csrf_token %}
+      <div class="text-xl mb-2 text-white">Change Email</div>
+      {% if email_error %}
+        <p class="text-l text-red-500" style="white-space: pre-line;">{{ email_error }}</p>
+      {% endif %}
+
+      <div class="mb-4">
+        <label for="new_email" class="block text-white">New Email:</label>
+        <input type="email" id="new_email" name="new_email" class="w-full p-2 rounded bg-gray-700 text-white" required>
+      </div>
+
+      <button type="submit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">Change Email</button>
+    </form>
+
+    <div class="mt-5 mb-5 border border-gray-500"></div>
+
     <!-- Add more account details as needed -->
     <form method="post" action="{% url 'reset_password' %}" class="mt-4">
       {% csrf_token %}
-      <div class="text-xl mb-2 text-white">Reset Password</div>
+      <div class="text-xl mb-2 text-white">Change Password</div>
       {% if error %}
         <p class="text-l text-red-500" style="white-space: pre-line;">{{ error }}</p>
       {% endif %}
@@ -33,7 +50,7 @@
         <input type="password" id="confirm_password" name="confirm_password" class="w-full p-2 rounded bg-gray-700 text-white" required>
       </div>
 
-      <button type="submit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">Reset Password</button>
+      <button type="submit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">Change Password</button>
 
       <div class="mt-5 mb-5 border border-gray-500"></div>
 
