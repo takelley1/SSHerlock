@@ -35,6 +35,11 @@ function showSuccessPopup(message) {
  * Displays the success message if available.
  */
 document.addEventListener('DOMContentLoaded', function() {
+    // Ensure the delete account popup functions are initialized
+    const deleteButton = document.querySelector('button[onclick="showDeleteAccountPopup()"]');
+    if (deleteButton) {
+        deleteButton.addEventListener('click', showDeleteAccountPopup);
+    }
     const successMessage = document.querySelector('.min-h-screen').getAttribute('data-success');
     const errorMessage = document.querySelector('.min-h-screen').getAttribute('data-error');
 
@@ -44,3 +49,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     }
 });
+
+/**
+ * Shows the delete account confirmation popup.
+ */
+function showDeleteAccountPopup() {
+    document.getElementById('deleteAccountPopup').classList.remove('hidden');
+}
+
+/**
+ * Hides the delete account confirmation popup.
+ */
+function hideDeleteAccountPopup() {
+    document.getElementById('deleteAccountPopup').classList.add('hidden');
+}

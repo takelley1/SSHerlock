@@ -12,23 +12,48 @@
     <h2 class="text-2xl mb-4 text-white">Account Details</h2>
     <p class="text-white">Username: {{ user.username }}</p>
     <p class="text-white">Email: {{ user.email }}</p>
+
+    <div class="mt-5 mb-5 border border-gray-500"></div>
+
     <!-- Add more account details as needed -->
     <form method="post" action="{% url 'reset_password' %}" class="mt-4">
       {% csrf_token %}
-      <h3 class="text-xl mb-2 text-white">Reset Password</h3>
+      <div class="text-xl mb-2 text-white">Reset Password</div>
       {% if error %}
         <p class="text-l text-red-500" style="white-space: pre-line;">{{ error }}</p>
       {% endif %}
+
       <div class="mb-4">
         <label for="new_password" class="block text-white">New Password:</label>
         <input type="password" id="new_password" name="new_password" class="w-full p-2 rounded bg-gray-700 text-white" required>
       </div>
+
       <div class="mb-4">
         <label for="confirm_password" class="block text-white">Confirm Password:</label>
         <input type="password" id="confirm_password" name="confirm_password" class="w-full p-2 rounded bg-gray-700 text-white" required>
       </div>
+
       <button type="submit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">Reset Password</button>
+
+      <div class="mt-5 mb-5 border border-gray-500"></div>
+
     </form>
+    <div class="text-xl mb-2 text-white">Delete Account</div>
+    <button onclick="showDeleteAccountPopup()" class="bg-red-500 hover:bg-red-600 mt-2 p-1.5 rounded">Delete Account</button>
+
+    <!-- Confirmation Popup -->
+    <div id="deleteAccountPopup" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+      <div class="bg-gray-800 p-5 rounded-lg shadow-lg text-white">
+        <p class="mb-4">Are you sure you want to delete your account? This action cannot be undone.</p>
+        <div class="flex justify-end space-x-4">
+          <button onclick="hideDeleteAccountPopup()" class="bg-gray-500 hover:bg-gray-600 p-1.5 rounded">Cancel</button>
+          <form method="post" action="{% url 'delete_account' %}">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-500 hover:bg-red-600 p-1.5 rounded">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

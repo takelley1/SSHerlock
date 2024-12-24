@@ -1532,11 +1532,13 @@ class TestSignupView(TestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
-        form = response.context.get('form')
+        form = response.context.get("form")
         self.assertIsNotNone(form)
         self.assertTrue(form.errors)
         self.assertIn("password2", form.errors)
-        self.assertEqual(form.errors["password2"], ["The two password fields didn’t match."])
+        self.assertEqual(
+            form.errors["password2"], ["The two password fields didn’t match."]
+        )
         self.assertFalse(User.objects.filter(username="newuser").exists())
 
     def test_signup_existing_username(self):
@@ -1552,11 +1554,13 @@ class TestSignupView(TestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
-        form = response.context.get('form')
+        form = response.context.get("form")
         self.assertIsNotNone(form)
         self.assertTrue(form.errors)
         self.assertIn("username", form.errors)
-        self.assertEqual(form.errors["username"], ["A user with that username already exists."])
+        self.assertEqual(
+            form.errors["username"], ["A user with that username already exists."]
+        )
 
 
 class TestAccountView(TestCase):
@@ -1586,22 +1590,31 @@ class TestAccountView(TestCase):
     def test_reset_password_success(self):
         """Test successful password reset."""
         self.client.login(username="testuser", password="password")
-        response = self.client.post(reverse("reset_password"), {
-            "new_password": "newpassword123",
-            "confirm_password": "newpassword123"
-        })
+        response = self.client.post(
+            reverse("reset_password"),
+            {"new_password": "newpassword123", "confirm_password": "newpassword123"},
+        )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Password successfully changed.")
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("newpassword123"))
 
+    def test_reset_password_not_authenticated(self):
+        """Test password reset while not authenticated redirects to login page."""
+        response = self.client.post(
+            reverse("reset_password"),
+            {"new_password": "newpassword123", "confirm_password": "newpassword123"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/reset_password/")
+
     def test_reset_password_mismatch(self):
         """Test password reset with mismatched passwords."""
         self.client.login(username="testuser", password="password")
-        response = self.client.post(reverse("reset_password"), {
-            "new_password": "newpassword123",
-            "confirm_password": "differentpassword"
-        })
+        response = self.client.post(
+            reverse("reset_password"),
+            {"new_password": "newpassword123", "confirm_password": "differentpassword"},
+        )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Passwords do not match.")
         self.user.refresh_from_db()
@@ -1610,20 +1623,28 @@ class TestAccountView(TestCase):
     def test_reset_password_complexity_failure(self):
         """Test password reset with a password that does not meet complexity requirements."""
         self.client.login(username="testuser", password="password")
-        response = self.client.post(reverse("reset_password"), {
-            "new_password": "simple",
-            "confirm_password": "simple"
-        })
+        response = self.client.post(
+            reverse("reset_password"),
+            {"new_password": "simple", "confirm_password": "simple"},
+        )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "This password is too short. It must contain at least 12 characters.")
+        self.assertContains(
+            response,
+            "This password is too short. It must contain at least 12 characters.",
+        )
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("password"))
 
-    def test_reset_password_not_authenticated(self):
-        """Test password reset while not authenticated redirects to login page."""
-        response = self.client.post(reverse("reset_password"), {
-            "new_password": "newpassword123",
-            "confirm_password": "newpassword123"
-        })
+    def test_delete_account_authenticated(self):
+        """Test deleting an account while authenticated."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.post(reverse("delete_account"))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, "/accounts/login/?next=/reset_password/")
+        self.assertRedirects(response, reverse("landing"))
+        self.assertFalse(User.objects.filter(username="testuser").exists())
+
+    def test_delete_account_not_authenticated(self):
+        """Test deleting an account while not authenticated redirects to login page."""
+        response = self.client.post(reverse("delete_account"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/delete_account/")
