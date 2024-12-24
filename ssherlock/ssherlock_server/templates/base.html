@@ -27,8 +27,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   {% comment %} Table manipulation and formatting {% endcomment %}
   <script src="https://cdn.datatables.net/2.1.5/js/dataTables.js"></script>
-  <script src="https://cdn.datatables.net/plug-ins/1.10.21/sorting/datetime-moment.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/2.1.5/css/dataTables.dataTables.css" />
+
 
 </head>
 
@@ -43,14 +43,10 @@
 <script>
   // Used to show and hide the Account drop-down menu on the navbar.
   $(document).ready(function() {
-    $.fn.dataTable.moment('YYYY-MM-DD'); // Ensure dates are parsed correctly
-    $('#accountButton').click(function(event) {
+    $('#accountButton').on('click', function(event) {
+      event.preventDefault(); // Prevent default action
       event.stopPropagation();
       $('#accountDropdown').toggleClass('hidden');
-    });
-
-    $(document).click(function() {
-      $('#accountDropdown').addClass('hidden');
     });
   });
 </script>

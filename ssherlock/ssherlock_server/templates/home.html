@@ -4,23 +4,25 @@
 {% block navbar %}
 <div id="navbar" class="mx-5 border-b-4 border-gray-700 p-4 h-14 bg-gray-800">
   <div class="navbar-content">
-    <ul class="flex space-x-6">
-      <a href="/" class="{% if request.path == '/' %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Landing</a>
-      {% if user.is_authenticated %}
-        <!-- Record each URL path as a variable so we can use it in the if-expression without hardcoding URLs. -->
-        {% url 'home' as home_url %}
-        {% url 'credential_list' as credential_list_url %}
-        {% url 'llm_api_list' as llm_api_list_url %}
-        {% url 'bastion_host_list' as bastion_host_list_url %}
-        {% url 'target_host_list' as target_host_list_url %}
-        {% url 'job_list' as job_list_url %}
-        <a href="{{ home_url }}" class="navbar-button {% if request.path == home_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Home</a>
-        <a href="{{ credential_list_url }}" class="navbar-button {% if request.path == credential_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Credentials</a>
-        <a href="{{ llm_api_list_url }}" class="navbar-button {% if request.path == llm_api_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">LLM APIs</a>
-        <a href="{{ bastion_host_list_url }}" class="navbar-button {% if request.path == bastion_host_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Bastion Hosts</a>
-        <a href="{{ target_host_list_url }}" class="navbar-button {% if request.path == target_host_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Target Hosts</a>
-        <a href="{{ job_list_url }}" class="navbar-button {% if request.path == job_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Jobs</a>
-        <div class="relative ml-auto">
+    <div class="flex justify-between">
+      <div class="flex space-x-6">
+        <a href="/" class="{% if request.path == '/' %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Landing</a>
+        {% if user.is_authenticated %}
+          <!-- Record each URL path as a variable so we can use it in the if-expression without hardcoding URLs. -->
+          {% url 'home' as home_url %}
+          {% url 'credential_list' as credential_list_url %}
+          {% url 'llm_api_list' as llm_api_list_url %}
+          {% url 'bastion_host_list' as bastion_host_list_url %}
+          {% url 'target_host_list' as target_host_list_url %}
+          {% url 'job_list' as job_list_url %}
+          <a href="{{ home_url }}" class="navbar-button {% if request.path == home_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Home</a>
+          <a href="{{ credential_list_url }}" class="navbar-button {% if request.path == credential_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Credentials</a>
+          <a href="{{ llm_api_list_url }}" class="navbar-button {% if request.path == llm_api_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">LLM APIs</a>
+          <a href="{{ bastion_host_list_url }}" class="navbar-button {% if request.path == bastion_host_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Bastion Hosts</a>
+          <a href="{{ target_host_list_url }}" class="navbar-button {% if request.path == target_host_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Target Hosts</a>
+          <a href="{{ job_list_url }}" class="navbar-button {% if request.path == job_list_url %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Jobs</a>
+        </div>
+        <div class="relative">
           <button class="navbar-button" id="accountButton">Account</button>
           <div id="accountDropdown" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10 hidden">
             <a href="{% url 'account' %}" class="block px-4 py-2 text-sm text-white hover:bg-gray-700">Settings</a>
@@ -36,7 +38,7 @@
           <a href="{% url 'login' %}" class="navbar-button">Login</a>
         {% endif %}
       {% endif %}
-    </ul>
+    </div>
   </div>
 </div>
 {% endblock %}
