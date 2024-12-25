@@ -15,7 +15,8 @@ from django.contrib.auth import (
 )
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate
 from django.http import (
     Http404,
     HttpResponse,
@@ -193,6 +194,26 @@ def stream_job_log(_, job_id):
 
     return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 
+
+def custom_login(request):
+    """Render the login page and handle user authentication."""
+    form = AuthenticationForm(request, data=request.POST or None)
+    error_message = None
+
+    if request.method == "POST":
+        if form.is_valid():
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect("home")
+            else:
+                error_message = "Invalid username or password."
+        else:
+            error_message = "Invalid username or password."
+
+    return render(request, "login.html", {"form": form, "error_message": error_message})
 
 def signup(request):
     """Render the signup page and handle user registration."""

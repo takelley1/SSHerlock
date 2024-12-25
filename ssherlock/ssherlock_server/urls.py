@@ -2,7 +2,7 @@
 
 # pylint: disable=import-error
 from django.urls import path, include
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LogoutView
 
 from . import views
 
@@ -36,7 +36,7 @@ urlpatterns = [
     path("reset_password/", views.reset_password, name="reset_password"),
     path("delete_account/", views.delete_account, name="delete_account"),
     path("update_email/", views.update_email, name="update_email"),
-    path("accounts/login/", LoginView.as_view(template_name='login.html'), name="login"),
+    path("accounts/login/", views.custom_login, name="login"),
     path("accounts/logout/", LogoutView.as_view(next_page='/'), name="logout"),
     path("signup/", views.signup, name="signup"),
     path("accounts/", include("django.contrib.auth.urls")),
