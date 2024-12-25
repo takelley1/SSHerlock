@@ -18,7 +18,8 @@
         <label for="password" class="text-white">Password:</label>
         <input type="password" name="password" id="password" required class="text-white bg-gray-700 p-2 border border-gray-600 rounded">
       </div>
-      <div class="flex space-x-4">
+      <div class="flex justify-end space-x-4">
+        <a href="{% url 'landing' %}" class="bg-gray-500 hover:bg-gray-600 mt-2 p-2 rounded">Cancel</a>
         <button type="submit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">Login</button>
       </div>
     </form>
