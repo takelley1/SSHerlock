@@ -15,6 +15,7 @@ import tiktoken
 SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
 SSHERLOCK_SERVER_PROTOCOL = "http"
 SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
+SSHERLOCK_RUNNER_MAX_ATTEMPTS = 3
 
 
 class HttpPostHandler(log.Handler):
@@ -670,6 +671,8 @@ def fetch_job_data(attempt, max_attempts, runner_number=get_runner_number()):
     Returns:
         dict or None: Job data if available, otherwise None.
     """
+    if max_attempts is None:
+        max_attempts = SSHERLOCK_RUNNER_MAX_ATTEMPTS
     while True:
         if max_attempts is not None and attempt >= max_attempts:
             log.info("Maximum attempts reached. Ceasing operation.")
