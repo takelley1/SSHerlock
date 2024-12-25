@@ -1,9 +1,10 @@
-FROM python:3.13-slim
+FROM python:3.12.3-slim
 
 WORKDIR /app
-COPY ./ssherlock_runner/ssherlock_runner.py /app
 
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip uninstall django django-htmlmin gunicorn
+COPY ./ssherlock_runner.py /app
+COPY ./requirements.txt /
+
+RUN pip install --no-cache-dir -r /requirements.txt
 
 CMD ["python", "/app/ssherlock_runner.py"]
