@@ -1,14 +1,36 @@
 """All Django forms for the SSHerlock server application."""
 
 # pylint: disable=import-error, missing-class-docstring
-from django.forms import ModelForm
 from django import forms
-
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+from django.forms import ModelForm
 from .models import BastionHost
 from .models import Credential
 from .models import Job
 from .models import LlmApi
 from .models import TargetHost
+
+
+class CustomUserCreationForm(UserCreationForm):
+    """Present a customized user creation form that allows us to set the user's email."""
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(
+            attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}
+        ),
+    )
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        if commit:
+            user.save()
+        return user
 
 
 class CredentialForm(ModelForm):

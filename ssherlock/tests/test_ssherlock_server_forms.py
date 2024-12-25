@@ -4,6 +4,7 @@
 
 from django.test import TestCase
 from ssherlock_server.forms import (
+    CustomUserCreationForm,
     CredentialForm,
     BastionHostForm,
     TargetHostForm,
@@ -11,6 +12,38 @@ from ssherlock_server.forms import (
     JobForm,
 )
 from ssherlock_server.models import User, Credential, BastionHost, TargetHost, LlmApi
+
+
+class TestCustomUserCreationForm(TestCase):
+    def test_valid_user_creation_form(self):
+        form_data = {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password1": "complexpassword123",
+            "password2": "complexpassword123",
+        }
+        form = CustomUserCreationForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_user_creation_form_mismatched_passwords(self):
+        form_data = {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password1": "complexpassword123",
+            "password2": "differentpassword123",
+        }
+        form = CustomUserCreationForm(data=form_data)
+        self.assertFalse(form.is_valid())
+
+    def test_invalid_user_creation_form_blank_email(self):
+        form_data = {
+            "username": "newuser",
+            "email": "",
+            "password1": "complexpassword123",
+            "password2": "complexpassword123",
+        }
+        form = CustomUserCreationForm(data=form_data)
+        self.assertFalse(form.is_valid())
 
 
 class TestCredentialForm(TestCase):

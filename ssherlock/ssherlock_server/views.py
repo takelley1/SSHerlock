@@ -15,7 +15,7 @@ from django.contrib.auth import (
 )
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate
 from django.http import (
     Http404,
@@ -30,6 +30,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .forms import (
+    CustomUserCreationForm,
     BastionHostForm,
     CredentialForm,
     JobForm,
@@ -207,7 +208,8 @@ def custom_login(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect("home")
+                login(request, user)
+                return render(request, "signup.html", {"form": form, "success_message": "Account created successfully!"})
             else:
                 error_message = "Invalid username or password."
         else:
@@ -215,17 +217,27 @@ def custom_login(request):
 
     return render(request, "login.html", {"form": form, "error_message": error_message})
 
+
 def signup(request):
     """Render the signup page and handle user registration."""
+    form = CustomUserCreationForm(request.POST or None)
+    error_message = None
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect("home")
-    else:
-        form = UserCreationForm()
-    return render(request, "signup.html", {"form": form})
+            try:
+                user = form.save()
+                login(request, user)
+                return redirect("home")
+            except ValidationError as e:
+                error_message = "\n".join(e.messages)
+        else:
+            error_message = "\n".join(
+                [error for field, errors in form.errors.items() for error in errors]
+            )
+
+    return render(
+        request, "signup.html", {"form": form, "error_message": error_message}
+    )
 
 
 @login_required
