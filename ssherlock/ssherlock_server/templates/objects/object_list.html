@@ -47,7 +47,7 @@
               {% if field == "password" or field == "api_key" %}
                 <span>******</span>
 
-              <!-- Propery format date fields -->
+              <!-- Properly format date fields -->
               {% elif field == "created_at" %}
                 <span>{{ item|get_attr:field|date:"Y-m-d H:i:s" }}</span>
               {% else %}

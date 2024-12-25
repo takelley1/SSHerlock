@@ -113,7 +113,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          SSHERLOCK_RUNNER_IMAGE_TAG=2 build_docker.sh
+          SSHERLOCK_RUNNER_IMAGE_TAG=2 bash build_docker.sh
 
   test_app:
     runs-on: ubuntu-latest

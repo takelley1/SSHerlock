@@ -26,6 +26,7 @@ class CustomUserCreationForm(UserCreationForm):
         fields = ("username", "email", "password1", "password2")
 
     def save(self, commit=True):
+        """Save the user instance with the email."""
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
         if commit:
@@ -34,7 +35,7 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CredentialForm(ModelForm):
-    """Present a form matching the Credential model."""
+    """Form for creating and updating Credential instances."""
 
     class Meta:
         model = Credential
@@ -59,7 +60,7 @@ class CredentialForm(ModelForm):
 
 
 class BastionHostForm(ModelForm):
-    """Present a form matching the Bastion Host model."""
+    """Form for creating and updating BastionHost instances."""
 
     port = forms.IntegerField(
         initial=22,
@@ -81,7 +82,7 @@ class BastionHostForm(ModelForm):
 
 
 class TargetHostForm(ModelForm):
-    """Present a form matching the Target Host model."""
+    """Form for creating and updating TargetHost instances."""
 
     port = forms.IntegerField(
         initial=22,
@@ -103,7 +104,7 @@ class TargetHostForm(ModelForm):
 
 
 class LlmApiForm(ModelForm):
-    """Present a form matching the LLM API model."""
+    """Form for creating and updating LlmApi instances."""
 
     class Meta:
         model = LlmApi
@@ -123,7 +124,7 @@ class LlmApiForm(ModelForm):
 
 
 class JobForm(ModelForm):
-    """Present a form matching the Job model."""
+    """Form for creating and updating Job instances."""
 
     instructions = forms.CharField(
         max_length=128000,
