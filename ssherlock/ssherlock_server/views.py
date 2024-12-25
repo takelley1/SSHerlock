@@ -452,7 +452,11 @@ def log_job_data(request, job_id):
 @login_required
 def account(request):
     """Render the account page."""
-    return render(request, "account.html", {"success": request.GET.get("success"), "error": request.GET.get("error")})
+    return render(
+        request,
+        "account.html",
+        {"success": request.GET.get("success"), "error": request.GET.get("error")},
+    )
 
 
 @login_required
@@ -464,7 +468,9 @@ def update_email(request):
             try:
                 request.user.email = new_email
                 request.user.save()
-                return redirect(f"{reverse('account')}?success=Email successfully updated.")
+                return redirect(
+                    f"{reverse('account')}?success=Email successfully updated."
+                )
             except Exception as e:
                 email_error = str(e)
         else:
