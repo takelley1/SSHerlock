@@ -3,4 +3,5 @@ django==5.1
 fabric==3.2.2
 gunicorn==23.0.0
 openai==1.47.0
+requests==2.32.3
 tiktoken==0.7.0
