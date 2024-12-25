@@ -24,6 +24,7 @@ grep -Ev "django|gunicorn" "requirements.txt" > "ssherlock_runner/docker/require
 # Build the image.
 cd "ssherlock_runner/docker" || exit 1
 docker build -t "ssherlock_runner:${SSHERLOCK_RUNNER_IMAGE_TAG:-1}" .
+docker image ls
 
 # Cleanup.
 cd -
