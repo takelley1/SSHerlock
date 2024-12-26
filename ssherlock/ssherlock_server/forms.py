@@ -14,6 +14,7 @@ from .models import TargetHost
 
 class CustomUserCreationForm(UserCreationForm):
     """Present a customized user creation form that allows us to set the user's email."""
+
     email = forms.EmailField(
         required=True,
         widget=forms.EmailInput(
@@ -130,8 +131,11 @@ class JobForm(ModelForm):
         max_length=128000,
         help_text="Instructions for the job, limited to 128,000 characters.",
         widget=forms.Textarea(
-            attrs={"class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"}
+            attrs={
+                "class": "text-sm text-white bg-gray-700 p-2 border border-gray-600 rounded"
+            }
         ),
+        # error_messages={'required': ''},  # Customize the error message
     )
 
     class Meta:
@@ -160,7 +164,7 @@ class JobForm(ModelForm):
                     "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
                 }
             ),
-            "target_hosts": forms.SelectMultiple(
+            "target_hosts": forms.CheckboxSelectMultiple(
                 attrs={
                     "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
                 }

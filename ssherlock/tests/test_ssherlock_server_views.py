@@ -12,6 +12,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.http import JsonResponse
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from ssherlock_server.models import (
     BastionHost,
     Credential,
@@ -1628,6 +1629,65 @@ class TestAccountView(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, "/accounts/login/?next=/account/")
 
+    def test_delete_account_authenticated(self):
+        """Test deleting an account while authenticated."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.post(reverse("delete_account"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("landing"))
+        self.assertFalse(User.objects.filter(username="testuser").exists())
+
+    def test_delete_account_not_authenticated(self):
+        """Test deleting an account while not authenticated redirects to login page."""
+        response = self.client.post(reverse("delete_account"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/delete_account/")
+
+
+class TestCustomLoginView(TestCase):
+    """Tests for the custom_login view."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
+
+    def test_login_page_renders_correctly(self):
+        """Test that the login page renders correctly."""
+        response = self.client.get(reverse("custom_login"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
+
+    def test_login_successful(self):
+        """Test that a user can log in successfully."""
+        response = self.client.post(
+            reverse("custom_login"),
+            data={"username": "testuser", "password": "password"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("home"))
+
+    def test_login_invalid_credentials(self):
+        """Test that login fails with invalid credentials."""
+        response = self.client.post(
+            reverse("custom_login"),
+            data={"username": "testuser", "password": "wrongpassword"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
+        self.assertContains(response, "Invalid username or password.")
+
+
+class TestResetPassword(TestCase):
+    """Tests for the reset_password view."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            "testuser", "testuser@example.com", "password"
+        )
+        self.client = Client()
+
     def test_reset_password_success(self):
         """Test successful password reset."""
         self.client.login(username="testuser", password="password")
@@ -1676,16 +1736,33 @@ class TestAccountView(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("password"))
 
-    def test_delete_account_authenticated(self):
-        """Test deleting an account while authenticated."""
+    def test_reset_password_empty_fields(self):
+        """Test password reset with empty fields."""
         self.client.login(username="testuser", password="password")
-        response = self.client.post(reverse("delete_account"))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse("landing"))
-        self.assertFalse(User.objects.filter(username="testuser").exists())
+        response = self.client.post(
+            reverse("reset_password"),
+            {"new_password": "", "confirm_password": ""},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Unknown error.")
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("password"))
 
-    def test_delete_account_not_authenticated(self):
-        """Test deleting an account while not authenticated redirects to login page."""
-        response = self.client.post(reverse("delete_account"))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, "/accounts/login/?next=/delete_account/")
+    def test_reset_password_with_validation_error(self):
+        """Test password reset with a validation error."""
+        self.client.login(username="testuser", password="password")
+        with patch(
+            "django.contrib.auth.password_validation.validate_password",
+            side_effect=ValidationError("Test validation error"),
+        ):
+            response = self.client.post(
+                reverse("reset_password"),
+                {
+                    "new_password": "newpassword123",
+                    "confirm_password": "newpassword123",
+                },
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Test validation error")
+            self.user.refresh_from_db()
+            self.assertTrue(self.user.check_password("password"))

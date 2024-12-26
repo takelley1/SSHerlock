@@ -52,7 +52,7 @@
               {% if field == "created_at" %}
                 <span>{{ item|get_attr:field|date:"Y-m-d H:i:s" }}</span>
               {% else %}
-                <span>{{ item|get_attr:field }}</span>
+                <span style="white-space: pre-wrap;">{{ item|get_attr:field }}</span>
               {% endif %}
             </div>
           </td>

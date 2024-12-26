@@ -34,7 +34,7 @@ class Credential(models.Model):
     created_at = models.DateTimeField(
         "Date credential was created", auto_now_add=True, editable=False
     )
-    credential_name = models.CharField("Name to give this credential", max_length=255)
+    credential_name = models.CharField("Credential name", max_length=255)
     username = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
 
@@ -53,8 +53,8 @@ class LlmApi(models.Model):
     created_at = models.DateTimeField(
         "date llm api was created", auto_now_add=True, editable=False
     )
-    base_url = models.CharField(max_length=255)
-    api_key = models.CharField(max_length=255)
+    base_url = models.CharField("LLM Base URL", max_length=255)
+    api_key = models.CharField("API Key", max_length=255)
 
     class Meta:
         ordering = ["-created_at"]

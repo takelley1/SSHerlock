@@ -147,11 +147,17 @@ def create_job(request):
             job.target_hosts.add(host.id)
             job.save()
 
+        # Start a SSHerlock runner Docker container in GCP for every target host
+        # in the job.
+        # for host in target_hosts:
+        #     gcp.run()
+
         return redirect("/job_list")
 
     context = {
         "form": form,
         "object_name": "Job",
+        "object_name_pretty": "Job",
     }
     return render(request, "objects/add_object.html", context)
 
@@ -208,8 +214,7 @@ def custom_login(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                login(request, user)
-                return render(request, "signup.html", {"form": form, "success_message": "Account created successfully!"})
+                return redirect("home")
             else:
                 error_message = "Invalid username or password."
         else:
