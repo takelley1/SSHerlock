@@ -1,99 +1,201 @@
 {% extends "base.html" %}
 
+{% block title %}Welcome{% endblock %}
+
+{% block navbar %}
+<nav class="sticky top-0 z-20 backdrop-blur bg-gray-900/70 border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex h-16 items-center justify-between">
+      <a href="/" class="flex items-center gap-2">
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white font-bold">S</span>
+        <span class="text-lg font-semibold tracking-wide">SSHerlock</span>
+      </a>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#features" class="text-sm text-gray-300 hover:text-white">Features</a>
+        <a href="#how-it-works" class="text-sm text-gray-300 hover:text-white">How it works</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'home' %}" class="text-sm text-gray-300 hover:text-white">Dashboard</a>
+          <a href="{% url 'create_job' %}" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+            Start a job
+          </a>
+        {% else %}
+          <a href="{% url 'signup' %}" class="text-sm text-gray-300 hover:text-white">Sign up</a>
+          <a href="{% url 'login' %}" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+            Log in
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
 {% block content %}
-<div id="content">
-<header class="header bg-gray-800 text-white">
-  <nav class="navbar">
-    <div class="container">
-      <div class="navbar-content">
-        <div class="logo">
-          <h1>pentester</h1>
+<section class="relative overflow-hidden">
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-gradient-to-b from-indigo-700/20 via-transparent to-transparent"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <p class="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-600/10 px-3 py-1 text-xs font-medium text-indigo-300 ring-1 ring-inset ring-indigo-600/30">
+          SSH-based autonomous agent
+        </p>
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight">
+          Configure servers with English, not code.
+        </h1>
+        <p class="mt-5 text-lg text-gray-300">
+          SSHerlock automates server configuration tasks by pairing a job runner with your
+          preferred LLM. Describe the desired state and SSHerlock executes the steps on target
+          hosts.
+        </p>
+
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+          {% if user.is_authenticated %}
+            <a href="{% url 'create_job' %}" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-500">
+              Start a job
+            </a>
+            <a href="{% url 'home' %}" class="inline-flex items-center justify-center rounded-md bg-white/10 px-5 py-3 text-sm font-medium text-white hover:bg-white/20">
+              Go to dashboard
+            </a>
+          {% else %}
+            <a href="{% url 'signup' %}" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-500">
+              Get started free
+            </a>
+            <a href="{% url 'login' %}" class="inline-flex items-center justify-center rounded-md bg-white/10 px-5 py-3 text-sm font-medium text-white hover:bg-white/20">
+              Log in
+            </a>
+          {% endif %}
         </div>
-        <ul class="nav-menu">
-          <li><a href="#">Home</a></li>
-          <li><a href="#">Company</a></li>
-          <li><a href="#">Contact</a></li>
-          <li><a href="#">Services</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="{% url 'signup' %}">Sign Up</a></li>
-          <li><a href="{% url 'login' %}">Login</a></li>
-          <li><a href="#" class="dark-mode-toggle">🌙</a></li>
-        </ul>
+
+        <p class="mt-4 text-sm text-gray-400">
+          No agents on your servers. No code to learn. Full audit trail.
+        </p>
+      </div>
+
+      <div class="relative">
+        <div class="rounded-xl border border-white/10 bg-gray-800 p-4 shadow-2xl">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <span class="text-xs font-medium text-gray-300">Live job log</span>
+            <span class="text-[10px] text-gray-400">Runner connected</span>
+          </div>
+          <div class="mt-3 space-y-1 text-xs font-mono leading-relaxed max-h-72 overflow-auto">
+            <p class="text-gray-400">&gt; $ ssh bastion.example.com</p>
+            <p class="text-gray-300">Connected. Authenticating...</p>
+            <p class="text-gray-300">Running: sudo apt-get update</p>
+            <p class="text-gray-300">Running: sudo apt-get install -y nginx</p>
+            <p class="text-gray-300">Configuring TLS...</p>
+            <p class="text-green-400">✓ Job completed in 02:14</p>
+          </div>
+        </div>
+        <div class="pointer-events-none absolute -inset-6 -z-10 rounded-2xl bg-indigo-600/10 blur-2xl"></div>
       </div>
     </div>
-  </nav>
-  <div class="container header-content">
-    <div class="header-text">
-      <p class="tagline">EASY TO USE &amp; FREE TO TRY (NO CREDIT CARD REQUIRED)</p>
-      <h1>Is Your Data Safe?</h1>
-      <h2>View Critical Risks in Under 30 Seconds.</h2>
+  </div>
+</section>
+
+<section id="features" class="py-16 sm:py-20 border-t border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-2xl sm:text-3xl font-bold">Why SSHerlock</h2>
+    <p class="mt-2 text-gray-300">
+      Purpose-built for hands-off, transparent server automation.
+    </p>
+
+    <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="rounded-lg border border-white/10 bg-gray-800 p-6">
+        <h3 class="font-semibold">LLM-driven automation</h3>
+        <p class="mt-2 text-sm text-gray-300">
+          Replace brittle playbooks with natural language instructions the runner executes.
+        </p>
+      </div>
+      <div class="rounded-lg border border-white/10 bg-gray-800 p-6">
+        <h3 class="font-semibold">No YAML required</h3>
+        <p class="mt-2 text-sm text-gray-300">
+          Describe outcomes, not implementation details. Faster authoring, fewer errors.
+        </p>
+      </div>
+      <div class="rounded-lg border border-white/10 bg-gray-800 p-6">
+        <h3 class="font-semibold">Secure by design</h3>
+        <p class="mt-2 text-sm text-gray-300">
+          Use bastion hosts, scoped credentials, and server-side key checks for API calls.
+        </p>
+      </div>
+      <div class="rounded-lg border border-white/10 bg-gray-800 p-6">
+        <h3 class="font-semibold">Bring your LLM</h3>
+        <p class="mt-2 text-sm text-gray-300">
+          Point at your preferred API and model; adjust prompts per job.
+        </p>
+      </div>
+      <div class="rounded-lg border border-white/10 bg-gray-800 p-6">
+        <h3 class="font-semibold">Live visibility</h3>
+        <p class="mt-2 text-sm text-gray-300">
+          Stream logs in real time and retry, cancel, or resume jobs from the dashboard.
+        </p>
+      </div>
+      <div class="rounded-lg border border-white/10 bg-gray-800 p-6">
+        <h3 class="font-semibold">Simple setup</h3>
+        <p class="mt-2 text-sm text-gray-300">
+          Add credentials and hosts, then start a job. No agents deployed on targets.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works" class="py-16 sm:py-20 border-t border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-2xl sm:text-3xl font-bold">How it works</h2>
+    <ol class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <li class="rounded-lg border border-white/10 bg-gray-800 p-5">
+        <span class="text-xs text-indigo-300">01</span>
+        <p class="mt-2 font-medium">Add hosts and credentials</p>
+        <p class="mt-1 text-sm text-gray-300">Configure bastions, targets, and API keys.</p>
+      </li>
+      <li class="rounded-lg border border-white/10 bg-gray-800 p-5">
+        <span class="text-xs text-indigo-300">02</span>
+        <p class="mt-2 font-medium">Create a job</p>
+        <p class="mt-1 text-sm text-gray-300">Write a prompt describing the desired state.</p>
+      </li>
+      <li class="rounded-lg border border-white/10 bg-gray-800 p-5">
+        <span class="text-xs text-indigo-300">03</span>
+        <p class="mt-2 font-medium">Runner picks it up</p>
+        <p class="mt-1 text-sm text-gray-300">The agent plans and executes via SSH.</p>
+      </li>
+      <li class="rounded-lg border border-white/10 bg-gray-800 p-5">
+        <span class="text-xs text-indigo-300">04</span>
+        <p class="mt-2 font-medium">Watch the logs</p>
+        <p class="mt-1 text-sm text-gray-300">Stream output with a full audit trail.</p>
+      </li>
+      <li class="rounded-lg border border-white/10 bg-gray-800 p-5">
+        <span class="text-xs text-indigo-300">05</span>
+        <p class="mt-2 font-medium">Finish and verify</p>
+        <p class="mt-1 text-sm text-gray-300">When the LLM signals done, the job completes.</p>
+      </li>
+    </ol>
+
+    <div class="mt-10">
       {% if user.is_authenticated %}
-        <p>Welcome back, you are logged in.</p>
+        <a href="{% url 'create_job' %}" class="inline-flex items-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-500">
+          Start your first job
+        </a>
       {% else %}
-        <p>Please log in to access more features.</p>
+        <a href="{% url 'signup' %}" class="inline-flex items-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-500">
+          Create a free account
+        </a>
       {% endif %}
-      <div class="cta">
-        <input type="text" placeholder="Enter website or email">
-        <button>Scan</button>
-      </div>
-    </div>
-    <div class="header-image">
-      <img src="image.png" alt="Dashboard Preview">
-    </div>
-  </div>
-</header>
-
-<section class="scan-section bg-gray-700 text-white">
-  <div class="container">
-    <div class="card personal">
-      <h2>Discover Your Digital Footprint</h2>
-      <button>Start Scan Now</button>
     </div>
   </div>
 </section>
 
-<section class="pricing-section bg-gray-800 text-white">
-  <div class="container">
-    <h2>Pricing Based on Needs</h2>
-    <div class="pricing-cards">
-      <div class="card personal">
-        <h3>PERSONAL</h3>
-        <p>From $19.00 / month</p>
-        <button>Start Now</button>
-        <ul>
-          <li>Automated Data Breach</li>
-          <li>Weekly Security Reports</li>
-          <li>Dedicated Support</li>
-        </ul>
-      </div>
-      <div class="card small-business">
-        <h3>SMALL BUSINESS</h3>
-        <p>From $49.00 / month</p>
-        <button>Start Now</button>
-        <ul>
-          <li>Automated Data Breach</li>
-          <li>24/7 Security Support</li>
-          <li>API Access and Integrations</li>
-        </ul>
-      </div>
-      <div class="card elite">
-        <h3>PENTESTER ELITE</h3>
-        <p>From $899.00 / month</p>
-        <button>Start Now</button>
-        <ul>
-          <li>24/7 Support and Monitoring</li>
-          <li>Custom API Integrations</li>
-          <li>Advanced Pentesting Tools</li>
-        </ul>
-      </div>
+<footer class="border-t border-white/10 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <p class="text-sm text-gray-400">© {{ now|date:"Y" }} SSHerlock. Automate with confidence.</p>
+    <div class="flex items-center gap-4 text-sm">
+      <a href="#features" class="text-gray-400 hover:text-white">Features</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'home' %}" class="text-gray-400 hover:text-white">Dashboard</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="text-gray-400 hover:text-white">Log in</a>
+      {% endif %}
     </div>
-  </div>
-</section>
-
-<footer class="footer bg-gray-900 text-white">
-  <div class="container">
-    <p>Industry Specific &amp; Powerful Reports</p>
-    <button>Start Free Scan</button>
   </div>
 </footer>
 {% endblock %}
