@@ -7,14 +7,15 @@ Like Ansible, but using an LLM to configure hosts instead of YAML.
 
 SSHerlock is comprised of a Django web app and 1 or more job runners.
 
-Control flow:
-    - User adds credentials, hosts, and other configurations in the web app.
-    - User creates a job with a prompt for the LLM to configure the target hosts (e.g. "Install Nginx with SSL").
-    - A pending job is created, which is picked up by a runner.
-    - The runner interacts with an LLM and executes the LLM's commands on the target server.
-    - Once the LLM believes the job has been completed, it signals the runner and the job finishes.
+- Control flow:
+  - User adds credentials, hosts, and other configurations in the web app.
+  - User creates a job with a prompt for the LLM to configure the target hosts (e.g. "Install Nginx with SSL").
+  - A pending job is created, which is picked up by a runner.
+  - The runner interacts with an LLM and executes the LLM's commands on the target server.
+  - Once the LLM believes the job has been completed, it signals the runner and the job finishes.
 
 ## Repository layout
+```
 .
 ├── README.md
 ├── Dockerfile
@@ -36,6 +37,7 @@ Control flow:
 │── deploy_ssherlock.sh
 │── start_ssherlock.sh
 └── cat_files.sh
+```
 
 ## Scripts
 
