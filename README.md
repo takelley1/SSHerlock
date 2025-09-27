@@ -14,7 +14,7 @@ SSHerlock is comprised of a Django web app and 1 or more job runners.
   - The runner interacts with an LLM and executes the LLM's commands on the target server.
   - Once the LLM believes the job has been completed, it signals the runner and the job finishes.
 
-## Repository layout
+## Layout
 ```
 .
 ├── README.md
@@ -38,6 +38,10 @@ SSHerlock is comprised of a Django web app and 1 or more job runners.
 │── start_ssherlock.sh
 └── cat_files.sh
 ```
+
+## Screenshots
+
+![landing page](readme_images/landing_page.png)
 
 ## Scripts
 
