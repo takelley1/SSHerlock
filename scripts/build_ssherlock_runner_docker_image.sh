@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 #
 # Build a Docker image for the SSHerlock Runner.
+
 set -euo pipefail
 
-# Ensure we start at the root of the git repo.
-cd "$(git rev-parse --show-toplevel)" || exit 1
-
-# Enter the venv if we're not already in it.
-if ! python --version &>/dev/null; then
-    source ./venv/bin/activate
-fi
+# Standard environment setup (repo root + optional venv).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/common.sh"
+ssherlock::setup_environment
 
 rm -rfv "ssherlock_runner/docker"
 

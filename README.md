@@ -20,25 +20,14 @@ SSHerlock is comprised of a Django web app and 1 or more job runners.
 ```
 .
 ├── README.md
-├── Dockerfile
 ├── ansible/                    # deployment playbooks and roles
 ├── conf/                       # linting and project configs
-├── requirements.txt
 ├── ssherlock/                  # Django project (server)
 │   ├── manage.py
 │   ├── ssherlock/              # Django project settings, wsgi, asgi
 │   └── ssherlock_server/       # Django app: models, views, templates, static
 ├── ssherlock_runner/           # Runner component (agent)
-│   ├── ssherlock_runner.py
-│   └── tests/
-├── root scripts:               # helper scripts (see below)
-│── run_linting.sh
-│── test_ssherlock.sh
-│── test_ssherlock_runner.sh
-│── build_docker.sh
-│── deploy_ssherlock.sh
-│── start_ssherlock.sh
-└── cat_files.sh
+├── scripts/                    # helper scripts (see below)
 ```
 
 ## Scripts

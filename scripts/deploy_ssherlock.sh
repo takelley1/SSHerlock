@@ -4,8 +4,11 @@
 # server with Ansible.
 set -euo pipefail
 
-# Ensure we start at the root of the git repo.
-cd "$(git rev-parse --show-toplevel)" || exit 1
+# Standard environment setup (repo root + optional venv).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/common.sh"
+ssherlock::setup_environment
 
 # Generate a long random key for SECRET_KEY.
 SECRET_KEY=$(openssl rand -base64 64)

@@ -21,4 +21,4 @@ jobs:
 
       - name: Run Deployment
         run: |
-          deploy_ssherlock.sh
+          scripts/deploy_ssherlock.sh
