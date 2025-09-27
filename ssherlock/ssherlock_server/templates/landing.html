@@ -7,7 +7,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex h-16 items-center justify-between">
       <a href="/" class="flex items-center gap-2">
-        <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white font-bold">S</span>
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-green-600 text-white font-bold">S</span>
         <span class="text-lg font-semibold tracking-wide">SSHerlock</span>
       </a>
       <div class="hidden md:flex items-center gap-6">
@@ -15,12 +15,12 @@
         <a href="#how-it-works" class="text-sm text-gray-300 hover:text-white">How it works</a>
         {% if user.is_authenticated %}
           <a href="{% url 'home' %}" class="text-sm text-gray-300 hover:text-white">Dashboard</a>
-          <a href="{% url 'create_job' %}" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+          <a href="{% url 'create_job' %}" class="inline-flex items-center rounded-md bg-green-500 px-3 py-2 text-sm font-medium text-white hover:bg-green-600">
             Start a job
           </a>
         {% else %}
           <a href="{% url 'signup' %}" class="text-sm text-gray-300 hover:text-white">Sign up</a>
-          <a href="{% url 'login' %}" class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+          <a href="{% url 'login' %}" class="inline-flex items-center rounded-md bg-green-500 px-3 py-2 text-sm font-medium text-white hover:bg-green-600">
             Log in
           </a>
         {% endif %}
@@ -32,11 +32,11 @@
 
 {% block content %}
 <section class="relative overflow-hidden">
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-gradient-to-b from-indigo-700/20 via-transparent to-transparent"></div>
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-gradient-to-b from-green-700/20 via-transparent to-transparent"></div>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       <div>
-        <p class="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-600/10 px-3 py-1 text-xs font-medium text-indigo-300 ring-1 ring-inset ring-indigo-600/30">
+        <p class="mb-4 inline-flex items-center gap-2 rounded-full bg-green-600/10 px-3 py-1 text-xs font-medium text-green-300 ring-1 ring-inset ring-green-600/30">
           SSH-based autonomous agent
         </p>
         <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight">
@@ -50,14 +50,14 @@
 
         <div class="mt-8 flex flex-col sm:flex-row gap-3">
           {% if user.is_authenticated %}
-            <a href="{% url 'create_job' %}" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-500">
+            <a href="{% url 'create_job' %}" class="inline-flex items-center justify-center rounded-md bg-green-500 px-5 py-3 text-sm font-medium text-white hover:bg-green-600">
               Start a job
             </a>
             <a href="{% url 'home' %}" class="inline-flex items-center justify-center rounded-md bg-white/10 px-5 py-3 text-sm font-medium text-white hover:bg-white/20">
               Go to dashboard
             </a>
           {% else %}
-            <a href="{% url 'signup' %}" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-500">
+            <a href="{% url 'signup' %}" class="inline-flex items-center justify-center rounded-md bg-green-500 px-5 py-3 text-sm font-medium text-white hover:bg-green-600">
               Get started free
             </a>
             <a href="{% url 'login' %}" class="inline-flex items-center justify-center rounded-md bg-white/10 px-5 py-3 text-sm font-medium text-white hover:bg-white/20">
@@ -86,7 +86,7 @@
             <p class="text-green-400">✓ Job completed in 02:14</p>
           </div>
         </div>
-        <div class="pointer-events-none absolute -inset-6 -z-10 rounded-2xl bg-indigo-600/10 blur-2xl"></div>
+        <div class="pointer-events-none absolute -inset-6 -z-10 rounded-2xl bg-green-600/10 blur-2xl"></div>
       </div>
     </div>
   </div>
@@ -173,11 +173,11 @@
 
     <div class="mt-10">
       {% if user.is_authenticated %}
-        <a href="{% url 'create_job' %}" class="inline-flex items-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-500">
+        <a href="{% url 'create_job' %}" class="inline-flex items-center rounded-md bg-green-500 px-5 py-3 text-sm font-medium text-white hover:bg-green-600">
           Start your first job
         </a>
       {% else %}
-        <a href="{% url 'signup' %}" class="inline-flex items-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-500">
+        <a href="{% url 'signup' %}" class="inline-flex items-center rounded-md bg-green-500 px-5 py-3 text-sm font-medium text-white hover:bg-green-600">
           Create a free account
         </a>
       {% endif %}
