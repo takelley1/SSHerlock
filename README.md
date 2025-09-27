@@ -3,6 +3,8 @@
 An SSH-based autonomous agent to replace system administrators.
 Like Ansible, but using an LLM to configure hosts instead of YAML.
 
+![landing page](readme_images/landing_page.png)
+
 ## Architecture
 
 SSHerlock is comprised of a Django web app and 1 or more job runners.
@@ -38,10 +40,6 @@ SSHerlock is comprised of a Django web app and 1 or more job runners.
 │── start_ssherlock.sh
 └── cat_files.sh
 ```
-
-## Screenshots
-
-![landing page](readme_images/landing_page.png)
 
 ## Scripts
 
