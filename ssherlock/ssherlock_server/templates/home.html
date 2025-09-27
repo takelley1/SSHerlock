@@ -7,7 +7,23 @@
   <div class="navbar-content">
     <div class="flex justify-between">
       <div class="flex space-x-6">
-        <a href="/" class="{% if request.path == '/' %}border-b-4 border-gray-300 {% else %} border-b-4 border-transparent hover:border-gray-300 {% endif %}">Landing</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'home' %}" class="flex items-center gap-2" aria-label="Go to dashboard">
+            <svg viewBox="0 0 24 24" class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" fill="currentColor"/>
+              <path d="M10 9l3 3-3 3" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <span class="font-semibold tracking-wide">SSHerlock</span>
+          </a>
+        {% else %}
+          <a href="{% url 'landing' %}" class="flex items-center gap-2" aria-label="Go to landing">
+            <svg viewBox="0 0 24 24" class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" fill="currentColor"/>
+              <path d="M10 9l3 3-3 3" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <span class="font-semibold tracking-wide">SSHerlock</span>
+          </a>
+        {% endif %}
         {% if user.is_authenticated %}
           <!-- Record each URL path as a variable so we can use it in the if-expression without hardcoding URLs. -->
           {% url 'home' as home_url %}
