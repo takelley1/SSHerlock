@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 # Open a Django debug shell for the SSHerlock project.
+#
+#
+# Common operations:
+# - delete all objects of a given type:
+#   BastionHost.objects.all().delete()
+#
+#
 
 set -euo pipefail
 
