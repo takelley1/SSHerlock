@@ -1,9 +1,11 @@
 """All Django forms for the SSHerlock server application."""
 
 # pylint: disable=import-error, missing-class-docstring
+from django.core.exceptions import ValidationError
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import password_validation
 from django.forms import ModelForm
 from .models import BastionHost
 from .models import Credential
@@ -13,7 +15,34 @@ from .models import TargetHost
 
 
 class CustomUserCreationForm(UserCreationForm):
-    """Present a customized user creation form that allows us to set the user's email."""
+    """Present a customized user creation form that allows us to set the user's email.
+
+    Enforce a maximum password length of 256 characters. Validation errors for an
+    overly-long password are attached to the password2 field (consistent with
+    UserCreationForm's clean_password2 behaviour).
+    """
+
+    # Do not set max_length on the field to avoid field-level length validation
+    # producing the generic error message. Enforce length in clean_password2 so
+    # we can attach a custom message to password2.
+    password1 = forms.CharField(
+        label="Password",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+            }
+        ),
+    )
+    password2 = forms.CharField(
+        label="Password confirmation",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+            }
+        ),
+    )
 
     email = forms.EmailField(
         required=True,
@@ -25,6 +54,36 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
+
+    def clean_password2(self):
+        """Validate matching passwords, enforce max length, and run Django password validators.
+
+        Returns:
+            str: The cleaned password2 value.
+
+        Raises:
+            ValidationError: If passwords don't match, exceed allowed length, or fail validators.
+        """
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+
+        # Matching check: match standard UserCreationForm message exactly.
+        if password1 and password2 and password1 != password2:
+            raise ValidationError("The two password fields didn’t match.")
+
+        # Enforce maximum length and attach error to password2.
+        if password1 and len(password1) > 256:
+            raise ValidationError("Password cannot be longer than 256 characters.")
+
+        # Run Django's password validators so complexity/min length is enforced.
+        if password2:
+            try:
+                password_validation.validate_password(password2, self.instance)
+            except ValidationError as exc:
+                # Re-raise with the same messages attached to the field.
+                raise ValidationError(exc.messages)
+
+        return password2
 
     def save(self, commit=True):
         """Save the user instance with the email."""

@@ -1563,6 +1563,30 @@ class TestSignupView(TestCase):
             form.errors["username"], ["A user with that username already exists."]
         )
 
+    def test_signup_password_too_long(self):
+        """Test that signup fails if password is longer than 256 characters."""
+        long_password = "a" * 257
+        response = self.client.post(
+            reverse("signup"),
+            data={
+                "username": "longpwuser",
+                "email": "longpw@example.com",
+                "password1": long_password,
+                "password2": long_password,
+            },
+        )
+        # Form should be invalid and return the signup page with errors
+        self.assertEqual(response.status_code, 200)
+        form = response.context.get("form")
+        self.assertIsNotNone(form)
+        self.assertTrue(form.errors)
+        # Validation attaches the error to password2 in our CustomUserCreationForm.clean_password2
+        self.assertIn("password2", form.errors)
+        self.assertEqual(
+            form.errors["password2"], ["Password cannot be longer than 256 characters."]
+        )
+        self.assertFalse(User.objects.filter(username="longpwuser").exists())
+
 
 class TestUpdateEmail(TestCase):
     """Tests for the update_email view."""
