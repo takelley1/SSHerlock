@@ -6,3 +6,4 @@ flake8
 pydocstyle
 pylint
 pytest
+selenium
