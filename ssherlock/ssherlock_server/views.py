@@ -38,7 +38,7 @@ from .forms import (
     TargetHostForm,
 )
 from .models import BastionHost, Credential, Job, LlmApi, TargetHost
-from .utils import check_private_key, get_object_pretty_name
+from .utils import check_private_key, get_object_pretty_name, get_job_log_path
 
 
 def landing(request):
@@ -147,6 +147,19 @@ def create_job(request):
             job.target_hosts.add(host.id)
             job.save()
 
+            # Create an empty log file for this job so SSE consumers won't immediately
+            # encounter "file not found" when the stream is opened right after creation.
+            try:
+                log_dir, log_file_path = get_job_log_path(job.id)
+                os.makedirs(log_dir, exist_ok=True)
+                # 'a' mode creates the file if it doesn't exist; close immediately.
+                with open(log_file_path, "a", encoding="utf-8"):
+                    pass
+            except Exception:
+                # Fail silently here; file creation is best-effort and shouldn't block job creation.
+                # Any errors will be surfaced when runners attempt to write logs.
+                pass
+
         # Start a SSHerlock runner Docker container in GCP for every target host
         # in the job.
         # for host in target_hosts:
@@ -176,14 +189,7 @@ def view_job(request, job_id):
 def stream_job_log(_, job_id):
     """Stream job log data to the client. This stream is rendered on the view_job view."""
     job_id = str(job_id)
-    log_dir = os.path.join(
-        settings.BASE_DIR.parent,
-        "ssherlock_runner_job_logs",
-        job_id[0:2],
-        job_id[2:4],
-        job_id[4:6],
-    )
-    log_file_path = os.path.join(log_dir, f"{job_id[6:]}.log")
+    log_dir, log_file_path = get_job_log_path(job_id)
 
     def event_stream():
         try:

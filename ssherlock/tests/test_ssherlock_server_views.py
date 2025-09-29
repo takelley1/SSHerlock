@@ -672,6 +672,19 @@ class TestCreateJobView(TestCase):
         self.assertEqual(job.llm_api, self.llm_api)
         self.assertIn(self.target_host1, job.target_hosts.all())  # codespell:ignore
 
+        # Verify that a log file was created for the job when it was created.
+        job_id = str(job.id)
+        log_dir = os.path.join(
+            settings.BASE_DIR.parent,
+            "ssherlock_runner_job_logs",
+            job_id[0:2],
+            job_id[2:4],
+            job_id[4:6],
+        )
+        log_file_path = os.path.join(log_dir, f"{job_id[6:]}.log")
+        self.assertTrue(os.path.isdir(log_dir))
+        self.assertTrue(os.path.isfile(log_file_path))
+
     def test_create_single_job_not_authenticated(self):
         """Test creating a single job with one target host while not authenticated redirects to login."""
         data = {
