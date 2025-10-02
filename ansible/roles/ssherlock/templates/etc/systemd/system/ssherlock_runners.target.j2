@@ -1,8 +1,0 @@
-# vim: ft=systemd
-# Unit file to deploy multiple copies of the same SSHerlock runner service.
-[Unit]
-Description=SSHerlock runners
-Wants={% for i in range(1, ssherlock_number_of_ssherlock_runners + 1) %}ssherlock_runner@{{ i }}.service{% if not loop.last %} {% endif %}{% endfor %}
-
-[Install]
-WantedBy=multi-user.target

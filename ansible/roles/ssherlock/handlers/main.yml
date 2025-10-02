@@ -1,16 +1,6 @@
 ---
 # yamllint disable
 
-- name: HANDLERS | SSHerlock runners restarted
-  ansible.builtin.systemd:
-    name: ssherlock_runners.target
-    state: restarted
-    enabled: true
-    masked: false
-    daemon_reload: true
-  listen: restart-ssherlock-runners
-
-
 - name: HANDLERS | SSHerlock Server
   listen: restart-ssherlock-server
   block:

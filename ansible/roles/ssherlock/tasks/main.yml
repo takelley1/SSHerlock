@@ -5,7 +5,6 @@
   ansible.builtin.group:
     name: "{{ ssherlock_user }}"
   notify:
-    - restart-ssherlock-runners
     - restart-ssherlock-server
 
 - name: MAIN | Create SSHerlock user
@@ -16,7 +15,6 @@
     create_home: false
     system: true
   notify:
-    - restart-ssherlock-runners
     - restart-ssherlock-server
 
 - name: MAIN | Copy SSHerlock to target server
@@ -31,7 +29,6 @@
     - ssherlock/
     - requirements.txt
   notify:
-    - restart-ssherlock-runners
     - restart-ssherlock-server
 
 - name: MAIN | Install Python dependencies
@@ -40,7 +37,6 @@
     virtualenv: "{{ ssherlock_venv_path }}"
     virtualenv_python: python3
   notify:
-    - restart-ssherlock-runners
     - restart-ssherlock-server
 
 - name: MAIN | Install Apt dependencies
@@ -55,7 +51,6 @@
     clean: true
     update_cache: true
   notify:
-    - restart-ssherlock-runners
     - restart-ssherlock-server
     - restart-certbot
 
@@ -76,10 +71,7 @@
     - etc/nginx/nginx.conf
     - etc/systemd/system/gunicorn.service
     - etc/systemd/system/gunicorn.socket
-    - etc/systemd/system/ssherlock_runner@.service
-    - etc/systemd/system/ssherlock_runners.target
   notify:
-    - restart-ssherlock-runners
     - restart-ssherlock-server
 
 - name: MAIN | Install TailwindCSS
