@@ -12,10 +12,17 @@ import requests
 import tiktoken
 
 
-SSHERLOCK_SERVER_DOMAIN = "localhost:8000"
-SSHERLOCK_SERVER_PROTOCOL = "http"
-SSHERLOCK_SERVER_RUNNER_TOKEN = "myprivatekey"
-SSHERLOCK_RUNNER_MAX_ATTEMPTS = 3
+SSHERLOCK_SERVER_DOMAIN = os.getenv(
+    "SSHERLOCK_SERVER_DOMAIN", "host.docker.internal:8000"
+)
+SSHERLOCK_SERVER_PROTOCOL = os.getenv("SSHERLOCK_SERVER_PROTOCOL", "http")
+SSHERLOCK_SERVER_RUNNER_TOKEN = os.getenv(
+    "SSHERLOCK_SERVER_RUNNER_TOKEN", "myprivatekey"
+)
+SSHERLOCK_RUNNER_MAX_ATTEMPTS = int(os.getenv("SSHERLOCK_RUNNER_MAX_ATTEMPTS", "3"))
+SSHERLOCK_RUNNER_LOG_LEVEL = os.getenv("SSHERLOCK_RUNNER_LOG_LEVEL", "DEBUG").upper()
+SSHERLOCK_LLM_MODEL = os.getenv("SSHERLOCK_LLM_MODEL", "llama3.1")
+SSHERLOCK_TOKEN_ENCODING_MODEL = os.getenv("SSHERLOCK_TOKEN_ENCODING_MODEL", "gpt-4o")
 
 
 class HttpPostHandler(log.Handler):
@@ -46,7 +53,7 @@ class HttpPostHandler(log.Handler):
 
 
 log.basicConfig(
-    level=log.DEBUG,
+    level=getattr(log, SSHERLOCK_RUNNER_LOG_LEVEL, log.DEBUG),
     format="%(asctime)s %(levelname)s %(filename)s:%(funcName)s - %(message)s",
 )
 
@@ -260,7 +267,7 @@ class Runner:  # pylint: disable=too-many-arguments
         )
 
         llm_reply = client.chat.completions.create(
-            model="llama3.1",
+            model=SSHERLOCK_LLM_MODEL,
             messages=prompt,
         )
 
@@ -614,7 +621,7 @@ def count_tokens(messages) -> int:
     """
     content_string = " ".join(message["content"] for message in messages)
 
-    encoding = tiktoken.encoding_for_model("gpt-4o")
+    encoding = tiktoken.encoding_for_model(SSHERLOCK_TOKEN_ENCODING_MODEL)
     tokens = encoding.encode(content_string)
 
     num_tokens = len(tokens)
@@ -692,7 +699,7 @@ def execute_job(job_data):
         log.info("Continuing to wait for new jobs...")
 
 
-def main(max_attempts=None):
+def main(max_attempts=25):
     """Main loop to continually request a job to run and run any job it receives.
 
     Args:
