@@ -135,6 +135,9 @@ jobs:
 
   test_app_selenium:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [firefox, chrome]
     steps:
       - uses: actions/checkout@v4
 
@@ -146,15 +149,10 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r ./requirements_test.txt
-          apt-get update && apt-get install -y firefox chrome
 
-      - name: Run Selenium Firefox tests
+      - name: Run Selenium tests
         run: |
-          bash ./scripts/test_ssherlock_selenium.sh --browser firefox
-
-      - name: Run Selenium Chrome tests
-        run: |
-          bash ./scripts/test_ssherlock_selenium.sh --browser chrome
+          bash ./scripts/test_ssherlock_selenium.sh --browser ${{ matrix.browser }}
 
   test_runner:
     runs-on: ubuntu-latest
