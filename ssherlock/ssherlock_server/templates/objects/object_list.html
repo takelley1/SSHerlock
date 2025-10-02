@@ -19,12 +19,12 @@
 
 {% if output %}
 
-<div class="mx-10">
-  <table id="object_list_table" class="table-auto w-full divide-y divide-gray-700 bg-gray-800 text-white">
-    <thead>
+<div class="mx-10 overflow-x-auto rounded-xl border border-white/10 bg-gray-800/70 backdrop-blur shadow">
+  <table id="object_list_table" class="w-full text-left divide-y divide-gray-700">
+    <thead class="sticky top-0 bg-gray-900/80 backdrop-blur z-10">
       <tr>
         {% for header in column_headers %}
-        <th scope="col">{{ header }}</th>
+        <th scope="col" class="px-4 py-3 text-xs font-semibold text-gray-300">{{ header }}</th>
         {% endfor %}
 
         {% if object_name != "Job" %}
@@ -37,11 +37,11 @@
       {% for item in output %}
 
         <!-- Make table rows clickable and highlight when mouseover -->
-        <tr onclick="window.location='{% url 'edit_object' object_name.split|join:'_'|lower item.id %}'" class="hover:bg-gray-700 cursor-pointer odd:bg-gray-800 even:bg-gray-900">
+        <tr onclick="window.location='{% url 'edit_object' object_name.split|join:'_'|lower item.id %}'" class="hover:bg-gray-700 cursor-pointer odd:bg-gray-800 even:bg-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50" role="button" tabindex="0">
 
           {% for field in object_fields %}
           <td>
-            <div class="flex items-center">
+            <div class="flex items-center gap-2">
 
               <!-- Properly mask sensitive or password fields -->
               {% if field == "password" or field == "api_key" %}
@@ -51,7 +51,7 @@
               {% elif field == "created_at" %}
                 <span>{{ item|get_attr:field|date:"Y-m-d H:i:s" }}</span>
               {% else %}
-                <span>{{ item|get_attr:field }}</span>
+                <span class="max-w-[22rem] lg:max-w-none truncate lg:whitespace-pre-wrap break-words">{{ item|get_attr:field }}</span>
               {% endif %}
 
             </div>

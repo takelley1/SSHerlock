@@ -3,16 +3,16 @@
 {% block title %}Add {{ object_name }}{% endblock %}
 
 {% block content %}
-<div class="flex justify-center items-start min-h-screen">
-  <div class="m-5 p-5 border-4 border-gray-800 rounded-lg max-w-md">
+<div class="flex justify-center items-start min-h-screen pt-[10vh]">
+  <div class="m-5 p-6 rounded-xl border border-white/10 bg-gray-800/80 backdrop-blur shadow-xl w-full max-w-2xl">
   <h2 class="text-2xl mb-4">Add {{ object_name_pretty }}</h2>
   {% with model_type=object_name|lower %}
     <form action="{% url 'add_object' model_type=model_type %}" method="post" class="space-y-4">
       {% csrf_token %}
       {{ form }}
       <div class="flex justify-end space-x-4">
-        <a href="/{{ object_name|lower }}_list" class="bg-gray-500 hover:bg-gray-600 mt-2 p-2 rounded">Cancel</a>
-        <input type="submit" value="Add" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">
+        <a href="/{{ object_name|lower }}_list" class="bg-white/10 hover:bg-white/20 mt-2 px-3 py-2 rounded-md transition active:scale-[.99]">Cancel</a>
+        <input type="submit" value="Add" class="bg-green-500 hover:bg-green-600 mt-2 px-3 py-2 rounded-md transition active:scale-[.99]">
       </div>
     </form>
   {% endwith %}

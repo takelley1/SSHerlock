@@ -5,15 +5,15 @@
 {% block content %}
 {% if success %}
 {% endif %}
-<div class="flex justify-center items-start min-h-screen" 
-     {% if success %}data-success="{{ success }}"{% endif %} 
+<div class="flex justify-center items-start min-h-screen pt-[5vh]"
+     {% if success %}data-success="{{ success }}"{% endif %}
      {% if error %}data-error="{{ error }}"{% endif %}>
-  <div class="m-5 p-5 border-4 border-gray-800 rounded-lg w-full max-w-xl bg-gray-800">
+  <div class="m-5 p-6 rounded-xl border border-white/10 bg-gray-800/80 backdrop-blur shadow-xl w-full max-w-xl">
     <h2 class="text-2xl mb-4 text-white">Account Details</h2>
     <p class="text-white">Username: {{ user.username }}</p>
     <p class="text-white">Email: {{ user.email }}</p>
 
-    <div class="mt-5 mb-5 border border-gray-500"></div>
+    <div class="mt-5 mb-5 border border-white/10"></div>
 
     <form method="post" action="{% url 'update_email' %}" class="mt-4">
       {% csrf_token %}
@@ -30,7 +30,7 @@
       <button type="submit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">Change Email</button>
     </form>
 
-    <div class="mt-5 mb-5 border border-gray-500"></div>
+    <div class="mt-5 mb-5 border border-white/10"></div>
 
     <!-- Add more account details as needed -->
     <form method="post" action="{% url 'reset_password' %}" class="mt-4">
@@ -52,7 +52,7 @@
 
       <button type="submit" class="bg-green-500 hover:bg-green-600 mt-2 p-2 rounded">Change Password</button>
 
-      <div class="mt-5 mb-5 border border-gray-500"></div>
+      <div class="mt-5 mb-5 border border-white/10"></div>
 
     </form>
     <div class="text-xl mb-2 text-white">Delete Account</div>
