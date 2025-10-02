@@ -27,7 +27,6 @@ import json
 import requests
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.conf import settings
 from django.contrib.auth.models import User
 
 try:
@@ -252,7 +251,7 @@ class SeleniumSSHerlockTests(StaticLiveServerTestCase):
                     (By.XPATH, "//*[contains(., 'SSE TEST LINE 2')]")
                 )
             )
-        except Exception as exc:
+        except Exception:
             # Non-fatal: continue the journey even if SSE verification fails.
             return
 
