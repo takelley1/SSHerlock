@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Run Selenium end-to-end tests for the SSHerlock Django app.
 # Usage:
-#   scripts/test_selenium.sh [--browser chrome|firefox] [--headed] [--] [extra manage.py test args...]
+#   scripts/test_ssherlock_selenium.sh [--browser chrome|firefox] [--headed] [--] [extra manage.py test args...]
 #
 # Examples:
-#   scripts/test_selenium.sh
-#   scripts/test_selenium.sh --browser firefox --headed -k SeleniumSSHerlockTests
+#   scripts/test_ssherlock_selenium.sh
+#   scripts/test_ssherlock_selenium.sh --browser firefox --headed -k SeleniumSSHerlockTests
 #
 # Environment variables:
 #   SELENIUM_BROWSER  - chrome (default) or firefox
