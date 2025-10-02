@@ -11,7 +11,7 @@ on:  # yamllint disable-line
       - '.github/workflows/python.yml'
 
 env:
-  PYTHON_VERSION: "3.12.5"
+  PYTHON_VERSION: "3.12.11"
 
 jobs:
 
