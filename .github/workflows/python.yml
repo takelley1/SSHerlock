@@ -131,7 +131,30 @@ jobs:
 
       - name: Run Tests
         run: |
-          bash ./test_ssherlock.sh
+          bash ./scripts/test_ssherlock.sh
+
+  test_app_selenium:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Dependencies
+        run: |
+          pip install -r ./requirements_test.txt
+          apt-get update && apt-get install -y firefox chrome
+
+      - name: Run Selenium Firefox tests
+        run: |
+          bash ./scripts/test_ssherlock_selenium.sh --browser firefox
+
+      - name: Run Selenium Chrome tests
+        run: |
+          bash ./scripts/test_ssherlock_selenium.sh --browser chrome
 
   test_runner:
     runs-on: ubuntu-latest
@@ -149,4 +172,4 @@ jobs:
 
       - name: Run Tests
         run: |
-          bash ./test_ssherlock_runner.sh
+          bash ./scripts/test_ssherlock_runner.sh
