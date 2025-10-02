@@ -18,7 +18,7 @@ mkdir "ssherlock_runner/docker"
 # Copy files into build directory.
 cp "Dockerfile" "ssherlock_runner/docker/Dockerfile"
 cp "ssherlock_runner/ssherlock_runner.py" "ssherlock_runner/docker/ssherlock_runner.py"
-grep -Ev "django|gunicorn" "requirements.txt" > "ssherlock_runner/docker/requirements.txt"
+cp "requirements_runner.txt" "ssherlock_runner/docker/requirements_runner.txt"
 
 # Build the image.
 cd "ssherlock_runner/docker" || exit 1
