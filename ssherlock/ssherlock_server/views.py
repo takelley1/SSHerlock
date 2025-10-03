@@ -442,24 +442,10 @@ def log_job_data(request, job_id):
         if not log_content:
             return JsonResponse({"message": "Log content not provided."}, status=400)
 
-        # Define the directory and file path for storing logs.
-        # Use the .git/objects method of storing job files.
-        # The first two characters of the job ID become a subdirectory.
-        # The next two characters of the job ID become another subdirectory.
-        # The remainining characters of the job ID become the name of the log file.
-        # This is to prevent letting directories fill up with tons of files.
+        # Determine the log directory and file path via helper in utils.
         job_id = str(job_id)
-        log_dir = os.path.join(
-            settings.BASE_DIR.parent,
-            "ssherlock_runner_job_logs",
-            job_id[0:2],
-            job_id[2:4],
-            job_id[4:6],
-        )
-
+        log_dir, log_file_path = get_job_log_path(job_id)
         os.makedirs(log_dir, exist_ok=True)
-
-        log_file_path = os.path.join(log_dir, f"{job_id[6:]}.log")
 
         # Write the log data to the file
         with open(log_file_path, "a", encoding="utf-8", buffering=1) as log_file:

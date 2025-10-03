@@ -47,6 +47,12 @@ def get_job_log_path(job_id: str) -> Tuple[str, str]:
     Returns:
         tuple: (log_dir, log_file_path)
     """
+    # Define the directory and file path for storing logs.
+    # Use the .git/objects method of storing job files.
+    # The first two characters of the job ID become a subdirectory.
+    # The next two characters of the job ID become another subdirectory.
+    # The remainining characters of the job ID become the name of the log file.
+    # This is to prevent letting directories fill up with tons of files.
     job_id = str(job_id)
     log_dir = os.path.join(
         settings.BASE_DIR.parent,
@@ -105,6 +111,4 @@ def stream_job_log_generator(job_id: str) -> Iterator[str]:
                 else:
                     time.sleep(1)
     except FileNotFoundError:
-        yield (
-            f"event: error\ndata: Log file not found for job ID {job_id}.\n\n"
-        )
+        yield (f"event: error\ndata: Log file not found for job ID {job_id}.\n\n")
