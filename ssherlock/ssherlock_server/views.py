@@ -5,6 +5,7 @@
 import json
 import os
 import time
+import datetime
 
 from django.conf import settings
 from django.contrib.auth import (
@@ -442,14 +443,18 @@ def log_job_data(request, job_id):
         if not log_content:
             return JsonResponse({"message": "Log content not provided."}, status=400)
 
-        # Determine the log directory and file path via helper in utils.
         job_id = str(job_id)
         log_dir, log_file_path = get_job_log_path(job_id)
         os.makedirs(log_dir, exist_ok=True)
 
-        # Write the log data to the file
+        # Write the log data to the file with a UTC timestamp prefix.
+        timestamp = (
+            timezone.now()
+            .astimezone(datetime.timezone.utc)
+            .strftime("%Y-%m-%d %H:%M:%S")
+        )
         with open(log_file_path, "a", encoding="utf-8", buffering=1) as log_file:
-            log_file.write(log_content + "\n")
+            log_file.write(f"{timestamp} {log_content}\n")
 
         return HttpResponse(status=200)
 
