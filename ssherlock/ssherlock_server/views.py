@@ -38,7 +38,13 @@ from .forms import (
     TargetHostForm,
 )
 from .models import BastionHost, Credential, Job, LlmApi, TargetHost
-from .utils import check_private_key, get_object_pretty_name, get_job_log_path
+from .utils import (
+    check_private_key,
+    get_object_pretty_name,
+    get_job_log_path,
+    read_full_job_log,
+    stream_job_log_generator,
+)
 
 
 def landing(request):
@@ -185,27 +191,20 @@ def view_job(request, job_id):
     return render(request, "objects/view_job.html", context)
 
 
+@require_http_methods(["GET"])
 @login_required
-def stream_job_log(_, job_id):
-    """Stream job log data to the client. This stream is rendered on the view_job view."""
-    job_id = str(job_id)
-    log_dir, log_file_path = get_job_log_path(job_id)
+def get_full_job_log(request, job_id):
+    """Return the full job log as plain text."""
+    content = read_full_job_log(job_id)
+    return HttpResponse(content, content_type="text/plain")
 
-    def event_stream():
-        try:
-            with open(log_file_path, "r", encoding="utf-8") as log_file:
-                # Move to the end of the file
-                log_file.seek(0, os.SEEK_END)
-                while True:
-                    line = log_file.readline()
-                    if line:
-                        yield f"data: {line}\n\n"
-                    else:
-                        time.sleep(1)
-        except FileNotFoundError:
-            yield f"event: error\ndata: Log file not found for job ID {job_id}.\n\n"
 
-    return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+@login_required
+def stream_job_log(request, job_id):
+    """Stream job log data to the client using utils.stream_job_log_generator."""
+    return StreamingHttpResponse(
+        stream_job_log_generator(job_id), content_type="text/event-stream"
+    )
 
 
 def custom_login(request):

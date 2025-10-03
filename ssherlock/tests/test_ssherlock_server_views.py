@@ -1506,6 +1506,36 @@ class TestStreamJobLog(TestCase):
         self.assertIn("event: error", combined_content)
         self.assertIn("data: Log file not found", combined_content)
 
+    @patch("builtins.open", new_callable=mock_open, read_data="Full log line 1\nFull log line 2\n")
+    def test_get_full_job_log_authenticated(self, _):
+        """Test fetching the full job log while authenticated."""
+        self.client.login(username="testuser", password="password")
+        with patch(
+            "builtins.open",
+            new_callable=mock_open,
+            read_data="Full log line 1\nFull log line 2\n",
+        ):
+            response = self.client.get(reverse("get_full_job_log", args=[self.job_id]))
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content.decode("utf-8"), "Full log line 1\nFull log line 2\n")
+
+    def test_get_full_job_log_not_authenticated(self):
+        """Test fetching the full job log while not authenticated redirects to login page."""
+        response = self.client.get(reverse("get_full_job_log", args=[self.job_id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/view_job/{self.job_id}/log/full"
+        )
+
+    @patch("builtins.open", side_effect=FileNotFoundError)
+    def test_get_full_job_log_file_not_found(self, _):
+        """Test fetching the full job log when the file does not exist returns empty body."""
+        self.client.login(username="testuser", password="password")
+        response = self.client.get(reverse("get_full_job_log", args=[self.job_id]))
+        self.assertEqual(response.status_code, 200)
+        # Body should be empty string when file not found
+        self.assertEqual(response.content.decode("utf-8"), "")
+
 
 class TestSignupView(TestCase):
     """Tests for the signup view."""

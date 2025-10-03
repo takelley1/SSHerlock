@@ -2,8 +2,9 @@
 
 from django.http import JsonResponse
 import os
+import time
 from django.conf import settings
-from typing import Tuple
+from typing import Tuple, Iterator
 
 
 def check_private_key(request):
@@ -56,3 +57,54 @@ def get_job_log_path(job_id: str) -> Tuple[str, str]:
     )
     log_file_path = os.path.join(log_dir, f"{job_id[6:]}.log")
     return log_dir, log_file_path
+
+
+def read_full_job_log(job_id: str) -> str:
+    """Read and return the full contents of a job log file.
+
+    If the log file does not exist, return an empty string.
+
+    Args:
+        job_id (str): The UUID (or string) of the job.
+
+    Returns:
+        str: The entire log file contents or an empty string.
+    """
+    _, log_file_path = get_job_log_path(job_id)
+    try:
+        with open(log_file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return ""
+
+
+def stream_job_log_generator(job_id: str) -> Iterator[str]:
+    """Generator that yields Server-Sent Events for new job log lines.
+
+    The generator seeks to the end of the current log file and yields any new
+    lines appended to the file. If the file is missing it yields a single
+    SSE-formatted error event.
+
+    Args:
+        job_id (str): The UUID (or string) of the job.
+
+    Yields:
+        Iterator[str]: SSE-formatted strings to be sent over a text/event-stream.
+    """
+    _, log_file_path = get_job_log_path(job_id)
+    try:
+        with open(log_file_path, "r", encoding="utf-8") as log_file:
+            # Move to the end of the file so we only stream new lines.
+            log_file.seek(0, os.SEEK_END)
+            while True:
+                line = log_file.readline()
+                if line:
+                    # SSE data lines must not contain bare newlines other than
+                    # the delimiter between events.
+                    yield f"data: {line}\n\n"
+                else:
+                    time.sleep(1)
+    except FileNotFoundError:
+        yield (
+            f"event: error\ndata: Log file not found for job ID {job_id}.\n\n"
+        )

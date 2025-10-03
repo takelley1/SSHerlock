@@ -31,6 +31,11 @@ urlpatterns = [
     path("log_job_data/<uuid:job_id>", views.log_job_data, name="log_job_data"),
     path("view_job/<uuid:job_id>", views.view_job, name="view_job"),
     path("view_job/<uuid:job_id>/log", views.stream_job_log, name="stream_job_log"),
+    path(
+        "view_job/<uuid:job_id>/log/full",
+        views.get_full_job_log,
+        name="get_full_job_log",
+    ),
     path("cancel_job/<uuid:job_id>", views.cancel_job, name="cancel_job"),
     path("account/", views.account, name="account"),
     path("reset_password/", views.reset_password, name="reset_password"),
