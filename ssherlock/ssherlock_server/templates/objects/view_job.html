@@ -3,9 +3,9 @@
 {% block title %}View Job{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_minmax(280px,0.8fr)] gap-4 p-5">
+<div class="grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_minmax(280px,0.8fr)] gap-4 p-5 min-h-0">
     <!-- Job Log Section -->
-    <div class="rounded-xl border border-white/10 bg-gray-900/90 backdrop-blur shadow h-[calc(100svh-12rem)] overflow-auto resize-x min-w-[260px] max-w-[85vw] p-4">
+    <div class="rounded-xl border border-white/10 bg-gray-900/90 backdrop-blur shadow min-h-0 max-h-[calc(100vh-12rem)] overflow-auto resize-none min-w-[260px] max-w-[85vw] p-4">
         <div id="job-log" data-stream-url="{% url 'stream_job_log' job_id=job.id %}" class="font-mono text-[13px] leading-relaxed space-y-1">
             <p class="text-gray-300">Job log for job {{ job.id }}</p>
             <!-- Log entries will be appended here by JavaScript -->
@@ -13,7 +13,7 @@
     </div>
 
     <!-- Controls and status section -->
-    <div class="rounded-xl border border-white/10 bg-gray-800/80 backdrop-blur shadow h-[calc(100svh-12rem)] p-5">
+    <div class="rounded-xl border border-white/10 bg-gray-800/80 backdrop-blur shadow min-h-0 max-h-[calc(100vh-12rem)] overflow-auto p-5">
 
         <div class="flex flex-wrap gap-3">
 
@@ -126,7 +126,7 @@
 
         <div class="items-center mt-2">
             <p class="font-bold mr-2">Instructions:</p>
-            <div class="overflow-x-auto bg-gray-700/60 p-3 my-1 border border-white/10 rounded max-h-[45svh]">
+            <div class="overflow-auto bg-gray-700/60 p-3 my-1 border border-white/10 rounded max-h-[45vh]">
                 <p class="whitespace-pre-wrap break-words">{{ job.instructions }}</p>
             </div>
         </div>
