@@ -203,11 +203,12 @@ class TestHandleObject(TestCase):
             response, f"/accounts/login/?next=/edit/target_host/{self.target_host.id}"
         )
 
-    def test_credential_add_authenticated(self):
+    def test_password_credential_add_authenticated(self):
         """Test adding a new credential while authenticated."""
         self.client.login(username="testuser", password="password")
         data = {
             "credential_name": "new-credential-name",
+            "credential_type": Credential.CREDENTIAL_TYPE_PASSWORD,
             "username": "new-credential-username",
             "password": "new-credential-password",
             "user": self.user.id,
@@ -217,10 +218,11 @@ class TestHandleObject(TestCase):
             "credential", data["credential_name"], data, "/credential_list"
         )
 
-    def test_credential_add_not_authenticated(self):
+    def test_password_credential_add_not_authenticated(self):
         """Test adding a new credential while not authenticated redirects to login page."""
         data = {
             "credential_name": "new-credential-name",
+            "credential_type": Credential.CREDENTIAL_TYPE_PASSWORD,
             "username": "new-credential-username",
             "password": "new-credential-password",
             "user": self.user.id,
@@ -229,11 +231,12 @@ class TestHandleObject(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, "/accounts/login/?next=/add/credential")
 
-    def test_credential_edit_authenticated(self):
+    def test_password_credential_edit_authenticated(self):
         """Test editing an existing credential while authenticated."""
         self.client.login(username="testuser", password="password")
         data = {
             "credential_name": "edited-credential-name",
+            "credential_type": Credential.CREDENTIAL_TYPE_PASSWORD,
             "username": "edited-credential-username",
             "password": "edited-credential-password",
             "user": self.user.id,
@@ -247,12 +250,77 @@ class TestHandleObject(TestCase):
             "/credential_list",
         )
 
-    def test_credential_edit_not_authenticated(self):
+    def test_password_credential_edit_not_authenticated(self):
         """Test editing an existing credential while not authenticated redirects to login page."""
         data = {
             "credential_name": "edited-credential-name",
+            "credential_type": Credential.CREDENTIAL_TYPE_PASSWORD,
             "username": "edited-credential-username",
             "password": "edited-credential-password",
+            "user": self.user.id,
+        }
+        response = self.client.post(
+            reverse("edit_object", args=["credential", str(self.credential.id)]), data
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/edit/credential/{self.credential.id}"
+        )
+
+    def test_key_credential_add_authenticated(self):
+        """Test adding a new credential while authenticated."""
+        self.client.login(username="testuser", password="password")
+        data = {
+            "credential_name": "new-credential-name",
+            "credential_type": Credential.CREDENTIAL_TYPE_KEY,
+            "username": "new-credential-username",
+            "private_key": "new-credential-key",
+            "user": self.user.id,
+        }
+        self._GET_add_object("credential")
+        self._POST_add_object(
+            "credential", data["credential_name"], data, "/credential_list"
+        )
+
+    def test_key_credential_add_not_authenticated(self):
+        """Test adding a new credential while not authenticated redirects to login page."""
+        data = {
+            "credential_name": "new-credential-name",
+            "credential_type": Credential.CREDENTIAL_TYPE_KEY,
+            "username": "new-credential-username",
+            "private_key": "new-credential-key",
+            "user": self.user.id,
+        }
+        response = self.client.post(reverse("add_object", args=["credential"]), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/accounts/login/?next=/add/credential")
+
+    def test_key_credential_edit_authenticated(self):
+        """Test editing an existing credential while authenticated."""
+        self.client.login(username="testuser", password="password")
+        data = {
+            "credential_name": "edited-credential-name",
+            "credential_type": Credential.CREDENTIAL_TYPE_KEY,
+            "username": "edited-credential-username",
+            "private_key": "edited-credential-key",
+            "user": self.user.id,
+        }
+        self._GET_edit_object("credential", self.credential.id)
+        self._POST_edit_object(
+            "credential",
+            self.credential.id,
+            data["credential_name"],
+            data,
+            "/credential_list",
+        )
+
+    def test_key_credential_edit_not_authenticated(self):
+        """Test editing an existing credential while not authenticated redirects to login page."""
+        data = {
+            "credential_name": "edited-credential-name",
+            "credential_type": Credential.CREDENTIAL_TYPE_KEY,
+            "username": "edited-credential-username",
+            "private_key": "edited-credential-key",
             "user": self.user.id,
         }
         response = self.client.post(
@@ -796,16 +864,10 @@ class TestRequestJob(TestCase):
         self.assertEqual(
             job_data["credentials_for_bastion_host_username"], self.credential.username
         )
-        self.assertEqual(
-            job_data["credentials_for_bastion_host_password"], self.credential.password
-        )
         self.assertEqual(job_data["target_host_hostname"], self.target_host.hostname)
         self.assertEqual(job_data["target_host_port"], self.target_host.port)
         self.assertEqual(
             job_data["credentials_for_target_hosts_username"], self.credential.username
-        )
-        self.assertEqual(
-            job_data["credentials_for_target_hosts_password"], self.credential.password
         )
 
     def test_no_pending_jobs(self):
@@ -1506,7 +1568,11 @@ class TestStreamJobLog(TestCase):
         self.assertIn("event: error", combined_content)
         self.assertIn("data: Log file not found", combined_content)
 
-    @patch("builtins.open", new_callable=mock_open, read_data="Full log line 1\nFull log line 2\n")
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data="Full log line 1\nFull log line 2\n",
+    )
     def test_get_full_job_log_authenticated(self, _):
         """Test fetching the full job log while authenticated."""
         self.client.login(username="testuser", password="password")
@@ -1517,7 +1583,9 @@ class TestStreamJobLog(TestCase):
         ):
             response = self.client.get(reverse("get_full_job_log", args=[self.job_id]))
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content.decode("utf-8"), "Full log line 1\nFull log line 2\n")
+            self.assertEqual(
+                response.content.decode("utf-8"), "Full log line 1\nFull log line 2\n"
+            )
 
     def test_get_full_job_log_not_authenticated(self):
         """Test fetching the full job log while not authenticated redirects to login page."""

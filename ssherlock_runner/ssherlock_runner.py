@@ -10,6 +10,9 @@ import fabric
 import openai
 import requests
 import tiktoken
+import tempfile
+import stat
+from typing import List, Optional
 
 
 SSHERLOCK_SERVER_DOMAIN = os.getenv(
@@ -96,8 +99,10 @@ def run_job(job_data):
 
     Args:
         job_data (dict): Dictionary containing job information including id, API base URL,
-                            instructions, target host details, and credentials.
+                         instructions, target host details, and credentials.
     """
+    # The server includes any private keys in the job response (no separate secrets fetch).
+
     http_post_handler = HttpPostHandler(job_data["id"])
     http_post_handler.setLevel(log.INFO)  # Set desired level for remote logging
 
@@ -106,31 +111,47 @@ def run_job(job_data):
         log.getLogger().addHandler(http_post_handler)
 
         log.info("Running job: %s", job_data["id"])
+        # Map job response fields to Runner parameters using the names provided
+        # by Job.dict in ssherlock_server.models. Keep optional secret fields
+        # if the server included them, but expect the core keys below.
         runner = Runner(
             job_id=job_data["id"],
-            llm_api_base_url=job_data["llm_api_baseurl"],
-            initial_prompt=job_data["instructions"],
-            target_host_hostname=job_data["target_host_hostname"],
-            credentials_for_target_hosts_username=job_data[
+            llm_api_base_url=job_data.get("llm_api_baseurl"),
+            initial_prompt=job_data.get("instructions"),
+            target_host_hostname=job_data.get("target_host_hostname"),
+            target_host_port=job_data.get("target_host_port"),
+            credentials_for_target_hosts_username=job_data.get(
                 "credentials_for_target_hosts_username"
-            ],
-            llm_api_api_key=job_data["llm_api_api_key"],
-            credentials_for_target_hosts_password=job_data[
-                "credentials_for_target_hosts_password"
-            ],
-            bastion_host_hostname=job_data["bastion_host_hostname"],
-            credentials_for_bastion_host_username=job_data[
-                "credentials_for_bastion_host_username"
-            ],
-            credentials_for_bastion_host_password=job_data[
-                "credentials_for_bastion_host_password"
-            ],
+            ),
+            llm_api_api_key=job_data.get("llm_api_api_key"),
+            bastion_host_hostname=job_data.get("bastion_host_hostname", ""),
+            bastion_host_port=job_data.get("bastion_host_port"),
+            credentials_for_bastion_host_username=job_data.get(
+                "credentials_for_bastion_host_username", ""
+            ),
+            # Optional secrets that may be present in the response
+            credentials_for_target_hosts_password=job_data.get(
+                "credentials_for_target_hosts_password", ""
+            ),
+            credentials_for_target_hosts_private_key=job_data.get(
+                "credentials_for_target_hosts_private_key", ""
+            ),
+            credentials_for_bastion_host_password=job_data.get(
+                "credentials_for_bastion_host_password", ""
+            ),
+            credentials_for_bastion_host_private_key=job_data.get(
+                "credentials_for_bastion_host_private_key", ""
+            ),
         )
         runner.run()
         log.info("Job %s completed", job_data["id"])
     except Exception as e:
         log.error("Error running job: %s", e)
-        log.getLogger().removeHandler(http_post_handler)
+    finally:
+        try:
+            log.getLogger().removeHandler(http_post_handler)
+        except Exception:
+            pass
 
 
 def request_job():
@@ -146,7 +167,20 @@ def request_job():
             headers={"Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}"},
         )
         if response.status_code == 200:
-            return response.json()
+            # Parse JSON once so we can optionally log the full response when debug is enabled.
+            try:
+                job_json = response.json()
+            except Exception:
+                job_json = None
+            if log.getLogger().isEnabledFor(log.DEBUG):
+                try:
+                    log.debug(
+                        "Received job: %s", json.dumps(job_json, indent=2, default=str)
+                    )
+                except Exception:
+                    # Fallback to simple repr if JSON serialization fails.
+                    log.debug("Received job response (repr): %s", repr(job_json))
+            return job_json
         log.warning(
             "No pending jobs found: (%d) %s", response.status_code, response.content
         )
@@ -154,6 +188,47 @@ def request_job():
     except Exception as e:
         log.error("Error fetching job: %s", e)
         return None
+
+
+def write_private_key_to_tempfile(
+    private_key_text: str, job_id: str, purpose: str
+) -> Optional[str]:
+    """Write the provided private key text to a secure temporary file.
+
+    The file is created with restrictive permissions (0o600). Returns the path or None.
+    """
+    if not private_key_text:
+        return None
+    try:
+        fd, path = tempfile.mkstemp(prefix=f"ssherlock_{job_id}_{purpose}_", text=True)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(private_key_text)
+                f.flush()
+                os.fsync(f.fileno())
+            os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
+            return path
+        except Exception:
+            try:
+                os.unlink(path)
+            except Exception:
+                pass
+            raise
+    except Exception as e:
+        log.error(
+            "Failed to write private key to tempfile for job %s: %s", job_id, str(e)
+        )
+        return None
+
+
+def cleanup_temp_keys(paths: List[str]) -> None:
+    """Remove temporary key files created during job execution."""
+    for p in paths:
+        try:
+            if p and os.path.exists(p):
+                os.remove(p)
+        except Exception:
+            pass
 
 
 class Runner:  # pylint: disable=too-many-arguments
@@ -170,12 +245,14 @@ class Runner:  # pylint: disable=too-many-arguments
         model_context_size=0,
         log_level="WARNING",
         credentials_for_target_hosts_password="",
-        credentials_for_target_hosts_keyfile="",
+        credentials_for_target_hosts_private_key="",
         credentials_for_target_hosts_sudo_password="",
+        target_host_port=None,
         bastion_host_hostname="",
         credentials_for_bastion_host_username="",
         credentials_for_bastion_host_password="",
-        credentials_for_bastion_host_keyfile="",
+        credentials_for_bastion_host_private_key="",
+        bastion_host_port=None,
     ):
         """Initialize main runner configuration."""
         self.job_id = job_id
@@ -183,24 +260,32 @@ class Runner:  # pylint: disable=too-many-arguments
         self.initial_prompt = initial_prompt
         self.model_context_size = model_context_size
         self.target_host_hostname = target_host_hostname
+        self.target_host_port = target_host_port
         self.credentials_for_target_hosts_username = (
             credentials_for_target_hosts_username
         )
         self.credentials_for_target_hosts_password = (
             credentials_for_target_hosts_password
         )
-        self.credentials_for_target_hosts_keyfile = credentials_for_target_hosts_keyfile
+        self.credentials_for_target_hosts_private_key = (
+            credentials_for_target_hosts_private_key
+        )
         self.credentials_for_target_hosts_sudo_password = (
             credentials_for_target_hosts_sudo_password
         )
         self.bastion_host_hostname = bastion_host_hostname
+        self.bastion_host_port = bastion_host_port
         self.credentials_for_bastion_host_username = (
             credentials_for_bastion_host_username
         )
         self.credentials_for_bastion_host_password = (
             credentials_for_bastion_host_password
         )
-        self.credentials_for_bastion_host_keyfile = credentials_for_bastion_host_keyfile
+        self.credentials_for_bastion_host_private_key = (
+            credentials_for_bastion_host_private_key
+        )
+        # Track any temp key files we create so we can remove them.
+        self._temp_key_paths: List[str] = []
         self.llm_api_base_url = llm_api_base_url
         self.llm_api_api_key = llm_api_api_key
         self.shell_environment = (
@@ -469,15 +554,25 @@ class Runner:  # pylint: disable=too-many-arguments
     def setup_ssh_connection_params(self) -> dict:
         """Prepare SSH connection parameters based on the configuration.
 
-        Args:
-            config (Config): Configuration object containing SSH credentials.
-
-        Returns:
-            dict: SSH connection parameters.
+        When a private key string is provided, write it to a secure temp file and
+        remember the path for cleanup.
         """
-        if self.credentials_for_target_hosts_keyfile:
-            return {"key_filename": self.credentials_for_target_hosts_keyfile}
+        # Private key text provided by the server for this job.
+        if getattr(self, "credentials_for_target_hosts_private_key", None):
+            key_text = self.credentials_for_target_hosts_private_key
+            path = write_private_key_to_tempfile(key_text, str(self.job_id), "target")
+            if path:
+                self._temp_key_paths.append(path)
+                return {"key_filename": path}
+
+        # Fallback to password when no private key is provided.
         return {"password": self.credentials_for_target_hosts_password}
+
+    def cleanup_temp_keys(self) -> None:
+        """Remove any temporary private key files created for this runner."""
+        if getattr(self, "_temp_key_paths", None):
+            cleanup_temp_keys(self._temp_key_paths)
+            self._temp_key_paths = []
 
     def process_interaction_loop(self, messages: list, connect_args: dict) -> None:
         """Process the interaction loop with the LLM and SSH server.
@@ -490,10 +585,20 @@ class Runner:  # pylint: disable=too-many-arguments
         gateway = None
         if self.bastion_host_hostname:
             gateway_connect_kwargs = {}
-            if self.credentials_for_bastion_host_keyfile:
-                gateway_connect_kwargs["key_filename"] = (
-                    self.credentials_for_bastion_host_keyfile
+            # Prefer an in-job private key text for the bastion.
+            if getattr(self, "credentials_for_bastion_host_private_key", None):
+                path = write_private_key_to_tempfile(
+                    self.credentials_for_bastion_host_private_key,
+                    str(self.job_id),
+                    "bastion",
                 )
+                if path:
+                    self._temp_key_paths.append(path)
+                    gateway_connect_kwargs["key_filename"] = path
+                else:
+                    gateway_connect_kwargs["password"] = (
+                        self.credentials_for_bastion_host_password
+                    )
             else:
                 gateway_connect_kwargs["password"] = (
                     self.credentials_for_bastion_host_password
@@ -508,6 +613,7 @@ class Runner:  # pylint: disable=too-many-arguments
 
         with fabric.Connection(
             host=self.target_host_hostname,
+            port=self.target_host_port,
             user=self.credentials_for_target_hosts_username,
             connect_kwargs=connect_args,
             gateway=gateway,
@@ -562,8 +668,14 @@ class Runner:  # pylint: disable=too-many-arguments
         # Setup SSH connection parameters.
         connect_args = self.setup_ssh_connection_params()
 
-        # Process the interaction loop.
-        self.process_interaction_loop(messages, connect_args)
+        # Process the interaction loop and ensure temporary keys are removed.
+        try:
+            self.process_interaction_loop(messages, connect_args)
+        finally:
+            try:
+                self.cleanup_temp_keys()
+            except Exception:
+                pass
 
 
 def strip_eot_from_string(string: str) -> str:

@@ -8,6 +8,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+
 # pylint: disable=import-error
 
 from pathlib import Path
@@ -26,7 +27,7 @@ SECRET_KEY = "django-insecure-+(eki!!v_qo#po0wk&b2+4z+qm2*y7cv@fpyb&nv*^v1mckp^^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["host.docker.internal", "127.0.0.1"]
 
 
 # Application definition
@@ -128,7 +129,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 # Redirect URL after login
-LOGIN_REDIRECT_URL = '/home'
+LOGIN_REDIRECT_URL = "/home"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

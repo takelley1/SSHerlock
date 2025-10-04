@@ -6,10 +6,51 @@
 <div class="flex justify-center items-start min-h-screen pt-[10vh]">
   <div class="m-5 p-6 rounded-xl border border-white/10 bg-gray-800/80 backdrop-blur shadow-xl w-full max-w-2xl">
   <h2 class="text-2xl mb-4">Add {{ object_name_pretty }}</h2>
+  <style>
+    /* Minimal CSS toggle for credential fields using :has(). */
+    #password-block, #privatekey-block { display: none; }
+    form:has(input[name="credential_type"][value="password"]:checked) #password-block { display: block; }
+    form:has(input[name="credential_type"][value="key"]:checked) #privatekey-block { display: block; }
+    #password-block p, #privatekey-block p { margin: 0; }
+  </style>
   {% with model_type=object_name|lower %}
     <form action="{% url 'add_object' model_type=model_type %}" method="post" class="space-y-4">
       {% csrf_token %}
-      {{ form }}
+      {% if object_name == "Credential" %}
+        {{ form.non_field_errors }}
+        <p>
+          {{ form.credential_name.label_tag }} {{ form.credential_name }}
+        </p>
+        {% if form.credential_name.errors %}
+          <p class="text-red-500">{{ form.credential_name.errors|join:", " }}</p>
+        {% endif %}
+        <p>
+          {{ form.credential_type.label_tag }} {{ form.credential_type }}
+        </p>
+        {% if form.credential_type.errors %}
+          <p class="text-red-500">{{ form.credential_type.errors|join:", " }}</p>
+        {% endif %}
+        <p>
+          {{ form.username.label_tag }} {{ form.username }}
+        </p>
+        {% if form.username.errors %}
+          <p class="text-red-500">{{ form.username.errors|join:", " }}</p>
+        {% endif %}
+        <div id="password-block">
+          <p>{{ form.password.label_tag }} {{ form.password }}</p>
+          {% if form.password.errors %}
+            <p class="text-red-500">{{ form.password.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+        <div id="privatekey-block">
+          <p>{{ form.private_key.label_tag }} {{ form.private_key }}</p>
+          {% if form.private_key.errors %}
+            <p class="text-red-500">{{ form.private_key.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+      {% else %}
+        {{ form }}
+      {% endif %}
       <div class="flex justify-end space-x-4">
         <a href="/{{ object_name|lower }}_list" class="bg-white/10 hover:bg-white/20 mt-2 px-3 py-2 rounded-md transition active:scale-[.99]">Cancel</a>
         <input type="submit" value="Add" class="bg-green-500 hover:bg-green-600 mt-2 px-3 py-2 rounded-md transition active:scale-[.99]">

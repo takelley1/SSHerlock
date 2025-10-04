@@ -95,11 +95,42 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CredentialForm(ModelForm):
-    """Form for creating and updating Credential instances."""
+    """Credential form. Validates fields based on credential_type."""
+
+    CREDENTIAL_TYPE_CHOICES = [
+        (Credential.CREDENTIAL_TYPE_PASSWORD, "Password"),
+        (Credential.CREDENTIAL_TYPE_KEY, "SSH Key"),
+    ]
+
+    credential_type = forms.ChoiceField(
+        choices=CREDENTIAL_TYPE_CHOICES,
+        widget=forms.RadioSelect,
+        initial=Credential.CREDENTIAL_TYPE_PASSWORD,
+        required=False,
+        label="Credential type",
+    )
+    private_key = forms.CharField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded font-mono",
+                "rows": "8",
+                "autocomplete": "off",
+            }
+        ),
+        label="Private key",
+        help_text="Paste the private key; it will not be shown again.",
+    )
 
     class Meta:
         model = Credential
-        fields = ["credential_name", "username", "password"]
+        fields = [
+            "credential_name",
+            "credential_type",
+            "username",
+            "password",
+            "private_key",
+        ]
         widgets = {
             "credential_name": forms.TextInput(
                 attrs={
@@ -113,10 +144,44 @@ class CredentialForm(ModelForm):
             ),
             "password": forms.PasswordInput(
                 attrs={
-                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded"
+                    "class": "text-white bg-gray-700 p-2 border border-gray-600 rounded",
+                    "autocomplete": "new-password",
                 }
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get("instance")
+        super().__init__(*args, **kwargs)
+        if instance and instance.private_key:
+            # Do not prefill private keys.
+            self.fields["private_key"].initial = ""
+        if instance and instance.credential_type:
+            self.fields["credential_type"].initial = instance.credential_type
+
+    def clean(self):
+        cleaned = super().clean()
+        ctype = cleaned.get("credential_type", Credential.CREDENTIAL_TYPE_PASSWORD)
+        username = cleaned.get("username")
+        password = cleaned.get("password")
+        private_key = cleaned.get("private_key")
+
+        if not username:
+            raise ValidationError("Username is required.")
+
+        if ctype == Credential.CREDENTIAL_TYPE_PASSWORD:
+            if not password:
+                self.add_error("password", "Password is required.")
+            if private_key:
+                self.add_error("private_key", "Private key should be empty for password credentials.")
+        elif ctype == Credential.CREDENTIAL_TYPE_KEY:
+            if not private_key:
+                self.add_error("private_key", "Private key is required.")
+            cleaned["password"] = ""
+        else:
+            raise ValidationError("Invalid credential type selected.")
+
+        return cleaned
 
 
 class BastionHostForm(ModelForm):

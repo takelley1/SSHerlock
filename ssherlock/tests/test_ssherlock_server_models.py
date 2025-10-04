@@ -320,11 +320,9 @@ class TestJob(TestCase):
             "bastion_host_hostname": self.bastion_host.hostname,
             "bastion_host_port": self.bastion_host.port,
             "credentials_for_bastion_host_username": self.credential.username,
-            "credentials_for_bastion_host_password": self.credential.password,
             "target_host_hostname": self.target_host.hostname,
             "target_host_port": self.target_host.port,
             "credentials_for_target_hosts_username": self.credential.username,
-            "credentials_for_target_hosts_password": self.credential.password,
             "instructions": self.job1.instructions,
         }
 

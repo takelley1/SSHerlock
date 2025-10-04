@@ -257,21 +257,28 @@ class SeleniumSSHerlockTests(StaticLiveServerTestCase):
 
     def _delete_additional_objects(self) -> None:
         """Delete remaining sample objects and verify removal from lists."""
-        # Delete Credential
+        # Delete Credential(s)
         self.go("/credential_list")
-        try:
-            self.click(
-                By.XPATH,
-                f"//tr[.//span[contains(., '{self.credential_name}')]]//button[contains(., 'Delete')]",
-            )
-            self.click(By.ID, "confirmButton")
-            self.wait_for_text_absent(self.credential_name, timeout=15)
-        except (
-            TimeoutException,
-            NoSuchElementException,
-            ElementClickInterceptedException,
+        for cred_name in filter(
+            None,
+            [
+                getattr(self, "credential_name", None),
+                getattr(self, "credential_name_key", None),
+            ],
         ):
-            pass
+            try:
+                self.click(
+                    By.XPATH,
+                    f"//tr[.//span[contains(., '{cred_name}')]]//button[contains(., 'Delete')]",
+                )
+                self.click(By.ID, "confirmButton")
+                self.wait_for_text_absent(cred_name, timeout=15)
+            except (
+                TimeoutException,
+                NoSuchElementException,
+                ElementClickInterceptedException,
+            ):
+                pass
 
         # Delete LLM API
         self.go("/llm_api_list")
@@ -628,6 +635,75 @@ class SeleniumSSHerlockTests(StaticLiveServerTestCase):
         self.go("/target_host_list")
         self.wait_for_text_absent(host1, timeout=5)
 
+    def test_credential_form_blank_password_ui(self) -> None:
+        """Selenium UI: submitting credential form without password shows password error."""
+        # Ensure we're authenticated and logged in via the UI.
+        User.objects.create_user(self.username, self.email, self.password)
+        self.go("/accounts/login/")
+        self.type(By.ID, "username", self.username)
+        self.type(By.ID, "password", self.password)
+        self.click(By.CSS_SELECTOR, "button[type='submit']")
+        self.wait.until(EC.url_contains("/home"))
+
+        # Open Add Credential form
+        self.go("/credential_list")
+        self.click(By.LINK_TEXT, "Add Credential")
+
+        # Fill form but leave password blank
+        self.type(By.NAME, "credential_name", "ui-test-no-pw")
+        self.type(By.NAME, "username", "ubuntu")
+        pw = self.wait.until(EC.presence_of_element_located((By.NAME, "password")))
+        pw.clear()
+
+        # Submit and assert the password-specific error appears
+        self.click(By.CSS_SELECTOR, "input[type='submit'][value='Add']")
+        err_el = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//*[contains(., 'Password is required')]")
+            )
+        )
+        self.assertIsNotNone(err_el)
+        self.assertIn("Password is required", err_el.text)
+
+    def test_credential_form_blank_key_ui(self) -> None:
+        """Selenium UI: submitting credential form without private key shows key error."""
+        # Ensure we're authenticated and logged in via the UI.
+        User.objects.create_user(self.username, self.email, self.password)
+        self.go("/accounts/login/")
+        self.type(By.ID, "username", self.username)
+        self.type(By.ID, "password", self.password)
+        self.click(By.CSS_SELECTOR, "button[type='submit']")
+        self.wait.until(EC.url_contains("/home"))
+
+        # Open Add Credential form and select SSH Key type
+        self.go("/credential_list")
+        self.click(By.LINK_TEXT, "Add Credential")
+        try:
+            self.click(By.CSS_SELECTOR, "input[name='credential_type'][value='key']")
+        except Exception:
+            try:
+                self.click(
+                    By.XPATH, "//label[contains(., 'SSH Key') or contains(., 'Key')]"
+                )
+            except Exception:
+                pass
+
+        # Fill form but leave private_key blank
+        self.type(By.NAME, "credential_name", "ui-test-no-key")
+        self.type(By.NAME, "username", "ubuntu")
+        pk = self.wait.until(EC.presence_of_element_located((By.NAME, "private_key")))
+        pk.clear()
+
+        # Submit and assert the private_key-specific error appears
+        self.click(By.CSS_SELECTOR, "input[type='submit'][value='Add']")
+        err_el = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//*[contains(., 'Private key is required')]")
+            )
+        )
+        self.assertIsNotNone(err_el)
+        self.assertIn("Private key is required", err_el.text)
+
     # ---------- Additional helper utilities ----------
 
     def open_first_job_detail(self) -> None:
@@ -863,8 +939,9 @@ class SeleniumSSHerlockTests(StaticLiveServerTestCase):
         self.password = self.password + "X"
 
     def _create_core_objects(self) -> None:
-        # Credentials
+        # Credentials: create a password credential and an SSH key credential
         self.go("/credential_list")
+        # Password credential
         self.click(By.LINK_TEXT, "Add Credential")
         self.type(By.NAME, "credential_name", self.credential_name)
         self.type(By.NAME, "username", self.credential_user)
@@ -872,6 +949,27 @@ class SeleniumSSHerlockTests(StaticLiveServerTestCase):
         self.click(By.CSS_SELECTOR, "input[type='submit'][value='Add']")
         self.wait.until(EC.url_contains("/credential_list"))
         self.assert_text_present(self.credential_name)
+
+        # SSH key credential
+        self.credential_name_key = _new_unique(self.credential_name + "-key")
+        self.click(By.LINK_TEXT, "Add Credential")
+        self.type(By.NAME, "credential_name", self.credential_name_key)
+        # Select SSH Key radio if present; fallback to clicking label text.
+        try:
+            self.click(By.CSS_SELECTOR, "input[name='credential_type'][value='key']")
+        except Exception:
+            try:
+                self.click(
+                    By.XPATH, "//label[contains(., 'SSH Key') or contains(., 'Key')]"
+                )
+            except Exception:
+                pass
+        # Fill username and paste private key
+        self.type(By.NAME, "username", self.credential_user)
+        self.type(By.NAME, "private_key", "-----BEGIN OPENSSH PRIVATE KEY-----\n...")
+        self.click(By.CSS_SELECTOR, "input[type='submit'][value='Add']")
+        self.wait.until(EC.url_contains("/credential_list"))
+        self.assert_text_present(self.credential_name_key)
 
         # LLM API
         self.go("/llm_api_list")

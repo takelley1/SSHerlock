@@ -1,4 +1,4 @@
-"""All Django models for the SSHerlock server application."""
+"""Django models for the SSHerlock server."""
 
 # pylint: disable=import-error, missing-class-docstring, invalid-str-returned, no-member
 
@@ -27,7 +27,14 @@ class BastionHost(models.Model):
 
 
 class Credential(models.Model):
-    """Defines username/password/key pairs for connecting to bastions and target hosts."""
+    """Defines username/password/key pairs for connecting to bastions and target hosts.
+
+    The model supports two credential types:
+      - password: stores username and password
+      - key: stores username and private_key
+
+    Existing records default to the 'password' type for backwards compatibility.
+    """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -36,7 +43,20 @@ class Credential(models.Model):
     )
     credential_name = models.CharField("Credential name", max_length=255)
     username = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
+    # Allow password to be blank/null because a credential may instead provide a private_key.
+    password = models.CharField(max_length=255, blank=True, null=True)
+
+    # New fields to support SSH key credentials.
+    CREDENTIAL_TYPE_PASSWORD = "password"
+    CREDENTIAL_TYPE_KEY = "key"
+    CREDENTIAL_TYPE_CHOICES = [
+        (CREDENTIAL_TYPE_PASSWORD, "Password"),
+        (CREDENTIAL_TYPE_KEY, "SSH Key"),
+    ]
+    credential_type = models.CharField(
+        max_length=10, choices=CREDENTIAL_TYPE_CHOICES, default=CREDENTIAL_TYPE_PASSWORD
+    )
+    private_key = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -148,8 +168,8 @@ class Job(models.Model):
     def __str__(self):
         return str(self.id)
 
-    def dict(self) -> dict[any]:
-        """Return relevant object data as a dict."""
+    def dict(self) -> dict[str, any]:
+        """Return relevant object data as a dict for runners."""
         return {
             "id": str(self.id),
             "status": str(self.status),
@@ -163,6 +183,9 @@ class Job(models.Model):
             "credentials_for_bastion_host_password": getattr(
                 self.credentials_for_bastion_host, "password", None
             ),
+            "credentials_for_bastion_host_private_key": getattr(
+                self.credentials_for_bastion_host, "private_key", None
+            ),
             "target_host_hostname": getattr(
                 self.target_hosts.first(), "hostname", None
             ),
@@ -170,8 +193,11 @@ class Job(models.Model):
             "credentials_for_target_hosts_username": getattr(
                 self.credentials_for_target_hosts, "username", None
             ),
-            "credentials_for_target_hosts_password": getattr(
+            "credentials_for_target_host_password": getattr(
                 self.credentials_for_target_hosts, "password", None
+            ),
+            "credentials_for_target_host_private_key": getattr(
+                self.credentials_for_target_hosts, "private_key", None
             ),
             "instructions": self.instructions,
         }

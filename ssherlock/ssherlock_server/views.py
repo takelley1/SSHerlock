@@ -159,12 +159,8 @@ def create_job(request):
             try:
                 log_dir, log_file_path = get_job_log_path(job.id)
                 os.makedirs(log_dir, exist_ok=True)
-                # 'a' mode creates the file if it doesn't exist; close immediately.
-                with open(log_file_path, "a", encoding="utf-8"):
-                    pass
+                open(log_file_path, "a", encoding="utf-8").close()
             except Exception:
-                # Fail silently here; file creation is best-effort and shouldn't block job creation.
-                # Any errors will be surfaced when runners attempt to write logs.
                 pass
 
         # Start a SSHerlock runner Docker container in GCP for every target host

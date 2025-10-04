@@ -63,7 +63,7 @@ SSHerlock is comprised of a Django web app and 1 or more job runners.
 
 ## Todo
 
-- allow key credentials to be created in addition to password credentials
+- list job duration in the job view page
 - allow sudo credentials to be specified for target hosts
 - allow selecting all target hosts at once when adding a job
 - move the sign out button to the navbar next to account

@@ -14,12 +14,10 @@ import openai
 import requests
 import pytest
 
-os.environ["RUNNER_NUMBER"] = "1"
 sys.path.insert(1, "../")
 from ssherlock_runner import (
     Runner,
     count_tokens,
-    get_runner_number,
     is_llm_done,
     is_string_too_long,
     main,
@@ -28,6 +26,8 @@ from ssherlock_runner import (
     strip_eot_from_string,
     update_conversation,
     update_job_status,
+    write_private_key_to_tempfile,
+    cleanup_temp_keys,
 )
 
 
@@ -47,7 +47,6 @@ def job():
         credentials_for_target_hosts_username="user1",
         log_level="CRITICAL",
         model_context_size=16,
-        credentials_for_target_hosts_keyfile="/path/to/keyfile",
         credentials_for_target_hosts_password="pass123",
     )
 
@@ -129,18 +128,51 @@ def test_initialize_messages(job):
     assert messages[1]["content"] == "Initial prompt example message."
 
 
-def test_setup_ssh_connection_params_with_keyfile():
-    """Ensure the SSH connect args use a keyfile when one is passed."""
+def test_setup_ssh_connection_params_with_private_key():
+    """Ensure the SSH connect args use a temp keyfile when a private_key string is provided."""
+    private_key_data = "-----BEGIN OPENSSH PRIVATE KEY-----\nPRIVATE\n-----END OPENSSH PRIVATE KEY-----"
     job = Runner(
-        job_id="123",
+        job_id="abc123",
         llm_api_base_url="test",
         initial_prompt="test",
         target_host_hostname="test",
         credentials_for_target_hosts_username="test",
-        credentials_for_target_hosts_keyfile="/path/to/keyfile",
+        credentials_for_target_hosts_private_key=private_key_data,
     )
     connect_args = job.setup_ssh_connection_params()
-    assert connect_args["key_filename"] == "/path/to/keyfile"
+    assert "key_filename" in connect_args
+    key_path = connect_args["key_filename"]
+    # File should exist and be written with restrictive permissions.
+    assert os.path.exists(key_path)
+    mode = os.stat(key_path).st_mode & 0o777
+    assert mode == 0o600
+    # Cleanup and ensure removal.
+    job.cleanup_temp_keys()
+    assert not os.path.exists(key_path)
+
+
+def test_write_private_key_to_tempfile_creates_file_and_permissions():
+    """Test the helper write_private_key_to_tempfile writes the key and sets 0o600 perms."""
+    private_key_data = "-----BEGIN OPENSSH PRIVATE KEY-----\nPRIVATE\n-----END OPENSSH PRIVATE KEY-----"
+    path = write_private_key_to_tempfile(private_key_data, "job-test-1", "unit")
+    assert path is not None
+    try:
+        assert os.path.exists(path)
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        assert content == private_key_data
+        mode = os.stat(path).st_mode & 0o777
+        assert mode == 0o600
+    finally:
+        # Ensure cleanup even if assertions fail.
+        cleanup_temp_keys([path])
+    assert not os.path.exists(path)
+
+
+def test_write_private_key_to_tempfile_empty_returns_none():
+    """When an empty private key is provided, the helper should return None."""
+    path = write_private_key_to_tempfile("", "job-test-2", "unit")
+    assert path is None
 
 
 def test_setup_ssh_connection_params_with_password():
@@ -313,10 +345,14 @@ def test_update_job_status_success():
         mock_post.return_value = mock_response
 
         update_job_status("job123", "Completed")
+        # Use the values from the module under test to build the expected URL so
+        # tests remain in sync with the module's configuration.
+        import ssherlock_runner as runner_mod
+
         mock_post.assert_called_once_with(
-            f"{SSHERLOCK_SERVER_PROTOCOL}://{SSHERLOCK_SERVER_DOMAIN}/update_job_status/job123",
+            f"{runner_mod.SSHERLOCK_SERVER_PROTOCOL}://{runner_mod.SSHERLOCK_SERVER_DOMAIN}/update_job_status/job123",
             headers={
-                "Authorization": f"Bearer {SSHERLOCK_SERVER_RUNNER_TOKEN}",
+                "Authorization": f"Bearer {runner_mod.SSHERLOCK_SERVER_RUNNER_TOKEN}",
                 "Content-Type": "application/json",
             },
             data=json.dumps({"status": "Completed"}),
@@ -755,32 +791,6 @@ def test_update_conversation_large_ssh_reply():
     ]
 
     assert messages == expected_messages
-
-
-@patch("ssherlock_runner.os.getenv")
-def test_get_runner_number_success(mock_getenv):
-    """Test get_runner_number when RUNNER_NUMBER is set."""
-    mock_getenv.return_value = "5"
-    assert get_runner_number() == "5"
-    mock_getenv.assert_called_once_with("RUNNER_NUMBER")
-
-
-@patch("ssherlock_runner.os.getenv")
-def test_get_runner_number_not_set(mock_getenv):
-    """Test get_runner_number when RUNNER_NUMBER is not set."""
-    mock_getenv.return_value = None
-    with pytest.raises(EnvironmentError, match="RUNNER_NUMBER environment variable is not set."):
-        get_runner_number()
-    mock_getenv.assert_called_once_with("RUNNER_NUMBER")
-
-
-@patch("ssherlock_runner.os.getenv")
-@patch("ssherlock_runner.log.info")
-def test_get_runner_number_logging(mock_log_info, mock_getenv):
-    """Test that get_runner_number logs the runner number."""
-    mock_getenv.return_value = "3"
-    get_runner_number()
-    mock_log_info.assert_called_once_with("RUNNER_NUMBER: %s", "3")
 
 
 @patch("ssherlock_runner.run_job")
