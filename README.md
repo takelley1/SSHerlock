@@ -63,7 +63,6 @@ SSHerlock is comprised of a Django web app and 1 or more job runners.
 
 ## Todo
 
-- add selenium to CI
 - allow key credentials to be created in addition to password credentials
 - allow sudo credentials to be specified for target hosts
 - allow selecting all target hosts at once when adding a job
